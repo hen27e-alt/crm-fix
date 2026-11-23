@@ -496,7 +496,7 @@ const APP_CATALOG = [
 let _editPid = null;
 function nav(view){
   S.view=view;
-  if(view!=='detail')S.pid=null;
+  if(view!=='detail'){S.pid=null;history.replaceState(null,'',location.pathname);}
   syncNav(); syncTopbar(); render();
 }
 function syncNav(){
@@ -602,7 +602,9 @@ function filterP(status){
 // ═══════════════════════════════════════════════════════════════
 // PROJECT DETAIL
 // ═══════════════════════════════════════════════════════════════
-function openProject(id){S.pid=id;S.tab='overview';S.view='detail';syncNav();syncTopbar();render();}
+function openProject(id){S.pid=id;S.tab='overview';S.view='detail';history.replaceState(null,'','#'+id);syncNav();syncTopbar();render();}
+function copyProjectLink(id){const url=location.origin+location.pathname+'#'+id;navigator.clipboard.writeText(url).then(()=>{const btn=document.getElementById('copy-link-btn');if(btn){const old=btn.textContent;btn.textContent='✅ הועתק!';setTimeout(()=>{btn.textContent=old;},2000);}});}
+
 function renderDetail(){
   const p=S.projects.find(x=>x.id===S.pid);if(!p){nav('projects');return;}
   const c=document.getElementById('content');
@@ -623,6 +625,7 @@ function renderDetail(){
           </div>
         </div>
         <div class="dh-actions">
+          <button id="copy-link-btn" class="btn btn-ghost btn-sm" onclick="copyProjectLink('${p.id}')">🔗 קישור</button>
           <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">✏️ ערוך</button>
           <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:none" onclick="confirmDelete('פרוייקט "${p.name}" יימחק לצמיתות.',()=>deleteProject('${p.id}'))">🗑️</button>
         </div>
@@ -1069,10 +1072,15 @@ function postStatusLbl(s){return{sent:'נשלח',scheduled:'מתוזמן',draft:
 // INIT
 // ═══════════════════════════════════════════════════════════════
 load();
+// Migrate existing projects to stable IDs (by name)
+const _SEED_IDS={'ביונד אינטימה':'seed-bi','קליניקמייט':'seed-cm','פרחי באך':'seed-pb','כדור בדולח':'seed-kb','אפליקציית משחקים':'seed-game'};
+let _migrated=false;
+S.projects.forEach(p=>{if(_SEED_IDS[p.name]&&p.id!==_SEED_IDS[p.name]){p.id=_SEED_IDS[p.name];_migrated=true;}});
+if(_migrated)save();
 if(S.projects.length===0){
   const now=Date.now();
   S.projects=[{
-    id:uid(),name:'ביונד אינטימה',emoji:'💜',
+    id:'seed-bi',name:'ביונד אינטימה',emoji:'💜',
     description:'משחק לוח אינטימי וחברתי לזוגות וחברים — חוויה ייחודית של קרבה וחשיפה.',
     status:'active',category:'משחק',
     tasks:[
@@ -1084,7 +1092,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'קונספט',body:'משחק שמביא זוגות וחברים קרובים יותר דרך שאלות ואתגרים מותאמים. כבר יש גרסת לוח — השלב הבא הוא אפליקציה.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:uid(),name:'קליניקמייט',emoji:'🏥',
+    id:'seed-cm',name:'קליניקמייט',emoji:'🏥',
     description:'מערכת ניהול חכמה לקליניקות ומטפלים — תיאום תורים, תיקי מטופלים ומעקב טיפולים.',
     status:'active',category:'SaaS',
     tasks:[
@@ -1096,7 +1104,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'רעיון מרכזי',body:'מערכת CRM ייעודית למטפלים — טיפול בתיקי מטופלים, תזכורות אוטומטיות, וניהול תשלומים במקום אחד.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:uid(),name:'פרחי באך',emoji:'🌸',
+    id:'seed-pb',name:'פרחי באך',emoji:'🌸',
     description:'אפליקציה לאבחון עצמי ובחירת פרחי באך — 38 פרחים, מדריך אישי ומעקב טיפול.',
     status:'active',category:'בריאות',
     tasks:[
@@ -1108,7 +1116,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'קהל יעד',body:'מטפלים הוליסטיים, אנשים המחפשים רפואה משלימה, ומתעניינים בבריאות רגשית טבעית.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:uid(),name:'כדור בדולח',emoji:'🔮',
+    id:'seed-kb',name:'כדור בדולח',emoji:'🔮',
     description:'אפליקציית AI לניחושים, תחזיות ואסטרולוגיה — חוויה מיסטית מתקדמת.',
     status:'active',category:'בידור',
     tasks:[
@@ -1120,7 +1128,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'ויב',body:'עיצוב כהה, כוכבים, אנימציות מיסטיות. חוויה שמרגישה אמיתית ומיוחדת — לא עוד אפליקציית הורוסקופ רגילה.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:uid(),name:'אפליקציית משחקים',emoji:'🎮',
+    id:'seed-game',name:'אפליקציית משחקים',emoji:'🎮',
     description:'פלטפורמת משחקים מגוונת — ​מינגלים, טריוויה, אתגרים חברתיים ועוד.',
     status:'active',category:'משחקים',
     tasks:[
@@ -1134,5 +1142,8 @@ if(S.projects.length===0){
   }];
   save();
 }
-syncNav();syncTopbar();render();
+syncNav();syncTopbar();
+const _startHash=location.hash.slice(1);
+if(_startHash&&S.projects.find(x=>x.id===_startHash)){openProject(_startHash);}
+else{render();}
 </script>
