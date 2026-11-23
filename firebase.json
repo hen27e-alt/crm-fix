@@ -8,6 +8,7 @@
       ".firebaserc",
       "vercel.json",
       "README.md",
+      "docs/**",
       "**/.*",
       "**/node_modules/**"
     ],
