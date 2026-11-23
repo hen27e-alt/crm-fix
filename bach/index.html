@@ -92,8 +92,10 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opa
 .ico.sm{width:18px;height:18px}
 
 /* ============ Header ============ */
-.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:4px;margin:0 calc(var(--pad)*-1);padding:calc(env(safe-area-inset-top) + 8px) var(--pad) 8px;
-  background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2)}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:4px;margin:0 calc(var(--pad)*-1);padding:calc(env(safe-area-inset-top) + 8px) var(--pad) 8px}
+.top::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);
+  background:linear-gradient(color-mix(in srgb,var(--bg) 88%,transparent) 60%,color-mix(in srgb,var(--bg) 0%,transparent));backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);
+  -webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}
 .brand{display:flex;align-items:center;gap:9px;text-decoration:none;min-height:44px;font-family:var(--f-disp);font-weight:700;font-size:21px;color:var(--ink)}
 .brand svg{width:30px;height:30px}
 .grow{flex:1}
@@ -285,7 +287,7 @@ textarea.input{min-height:84px;resize:vertical;line-height:1.5}
 .pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 6px 0 14px;border-radius:999px;background:var(--gs);color:var(--gi);font-weight:600;font-size:14.5px}
 .pill .dot{width:11px;height:11px;border-radius:50%;background:var(--gc)}
 .pill small{font-weight:500;opacity:.85}
-.pill button{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--gi)}
+.pill button{width:44px;height:44px;margin-inline-end:-4px;border-radius:50%;display:grid;place-items:center;color:var(--gi)}
 .pill button .ico{width:16px;height:16px}
 .slots{display:flex;gap:6px;justify-content:center}
 .slots i{width:22px;height:6px;border-radius:99px;background:var(--line)}
@@ -396,6 +398,7 @@ noscript{display:block;padding:40px;text-align:center}
   .breathe{animation:none;transform:none}
 }
 @media (min-width:700px){
+  .chips{flex-wrap:wrap;overflow:visible;margin:0;padding:4px 0 10px}
   .hero{padding:44px 40px}
   .fod{grid-template-columns:150px 1fr}
 }
