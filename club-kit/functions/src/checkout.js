@@ -119,8 +119,8 @@ async function createCheckoutCore({ db, provider, config, uid, token, data, now 
   }
 
   await orderRef.update({ providerRef: page.providerRef });
-  if (userSnap.exists) {
-    // best effort: record when the customer accepted the terms (the user doc is also client-writable for this field)
+  if (userSnap.exists && !u.termsAcceptedAt) {
+    // best effort: record the FIRST terms acceptance on the profile (each order also keeps its own termsAcceptedAt)
     try {
       await db.collection('users').doc(uid).update({ termsAcceptedAt: now });
     } catch (_) {

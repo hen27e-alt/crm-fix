@@ -1069,7 +1069,7 @@ const REG={
   'seed-bi':  {name:'ביונד אינטימה',en:'BYOND INTIMA',tag:'חוויות זוגיות מודרכות',desc:'מארזי ערבים לזוגות עם מלווה דיגיטלי, משחקים ויועץ AI. החנות והאזור האישי של הזוג.',url:'https://byondintima-d1d4e.web.app/',g:['#3A1712','#0A0809'],ac:'#C9A66B'},
   'seed-cm':  {name:'ClinicMate',en:'CLINICMATE',tag:'ניהול קליניקה חכם',desc:'מערכת למטפלים: תיקי מטופלים, יומן פגישות, הוצאות וקבלות, עם בידוד מלא בין מטפלים.',url:'https://clinicmate.co.il/',g:['#0F766E','#1E3A8A'],ac:'#2DD4BF'},
   'seed-pb':  {name:'פרחי באך',en:'BACH FLOWERS',tag:'מצאו את הפרח שלכם',desc:'38 פרחי באך ופרח החירום: אבחון עצמי, תערובת אישית ויומן מעקב יומי.',url:'https://bach-flowers-site.vercel.app/',g:['#C2577A','#5B3A86'],ac:'#F4A8C0'},
-  'seed-kb':  {name:'כדור בדולח',en:'CRYSTAL BALL',tag:'שאלו את הכדור',desc:'כדור בדולח אינטראקטיבי: שאלות לכדור, קלף היום, מזלות ונומרולוגיה.',url:'https://kadur-habdolach.vercel.app/',g:['#3B1D8A','#07051A'],ac:'#A78BFA'},
+  'seed-kb':  {name:'כדור בדולח',en:'CRYSTAL BALL',tag:'שאלו את הכדור',desc:'כדור בדולח אינטראקטיבי ועולם של קריאות: קלפים, מזלות, כף יד, אסטרולוגיה סינית, קפה, חלומות, אי צ׳ינג ונומרולוגיה.',url:'https://kadur-habdolach.vercel.app/',g:['#3B1D8A','#07051A'],ac:'#A78BFA'},
   'seed-game':{name:'ערב משחקים',en:'GAME NIGHT',tag:'משחקים לחברים ולזוגות',desc:'טריוויה, זיהוי שירים, פוקר ובינגו ראש בראש, מסלול שלבים, מטבעות, רמות, אווטארים תלת־ממדיים ופאנל ניהול.',url:'https://erev-mischakim-jfkpt.web.app/',g:['#EA580C','#9D174D'],ac:'#FDBA74'}
 };
 const _petals=[0,1,2,3,4,5,6,7].map(i=>`<ellipse cx="0" cy="-12.5" rx="5.6" ry="11" fill="#fff" fill-opacity="${i%2?'.72':'.92'}" transform="rotate(${i*45})"/>`).join('');
@@ -1319,7 +1319,7 @@ S.projects.forEach(p=>{
   const r=REG[p.id];
   if(r){
     if(p.name!==r.name){p.name=r.name;_migrated=true;}
-    if(p.descV!==3){p.description=r.desc;p.descV=3;_migrated=true;}
+    if(p.descV!==4){p.description=r.desc;p.descV=4;_migrated=true;}
     if((!p.url||_STALE_URL.test(p.url))&&p.url!==r.url){p.url=r.url;_migrated=true;}
   }
 });

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הדגמת מועדון לקוחות</title>
+<meta name="color-scheme" content="light dark">
+<style>
+  :root { --bg:#faf9fb; --ink:#1c1b1f; --muted:#5d5963; --card:#fff; --line:#dedbe2; --ok:#17653a; --lock:#80560a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121115; --ink:#f2f0f5; --muted:#b4afbd; --card:#1b1a1f; --line:#3d3a45; --ok:#86d9a2; --lock:#f2c76f; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; line-height: 1.55; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
+  header h1 { margin: 0; font-size: 1.1rem; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+  .card h2 { margin: 0 0 8px; font-size: 1.05rem; }
+  .muted { color: var(--muted); font-size: .9375rem; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+  .btn:focus-visible, a:focus-visible { outline: 3px solid #6b4eff; outline-offset: 2px; }
+  a { color: inherit; }
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; overflow-wrap: anywhere; }
+  .gate { padding: 14px; border-radius: 12px; border: 1px dashed var(--line); }
+  .gate[data-open="true"] { border-style: solid; border-color: var(--ok); color: var(--ok); }
+  .gate[data-open="false"] { color: var(--lock); }
+  #log { margin: 0; padding: 0; list-style: none; font: .8125rem/1.6 ui-monospace, Menlo, monospace; max-height: 160px; overflow: auto; direction: ltr; text-align: left; }
+  .banner { background: #fff4d6; color: #5a3d00; padding: 10px 16px; font-weight: 600; text-align: center; font-size: .9rem; }
+</style>
+</head>
+<body>
+  <div class="banner">הדגמה בלבד: אין חיבור ל-Firebase. כל הנתונים בזיכרון הדפדפן ונעלמים ברענון.</div>
+  <header>
+    <h1 id="site-name">האתר שלי</h1>
+    <div id="fab-slot"></div>
+  </header>
+  <main>
+    <section class="card">
+      <h2>פתיחת המגירה</h2>
+      <p class="muted">המגירה נפתחת מכל מקום באפליקציה, באמצעות <code dir="ltr">club.open('store')</code>.</p>
+      <div class="row">
+        <button class="btn" data-open="account">חשבון</button>
+        <button class="btn" data-open="store">חנות</button>
+        <button class="btn" data-open="orders">הזמנות</button>
+        <button class="btn" data-open="club">מועדון</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>תוכן שננעל לפי זכאות</h2>
+      <p class="muted">הבלוק נפתח כשיש זכאות <code dir="ltr">premium_readings</code> (קנו את מוצר דוגמה א׳).</p>
+      <div class="gate" id="gate" data-open="false" aria-live="polite">נעול. רכשו את מוצר דוגמה א׳ כדי לפתוח.</div>
+    </section>
+
+    <section class="card">
+      <h2>מצב נוכחי</h2>
+      <dl>
+        <dt>משתמש</dt><dd id="st-user">לא מחובר</dd>
+        <dt>זכאויות</dt><dd id="st-ent">אין</dd>
+        <dt>דרגה / נקודות</dt><dd id="st-member">-</dd>
+        <dt>הזמנות</dt><dd id="st-orders">0</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>תרחישים</h2>
+      <div class="row" id="scenarios">
+        <a class="btn" href="?">ברירת מחדל</a>
+        <a class="btn" href="?scenario=signedin">מחובר מראש</a>
+        <a class="btn" href="?scenario=empty">חנות ריקה</a>
+        <a class="btn" href="?scenario=fallback">קטלוג גיבוי</a>
+        <a class="btn" href="?scenario=return-paid&amp;checkout=success&amp;order=ORD-DEMO1">חזרה מתשלום (הצלחה)</a>
+        <a class="btn" href="?scenario=return-failed&amp;checkout=success&amp;order=ORD-DEMO2">חזרה מתשלום (כישלון)</a>
+        <a class="btn" href="?scenario=return-timeout&amp;checkout=success&amp;order=ORD-SLOW&amp;wait=4000">חזרה מתשלום (איטי)</a>
+        <a class="btn" href="?checkout=cancel&amp;scenario=signedin">חזרה בביטול</a>
+        <a class="btn" href="?accent=%231f6f8b">צבע מותג אחר</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>יומן אירועים</h2>
+      <ul id="log" aria-label="יומן אירועים"></ul>
+    </section>
+  </main>
+
+<script type="module">
+  import { initClub } from '../club/club.js';
+
+  const q = new URLSearchParams(location.search);
+  const scenario = q.get('scenario') || '';
+  const accent = q.get('accent') || '#C2577A';
+  const theme = q.get('theme') || 'auto';
+
+  const mock = { latencyMs: 120, payDelayMs: 1200 };
+  if (['signedin', 'return-paid', 'return-failed', 'return-timeout'].includes(scenario)) mock.user = 'google';
+  if (scenario === 'empty') mock.products = [];
+  if (scenario === 'return-paid') mock.seedOrders = [{ id: 'ORD-DEMO1', status: 'pending', settleAfterMs: 2200, settleTo: 'paid' }];
+  if (scenario === 'return-failed') mock.seedOrders = [{ id: 'ORD-DEMO2', status: 'pending', settleAfterMs: 1800, settleTo: 'failed' }];
+  if (scenario === 'return-timeout') mock.seedOrders = [{ id: 'ORD-SLOW', status: 'pending' }];
+  if (scenario === 'fallback') { mock.productsError = true; }
+  if (q.get('failcheckout')) mock.failCheckout = 'functions/' + q.get('failcheckout');
+  if (q.get('user') === 'google') mock.user = 'google';
+  if (q.get('member') === 'gold') mock.member = { tier: 'gold', lifetimeSpendAgorot: 70000, points: 700, ordersCount: 3 };
+
+  const club = initClub({
+    mock,
+    firebaseConfig: { apiKey: 'demo', projectId: 'demo' },
+    appId: 'demo',
+    region: 'europe-west1',
+    brand: { name: 'האתר שלי', accent, theme },
+    legalUrls: { terms: '../legal/terms.html', privacy: '../legal/privacy.html', refunds: '../legal/refunds.html' },
+    productsFallbackUrl: scenario === 'fallback' ? './fallback-products.json' : undefined,
+    checkoutWaitMs: Number(q.get('wait')) || undefined,
+  });
+  window.club = club; // handy for the console and the test harness
+
+  club.mountButton(document.getElementById('fab-slot'));
+  document.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => club.open(b.dataset.open)));
+
+  const log = document.getElementById('log');
+  const say = (msg) => { const li = document.createElement('li'); li.textContent = new Date().toLocaleTimeString('he-IL') + '  ' + msg; log.prepend(li); };
+  const $ = (id) => document.getElementById(id);
+
+  club.on('auth', (u) => { $('st-user').textContent = u ? (u.displayName || u.phoneNumber || u.email) + ' (' + u.uid + ')' : 'לא מחובר'; say('auth: ' + (u ? u.uid : 'null')); });
+  club.on('entitlements', (set) => {
+    $('st-ent').textContent = set.size ? [...set].join(', ') : 'אין';
+    const open = club.has('premium_readings');
+    const g = $('gate');
+    g.dataset.open = String(open);
+    g.textContent = open ? 'נפתח: זה התוכן של זכאות premium_readings.' : 'נעול. רכשו את מוצר דוגמה א׳ כדי לפתוח.';
+    say('entitlements: ' + ([...set].join(',') || '-'));
+  });
+  club.on('member', (m) => { $('st-member').textContent = m ? m.tier + ' / ' + m.points + ' נק׳' : '-'; });
+  club.on('orders', (o) => { $('st-orders').textContent = String(o.length); });
+  club.on('checkout', (c) => say('checkout: ' + c.status + ' ' + (c.orderId || '')));
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "_DRAFT": "DRAFT — owner must set real products, names, descriptions and prices. Nothing here is a real offer. Do not publish as-is.",
+  "_priceNote": "priceAgorot is in agorot (1/100 NIS) and INCLUDES VAT. 100 = 1.00 NIS. The values below are meaningless placeholders.",
+  "products": [
+    {
+      "id": "sample-product-1",
+      "_draft": "DRAFT — owner must set real prices",
+      "name": "[טיוטה] מוצר דיגיטלי לדוגמה 1",
+      "description": "[טיוטה] תיאור לדוגמה. להחלפה על ידי הבעלים.",
+      "priceAgorot": 100,
+      "currency": "ILS",
+      "grants": ["sample_feature_1"],
+      "accessDays": null,
+      "active": false,
+      "sort": 10
+    },
+    {
+      "id": "sample-product-2",
+      "_draft": "DRAFT — owner must set real prices",
+      "name": "[טיוטה] מוצר דיגיטלי לדוגמה 2 (גישה לזמן מוגבל)",
+      "description": "[טיוטה] דוגמה לגישה מוגבלת בזמן (accessDays). להחלפה על ידי הבעלים.",
+      "priceAgorot": 200,
+      "currency": "ILS",
+      "grants": ["sample_feature_2"],
+      "accessDays": 30,
+      "active": false,
+      "sort": 20
+    },
+    {
+      "id": "sample-product-3",
+      "_draft": "DRAFT — owner must set real prices",
+      "name": "[טיוטה] מוצר דיגיטלי לדוגמה 3",
+      "description": "[טיוטה] דוגמה למוצר שפותח כמה הרשאות. להחלפה על ידי הבעלים.",
+      "priceAgorot": 300,
+      "currency": "ILS",
+      "grants": ["sample_feature_1", "sample_feature_3"],
+      "accessDays": null,
+      "active": false,
+      "sort": 30
+    }
+  ]
+}

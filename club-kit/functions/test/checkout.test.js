@@ -153,3 +153,11 @@ test('missing siteUrl/webhookUrl is a configuration error, not a crash', async (
   const { db, provider } = setup();
   assert.equal(await codeOf(run(db, provider, cart([{ productId: 'p1', qty: 1 }]), { webhookUrl: '' })), 'failed-precondition');
 });
+
+test('an existing profile termsAcceptedAt is not overwritten by later checkouts', async () => {
+  const { db, provider } = setup();
+  const first = new Date('2026-01-01T00:00:00Z');
+  db.seed('users/u1', { displayName: 'דנה', marketingConsent: false, createdAt: NOW, termsAcceptedAt: first });
+  await run(db, provider, cart([{ productId: 'p1', qty: 1 }]));
+  assert.equal(db.read('users/u1').termsAcceptedAt.getTime(), first.getTime());
+});

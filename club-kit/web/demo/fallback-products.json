@@ -1,0 +1,6 @@
+{
+  "products": [
+    { "id": "demo-reading", "name": "מוצר גיבוי א׳ (הדגמה)", "description": "נטען מקובץ ה-JSON כשאין חיבור ל-Firestore.", "priceAgorot": 3900, "currency": "ILS", "grants": ["premium_readings"], "accessDays": null, "active": true, "sort": 1 },
+    { "id": "demo-hidden", "name": "מוצר לא פעיל", "description": "לא אמור להופיע.", "priceAgorot": 1000, "currency": "ILS", "grants": [], "accessDays": null, "active": false, "sort": 2 }
+  ]
+}

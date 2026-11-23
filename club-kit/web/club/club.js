@@ -159,7 +159,7 @@ const TIER_FALLBACK_LABEL = { member: 'חבר/ה', silver: 'כסף', gold: 'זה
 function normalizeConfig(raw) {
   const base = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   if (!raw || typeof raw !== 'object') return base;
-  const per = Number(raw.points && raw.points.perShekel ?? raw.pointsPerShekel);
+  const per = Number((raw.points && raw.points.perShekel) ?? raw.pointsPerShekel);
   if (Number.isFinite(per) && per >= 0) base.points.perShekel = per;
   let tiers = raw.tiers;
   if (tiers && !Array.isArray(tiers) && typeof tiers === 'object') {
@@ -281,8 +281,12 @@ function buildCss(accentHex) {
   const fgD = tune(acc, DBG, 4.5, W);
   const softL = mixRgb(acc, W, 0.88);
   const softD = mixRgb(acc, DBG, 0.82);
+  // dark mode: the filled button must stand out from the dark surface (>= 3:1)
+  let dBtn = btn.bg;
+  for (let t = 0; contrast(dBtn, DBG) < 3 && t < 1; t += 0.04) dBtn = mixRgb(btn.bg, W, t + 0.04);
+  const dOn = contrast(dBtn, W) >= contrast(dBtn, INK) ? W : INK;
   const lightVars = `--kc-accent:${toHex(acc)};--kc-btn:${toHex(btn.bg)};--kc-on-btn:${toHex(btn.on)};--kc-accent-fg:${toHex(fgL)};--kc-accent-soft:${toHex(softL)};`;
-  const darkVars = `--kc-bg:#1b1a1f;--kc-surface:#26242b;--kc-surface-2:#2f2d35;--kc-ink:#f2f0f5;--kc-muted:#b4afbd;--kc-line:#3d3a45;--kc-danger:#ff9a90;--kc-danger-bg:rgba(255,154,144,.14);--kc-ok:#86d9a2;--kc-ok-bg:rgba(134,217,162,.14);--kc-warn:#f2c76f;--kc-warn-bg:rgba(242,199,111,.14);--kc-shadow:0 12px 40px rgba(0,0,0,.6);--kc-scrim:rgba(0,0,0,.62);--kc-accent-fg:${toHex(fgD)};--kc-accent-soft:${toHex(softD)};color-scheme:dark;`;
+  const darkVars = `--kc-bg:#1b1a1f;--kc-surface:#26242b;--kc-surface-2:#2f2d35;--kc-ink:#f2f0f5;--kc-muted:#b4afbd;--kc-line:#3d3a45;--kc-danger:#ff9a90;--kc-danger-bg:rgba(255,154,144,.14);--kc-ok:#86d9a2;--kc-ok-bg:rgba(134,217,162,.14);--kc-warn:#f2c76f;--kc-warn-bg:rgba(242,199,111,.14);--kc-shadow:0 12px 40px rgba(0,0,0,.6);--kc-scrim:rgba(0,0,0,.62);--kc-accent-fg:${toHex(fgD)};--kc-accent-soft:${toHex(softD)};--kc-btn:${toHex(dBtn)};--kc-on-btn:${toHex(dOn)};color-scheme:dark;`;
   return `
 .kc-root,.kc-fab{${lightVars}
 --kc-bg:#ffffff;--kc-surface:#f6f5f7;--kc-surface-2:#ecebef;--kc-ink:#1c1b1f;--kc-muted:#5d5963;--kc-line:#dedbe2;
@@ -311,9 +315,10 @@ direction:rtl;font-family:var(--kc-font);color:var(--kc-ink);line-height:1.5;fon
 .kc-tab[aria-selected="true"]{color:var(--kc-accent-fg)}
 .kc-tab[aria-selected="true"]::after{content:"";position:absolute;inset-inline:18%;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--kc-accent-fg)}
 .kc-tab:hover{background:var(--kc-surface)}
-.kc-badge{position:absolute;top:4px;inset-inline-end:calc(50% - 22px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--kc-btn);color:var(--kc-on-btn);font-size:.6875rem;line-height:18px;text-align:center}
+.kc-badge{position:absolute;top:2px;inset-inline-start:calc(50% + 4px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--kc-btn);color:var(--kc-on-btn);font-size:.6875rem;line-height:18px;text-align:center}
 .kc-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px;-webkit-overflow-scrolling:touch}
 .kc-body:focus-visible{outline-offset:-3px}
+.kc-root [tabindex="-1"]:focus-visible{outline:none}
 .kc-recaptcha{position:absolute;width:0;height:0;overflow:hidden}
 .kc-root :focus-visible,.kc-fab:focus-visible{outline:3px solid var(--kc-accent-fg);outline-offset:2px}
 .kc-h{margin:0 0 4px;font-size:1.25rem;font-weight:700;line-height:1.3}
@@ -325,6 +330,7 @@ direction:rtl;font-family:var(--kc-font);color:var(--kc-ink);line-height:1.5;fon
 .kc-grow{flex:1;min-width:0}
 .kc-spread{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .kc-sp{height:12px}
+.kc-neg{color:var(--kc-ok);font-weight:600}
 .kc-ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
 .kc-i{flex:none}
 .kc-card{background:var(--kc-surface);border:1px solid var(--kc-line);border-radius:var(--kc-radius);padding:14px}
@@ -368,9 +374,10 @@ direction:rtl;font-family:var(--kc-font);color:var(--kc-ink);line-height:1.5;fon
 .kc-stat:hover{background:var(--kc-surface-2)}
 .kc-stat .kc-k{display:block;font-size:.8125rem;color:var(--kc-muted)}
 .kc-stat .kc-v{display:block;font-size:1.2rem;font-weight:700}
-.kc-switch{flex:none;position:relative;width:52px;height:32px;border-radius:16px;border:0;background:var(--kc-line);cursor:pointer;padding:0;transition:background-color .15s}
-.kc-switch::after{content:"";position:absolute;top:4px;inset-inline-start:4px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}
-.kc-switch[aria-checked="true"]{background:var(--kc-btn)}
+.kc-switch{flex:none;position:relative;width:52px;height:32px;border-radius:16px;border:0;background:var(--kc-surface-2);box-shadow:inset 0 0 0 2px var(--kc-muted);cursor:pointer;padding:0;transition:background-color .15s}
+.kc-switch::after{content:"";position:absolute;top:4px;inset-inline-start:4px;width:24px;height:24px;border-radius:50%;background:var(--kc-muted);transition:transform .15s,background-color .15s}
+.kc-switch[aria-checked="true"]{background:var(--kc-btn);box-shadow:none}
+.kc-switch[aria-checked="true"]::after{background:var(--kc-on-btn)}
 .kc-switch[aria-checked="true"]::after{transform:translateX(-20px)}
 .kc-switch-wrap{position:relative;flex:none;display:flex;align-items:center;justify-content:center;min-width:52px;min-height:44px}
 .kc-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
@@ -456,7 +463,7 @@ export function initClub(opts = {}) {
     cart: {}, storeView: 'list', consent: false, paying: false, payError: '', mockPay: null,
     signin: { step: 'choose', phone: '', code: '', e164: '', terms: false, marketing: false, err: '', busy: '', resendIn: 0 },
     nameDraft: null, nameBusy: false, redirectErr: '',
-    checkout: null, pendingReturn: null, afterAuth: null, tierBefore: null,
+    checkout: null, pendingReturn: null, afterAuth: null, tierBefore: null, resumeOrder: null, pendingSignup: null,
     deleteStep: 0, deleting: false, deleteErr: '',
   };
 
@@ -555,6 +562,12 @@ export function initClub(opts = {}) {
     root.addEventListener('change', onInput);
     root.addEventListener('keydown', onKeydown);
     root.addEventListener('error', onImgError, true);
+    // Focus can be lost to <body> when a focused button is removed/disabled; keep Escape and Tab working.
+    document.addEventListener('keydown', (e) => {
+      if (!S.open || root.contains(e.target)) return;
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if (e.key === 'Tab') { e.preventDefault(); (e.shiftKey ? sheet.querySelector('.kc-iconbtn') : sheet).focus(); }
+    });
   }
 
   function toast(msg) {
@@ -562,7 +575,7 @@ export function initClub(opts = {}) {
     toastEl.textContent = msg;
     toastEl.dataset.show = 'true';
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { toastEl.dataset.show = 'false'; }, 3600);
+    toastTimer = setTimeout(() => { toastEl.dataset.show = 'false'; }, 2800);
   }
 
   /* ----- open / close ----- */
@@ -610,15 +623,11 @@ export function initClub(opts = {}) {
 
   function setTab(tab, rerender = true) {
     if (!TAB_IDS.includes(tab)) return;
-    if (S.tab !== tab) {
-      // leaving a finished checkout screen returns to normal tabs
-      if (S.checkout && S.checkout.phase !== 'waiting') S.checkout = null;
-      else if (S.checkout) { S.checkout = null; stopWait(); }
-      S.mockPay = null;
-      if (S.deleteStep) S.deleteStep = 0;
-    } else if (S.checkout && S.checkout.phase !== 'waiting') {
+    if (S.checkout) {
+      if (S.checkout.phase === 'waiting') stopWait();
       S.checkout = null;
     }
+    if (S.tab !== tab) { S.mockPay = null; S.deleteStep = 0; }
     S.tab = tab;
     if (tab === 'store') loadProducts();
     if (rerender) render();
@@ -698,7 +707,10 @@ export function initClub(opts = {}) {
   function act(name, arg) {
     switch (name) {
       case 'close': close(); break;
-      case 'goto': S.checkout = null; setTab(arg); break;
+      case 'goto':
+        if (S.checkout && S.checkout.phase === 'needsLogin') S.resumeOrder = S.checkout.orderId;
+        setTab(arg);
+        break;
       case 'google': signInGoogle(); break;
       case 'phone-mode': S.signin.err = ''; S.signin.step = 'phone'; render(); focusSoon('#kc-phone'); break;
       case 'phone-back': S.signin.err = ''; S.signin.step = 'choose'; S.signin.code = ''; stopResend(); render(); break;
@@ -722,6 +734,7 @@ export function initClub(opts = {}) {
       case 'delete-cancel': S.deleteStep = 0; S.deleteErr = ''; render(); break;
       case 'delete-confirm': deleteAccount(); break;
       case 'mock-pay': mockPayOutcome(arg); break;
+      case 'reload': location.reload(); break;
       case 'checkout-done': S.checkout = null; S.storeView = 'list'; render(); break;
       case 'checkout-orders': S.checkout = null; stopWait(); setTab('orders'); break;
       case 'checkout-cart': S.checkout = null; stopWait(); S.tab = 'store'; S.storeView = cartLines().length ? 'cart' : 'list'; render(); break;
@@ -760,7 +773,7 @@ export function initClub(opts = {}) {
   }
   async function signInGoogle() {
     if (S.signin.busy || !requireTerms()) return;
-    S.signin.err = ''; S.signin.busy = 'google'; render();
+    S.signin.err = ''; S.redirectErr = ''; S.signin.busy = 'google'; render();
     rememberSignup();
     try {
       await backend.signInGoogle();
@@ -853,8 +866,8 @@ export function initClub(opts = {}) {
     }
     emit('auth', publicUser());
     updateFabs();
-    if (S.pendingReturn && S.authReady) processReturn();
-    else if (u && S.checkout && S.checkout.phase === 'needsLogin') { const id = S.checkout.orderId; waitForOrder(id); }
+    if (u && S.resumeOrder) { const id = S.resumeOrder; S.resumeOrder = null; S.tab = 'store'; waitForOrder(id); }
+    if (S.pendingReturn) processReturn();
     render();
   }
 
@@ -866,7 +879,7 @@ export function initClub(opts = {}) {
     detachUserData();
     const uid = u.uid;
     S.ordersState = 'loading';
-    unsubs.push(backend.watchProfile(uid, (p) => { S.profile = p; if (S.nameDraft === null) S.nameDraft = null; scheduleRender(); updateFabs(); }));
+    unsubs.push(backend.watchProfile(uid, (p) => { S.profile = p; scheduleRender(); updateFabs(); }));
     unsubs.push(backend.watchMember(uid, (m) => { S.member = m; emit('member', m ? { ...m } : null); scheduleRender(); }));
     unsubs.push(backend.watchEntitlements(uid, (list) => {
       S.entList = list || [];
@@ -1042,7 +1055,9 @@ export function initClub(opts = {}) {
     S.pendingReturn = null;
     S.tab = 'store'; S.storeView = 'list';
     if (!S.tierBefore) S.tierBefore = store.get('kc_tier_before');
-    if (r.status === 'cancel') {
+    if (r.status === 'invalid') {
+      S.checkout = { phase: 'error', orderId: '' };
+    } else if (r.status === 'cancel') {
       S.checkout = { phase: 'cancel', orderId: r.orderId };
       emit('checkout', { status: 'cancel', orderId: r.orderId });
     } else if (!S.user) {
@@ -1050,7 +1065,7 @@ export function initClub(opts = {}) {
     } else {
       waitForOrder(r.orderId);
     }
-    open('store');
+    open();
     render(true);
   }
   function stopWait() {
@@ -1101,8 +1116,9 @@ export function initClub(opts = {}) {
       const qs = q.toString();
       history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
     } catch { /* ignore */ }
-    if (c === 'success' && !/^[A-Za-z0-9_-]{4,128}$/.test(id)) return { status: 'cancel-invalid' };
-    return { status: c, orderId: /^[A-Za-z0-9_-]{4,128}$/.test(id) ? id : '' };
+    const okId = /^[A-Za-z0-9_-]{4,128}$/.test(id);
+    if (c === 'success' && !okId) return { status: 'invalid', orderId: '' };
+    return { status: c, orderId: okId ? id : '' };
   }
 
   /* ----- rendering ----- */
@@ -1163,7 +1179,8 @@ export function initClub(opts = {}) {
         target.focus({ preventScroll: true });
       }
     }
-    if (viewChanged && S.checkout && S.checkout.phase !== 'waiting') {
+    const lost = !inBody && (!document.activeElement || document.activeElement === document.body);
+    if (viewChanged && ((S.checkout && S.checkout.phase !== 'waiting') || lost)) {
       const h = bodyEl.querySelector('[data-autofocus]');
       if (h) h.focus({ preventScroll: true });
     }
@@ -1171,7 +1188,7 @@ export function initClub(opts = {}) {
   }
 
   const btn = (label, act_, o = {}) =>
-    `<button type="${o.submit ? 'submit' : 'button'}" class="kc-btn ${o.cls || 'kc-btn-primary'}${o.block ? ' kc-btn-block' : ''}"${act_ ? ` data-act="${esc(act_)}"` : ''}${o.arg ? ` data-arg="${esc(o.arg)}"` : ''}${o.f ? ` data-f="${esc(o.f)}"` : ''}${o.disabled ? ' disabled' : ''}${o.attrs ? ' ' + o.attrs : ''}>${o.busy ? '<span class="kc-spin" aria-hidden="true"></span>' : ''}${o.icon ? ico(o.icon) : ''}<span>${esc(label)}</span></button>`;
+    `<button type="${o.submit ? 'submit' : 'button'}" class="kc-btn ${o.cls || 'kc-btn-primary'}${o.block ? ' kc-btn-block' : ''}"${act_ ? ` data-act="${esc(act_)}"` : ''}${o.arg ? ` data-arg="${esc(o.arg)}"` : ''}${o.f ? ` data-f="${esc(o.f)}"` : ''}${o.disabled ? ' disabled' : ''}${o.attrs ? ' ' + o.attrs : ''}>${o.busy ? '<span class="kc-spin" aria-hidden="true"></span>' : ''}${o.rawIcon || (o.icon ? ico(o.icon) : '')}<span>${esc(label)}</span></button>`;
   const alertBox = (msg, kind = '') => msg ? `<div class="kc-alert ${kind}" role="${kind === 'kc-info' ? 'status' : 'alert'}">${ico(kind === 'kc-info' ? 'info' : 'alert')}<div>${esc(msg)}</div></div>` : '';
   const mockBar = () => (backend && backend.isMock ? '<div class="kc-mockbar">מצב הדגמה: אין חיבור לשרת, הנתונים נשמרים בזיכרון בלבד.</div>' : '');
   const legalLink = (k, label) => `<a href="${esc(pageUrl(legal[k]) || '#')}" target="_blank" rel="noopener">${esc(label)}</a>`;
@@ -1219,7 +1236,7 @@ export function initClub(opts = {}) {
       const canResend = s.resendIn <= 0 && !s.busy;
       return `<form class="kc-stack" data-form="phone-verify" novalidate>
         <button type="button" class="kc-btn kc-btn-quiet" style="align-self:flex-start" data-act="phone-change" data-f="back">${ico('back')}<span>החלפת מספר</span></button>
-        <div><h3 class="kc-h" data-autofocus tabindex="-1">הזינו את הקוד</h3><p class="kc-p">שלחנו קוד בן 6 ספרות אל <span class="kc-ltr">${esc(prettyPhone(s.e164))}</span>.</p></div>
+        <div><h3 class="kc-h" data-autofocus tabindex="-1">הזינו את הקוד</h3><p class="kc-p">שלחנו קוד בן 6 ספרות אל <span class="kc-ltr">${esc(prettyPhone(s.e164))}</span></p></div>
         <div class="kc-field">
           <label class="kc-label" for="kc-code">קוד אימות</label>
           <input class="kc-input kc-code" id="kc-code" data-f="code" data-bind="signin.code" type="text" dir="ltr" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" value="${esc(s.code)}"${s.err ? ' aria-invalid="true"' : ''}>
@@ -1234,7 +1251,7 @@ export function initClub(opts = {}) {
       <div><h3 class="kc-h" data-autofocus tabindex="-1">ברוכים הבאים למועדון</h3><p class="kc-p">התחברו כדי לצבור נקודות, לקנות ולעקוב אחרי ההזמנות שלכם.</p></div>
       ${termsBlock()}
       ${err}
-      ${btn(s.busy === 'google' ? 'מתחברים…' : 'המשך עם Google', 'google', { cls: 'kc-btn-ghost', block: true, busy: s.busy === 'google', disabled: !!s.busy, f: 'google', icon: '' }).replace('<span>', GOOGLE_G + '<span>')}
+      ${btn(s.busy === 'google' ? 'מתחברים…' : 'המשך עם Google', 'google', { cls: 'kc-btn-ghost', block: true, busy: s.busy === 'google', disabled: !!s.busy, f: 'google', rawIcon: s.busy === 'google' ? '' : GOOGLE_G })}
       ${btn('המשך עם מספר טלפון', 'phone-mode', { cls: 'kc-btn-primary', block: true, icon: 'phone', disabled: !!s.busy, f: 'phone-mode' })}
       <p class="kc-small">אין צורך בסיסמה. פרטי תשלום לא נשמרים אצלנו.</p>
     </div>`;
@@ -1376,7 +1393,7 @@ export function initClub(opts = {}) {
       </div>
       <div>
         <div class="kc-sum"><span>סכום ביניים</span><span>${esc(money(sub))}</span></div>
-        ${estDisc ? `<div class="kc-sum"><span>הנחת דרגת ${esc(t.label)} (${esc(String(t.discountPct))}%)</span><span>−${esc(money(estDisc))}</span></div>` : ''}
+        ${estDisc ? `<div class="kc-sum"><span>הנחת דרגת ${esc(t.label)} (${esc(String(t.discountPct))}%)</span><span><span class="kc-neg">${esc(money(estDisc))}</span></span></div>` : ''}
         <div class="kc-sum kc-total"><span>${S.user ? 'לתשלום (משוער)' : 'סה״כ'}</span><span>${esc(money(total))}</span></div>
         <p class="kc-small" style="margin:6px 0 0">${S.user ? 'הסכום הסופי, כולל הנחת המועדון, מחושב בשרת ומוצג בעמוד התשלום.' : 'התחברו כדי שהנחת המועדון תחושב בעת התשלום.'} המחירים כוללים מע״מ.</p>
       </div>
@@ -1408,7 +1425,7 @@ export function initClub(opts = {}) {
           ${up ? `<div class="kc-alert kc-info" role="status">${ico('star')}<div>עליתם לדרגת <strong>${esc(tierOf(memberTierId()).label)}</strong>. מזל טוב!</div></div>` : ''}
           <div class="kc-card">
             ${(o.items || []).map((it) => `<div class="kc-sum"><span>${esc(it.name)} × ${esc(String(it.qty))}</span><span>${esc(money(it.priceAgorot * it.qty))}</span></div>`).join('')}
-            ${o.discountAgorot ? `<div class="kc-sum"><span>הנחת מועדון</span><span>−${esc(money(o.discountAgorot))}</span></div>` : ''}
+            ${o.discountAgorot ? `<div class="kc-sum"><span>הנחת מועדון</span><span><span class="kc-neg">${esc(money(o.discountAgorot))}</span></span></div>` : ''}
             <div class="kc-sum kc-total"><span>שולם</span><span>${esc(money(o.totalAgorot))}</span></div>
           </div>
           <div class="kc-small" role="status">נקודות במועדון: <strong>${esc(intFmt.format(pts))}</strong> · דרגה: <strong>${esc(tierOf(memberTierId()).label)}</strong></div>
@@ -1510,7 +1527,7 @@ export function initClub(opts = {}) {
     return `<div class="kc-stack">
       <div class="kc-alert kc-warn" role="status">${ico('info')}<div>הדגמה: זהו תחליף לעמוד התשלום של הספק. בפועל תועברו לעמוד מאובטח חיצוני.</div></div>
       <h3 class="kc-h" data-autofocus tabindex="-1">עמוד תשלום (הדמיה)</h3>
-      <p class="kc-p">סכום לתשלום (ללא הנחת הדרגה, החישוב המלא בשרת ההדמיה): ${esc(money(m.total))}</p>
+      <p class="kc-p">סכום לפני הנחות: ${esc(money(m.total))}. בהדמיה, ההנחה מחושבת בשרת המדומה לפי הדרגה.</p>
       ${btn('אישור תשלום (דמו)', 'mock-pay', { arg: 'paid', block: true, f: 'mock-paid' })}
       ${btn('כישלון תשלום (דמו)', 'mock-pay', { arg: 'failed', cls: 'kc-btn-ghost', block: true, f: 'mock-failed' })}
       ${btn('ביטול וחזרה לאתר', 'mock-pay', { arg: 'cancel', cls: 'kc-btn-quiet', block: true, f: 'mock-cancel' })}
@@ -1551,10 +1568,16 @@ export function initClub(opts = {}) {
   }
 
   /* ----- boot ----- */
-  function mapUserForPublic(u) { return u; }
   const api = {
     open, close,
-    on: emitter.on,
+    on(ev, fn) {
+      const off = emitter.on(ev, fn);
+      if (typeof fn === 'function' && S.authReady) {
+        if (ev === 'auth') { try { fn(publicUser()); } catch (e) { console.error(e); } }
+        if (ev === 'entitlements') { try { fn(activeFeatures()); } catch (e) { console.error(e); } }
+      }
+      return off;
+    },
     has: (feature) => activeFeatures().has(String(feature)),
     get user() { return publicUser(); },
     signOut: () => doSignOut(),
@@ -1576,14 +1599,11 @@ export function initClub(opts = {}) {
         backend = await createFirebaseBackend(opts, appId);
       }
       const ret = readReturnParams();
-      if (ret) {
-        if (ret.status === 'cancel-invalid') S.pendingReturn = { status: 'cancel', orderId: '' }, S.pendingReturn.status = 'cancel';
-        else S.pendingReturn = ret;
-        if (ret.status === 'cancel-invalid') S.pendingReturn = { status: 'invalid', orderId: '' };
-      }
+      if (ret) S.pendingReturn = ret;
       backend.onAuth((u) => { onAuthChange(u); });
       const re = backend.takeRedirectError && await backend.takeRedirectError();
       if (re && !SILENT_AUTH_CODES.has(re.code)) { S.redirectErr = authErrorText(re); render(); }
+      if (S.open && S.tab === 'store') loadProducts();
       await cfgP;
       emit('ready', {});
     } catch (e) {
@@ -1594,23 +1614,6 @@ export function initClub(opts = {}) {
     }
   })();
   api.ready = boot;
-
-  // handle the "reload" button of the init-error card
-  const origAct = act;
-  act = function patched(name, arg, el) { if (name === 'reload') { location.reload(); return; } return origAct(name, arg, el); };
-
-  // Patch processReturn for the invalid-return marker.
-  const origProcess = processReturn;
-  processReturn = function patchedProcess() {
-    if (S.pendingReturn && S.pendingReturn.status === 'invalid') {
-      S.pendingReturn = null;
-      S.checkout = { phase: 'error', orderId: '' };
-      open('store');
-      render(true);
-      return;
-    }
-    return origProcess();
-  };
 
   return api;
 }

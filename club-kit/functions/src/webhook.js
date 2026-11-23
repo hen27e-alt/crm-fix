@@ -198,7 +198,7 @@ async function handleWebhook({ req, res, provider, db, config, now = new Date() 
   }
   let verdict;
   try {
-    verdict = provider.verifyWebhook(req);
+    verdict = await provider.verifyWebhook(req); // may be sync or async (adapters that re-fetch the transaction)
   } catch (e) {
     log.error('webhook: verifyWebhook threw', { errType: e && e.name ? String(e.name) : 'Error' });
     res.status(500).json({ ok: false });

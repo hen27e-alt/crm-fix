@@ -9,10 +9,11 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-club-kit \"node --test test/rules/*.test.js\"",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-club-kit --config ../firebase.json \"node --test test/rules/firestore.rules.test.js test/emulator/flow.test.js\"",
     "sync-config": "node ../scripts/sync-config.js",
     "serve": "firebase emulators:start --only functions,firestore",
-    "deploy": "firebase deploy --only functions,firestore:rules,firestore:indexes"
+    "deploy": "firebase deploy --only functions,firestore:rules,firestore:indexes",
+    "test:all": "npm test && npm run test:rules"
   },
   "dependencies": {
     "firebase-admin": "13.10.0",
