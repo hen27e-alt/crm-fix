@@ -14,9 +14,9 @@ const mk=async(pre)=>{const ctx=await b.newContext({viewport:{width:390,height:8
 
 // 1 fresh
 let {ctx,pg}=await mk();
-ok(await pg.locator('.poster').count()===5,'5 posters on fresh load');
+ok(await pg.locator('.poster').count()===6,'6 posters on fresh load');
 ok((await pg.locator('.hero-stage h1').innerText())==='ביונד אינטימה','hero default = ביונד אינטימה');
-ok(await pg.locator('.ctl-row').count()===5,'5 control rows');
+ok(await pg.locator('.ctl-row').count()===6,'6 control rows');
 // player external link for byond
 await pg.click('.hs-play');
 ok((await pg.locator('#browser-ext-link').getAttribute('href'))==='https://byondintima-d1d4e.web.app/','byond ext link correct');
