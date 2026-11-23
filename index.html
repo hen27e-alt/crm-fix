@@ -2,126 +2,145 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: fixed sidebar + scrollable main, full dark-first */
-:root {
-  --bg:      #07080f;
-  --card:    #0f1018;
-  --card2:   #161720;
-  --border:  rgba(255,255,255,0.07);
-  --accent:  #6c63ff;
-  --accent2: #a78bfa;
-  --green:   #22c55e;
-  --yellow:  #f59e0b;
-  --red:     #ef4444;
-  --cyan:    #06b6d4;
-  --pink:    #ec4899;
-  --text:    #e2e8f0;
-  --muted:   #64748b;
-  --sidebar: #0a0b16;
-  color-scheme: dark;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg:      #f1f3fa;
-    --card:    #ffffff;
-    --card2:   #eef0f8;
-    --border:  rgba(0,0,0,0.08);
-    --accent:  #5b52e8;
-    --accent2: #7c6fe8;
-    --green:   #16a34a;
-    --yellow:  #d97706;
-    --red:     #dc2626;
-    --cyan:    #0891b2;
-    --pink:    #db2777;
-    --text:    #1a1b2e;
-    --muted:   #64748b;
-    --sidebar: #1a1b2e;
-    color-scheme: light;
-  }
-}
-:root[data-theme="dark"] {
+:root{
   --bg:#07080f;--card:#0f1018;--card2:#161720;--border:rgba(255,255,255,0.07);
   --accent:#6c63ff;--accent2:#a78bfa;--green:#22c55e;--yellow:#f59e0b;
   --red:#ef4444;--cyan:#06b6d4;--pink:#ec4899;--text:#e2e8f0;--muted:#64748b;
-  --sidebar:#0a0b16;color-scheme:dark;
+  --nav:#0a0b16;color-scheme:dark;
 }
-:root[data-theme="light"] {
+@media(prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#f1f3fa;--card:#ffffff;--card2:#eef0f8;--border:rgba(0,0,0,0.08);
+    --accent:#5b52e8;--accent2:#7c6fe8;--green:#16a34a;--yellow:#d97706;
+    --red:#dc2626;--cyan:#0891b2;--pink:#db2777;--text:#1a1b2e;--muted:#64748b;
+    --nav:#1a1b2e;color-scheme:light;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#07080f;--card:#0f1018;--card2:#161720;--border:rgba(255,255,255,0.07);
+  --accent:#6c63ff;--accent2:#a78bfa;--green:#22c55e;--yellow:#f59e0b;
+  --red:#ef4444;--cyan:#06b6d4;--pink:#ec4899;--text:#e2e8f0;--muted:#64748b;
+  --nav:#0a0b16;color-scheme:dark;
+}
+:root[data-theme="light"]{
   --bg:#f1f3fa;--card:#ffffff;--card2:#eef0f8;--border:rgba(0,0,0,0.08);
   --accent:#5b52e8;--accent2:#7c6fe8;--green:#16a34a;--yellow:#d97706;
   --red:#dc2626;--cyan:#0891b2;--pink:#db2777;--text:#1a1b2e;--muted:#64748b;
-  --sidebar:#1a1b2e;color-scheme:light;
+  --nav:#1a1b2e;color-scheme:light;
 }
-
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;font-size:14px;overflow-x:hidden;}
 button{cursor:pointer;font-family:inherit;}
 input,textarea,select{font-family:inherit;}
 h1,h2,h3{font-family:'Space Grotesk',sans-serif;text-wrap:balance;}
-font-variant-numeric{tabular-nums;}
 
-#app{display:flex;min-height:100%;position:relative;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:200;}
 
-/* ── SIDEBAR ── */
-.sidebar{
-  width:220px;min-width:220px;background:var(--sidebar);
-  border-inline-end:1px solid var(--border);
-  display:flex;flex-direction:column;
-  position:fixed;top:0;inset-inline-end:0;height:100%;z-index:100;
-}
-.main{
-  margin-inline-end:220px;display:flex;flex-direction:column;min-height:100%;flex:1;
-  padding-inline-start:max(0px,env(safe-area-inset-left,0px));
-  padding-inline-end:max(0px,env(safe-area-inset-right,0px));
-}
-.sb-brand{padding:18px 16px 14px;border-bottom:1px solid var(--border);}
-.sb-logo{font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:700;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.sb-sub{font-size:.65rem;color:var(--muted);margin-top:2px;letter-spacing:.06em;}
-.sb-nav{flex:1;padding:12px 8px;overflow-y:auto;}
-.sb-section{font-size:.6rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;padding:10px 10px 4px;}
-.nav-item{
-  display:flex;align-items:center;gap:10px;padding:9px 12px;
-  border-radius:8px;margin-bottom:2px;cursor:pointer;
-  color:var(--muted);font-size:.88rem;transition:background .15s,color .15s;
-}
-.nav-item:hover{background:rgba(108,99,255,.12);color:var(--text);}
-.nav-item.active{background:rgba(108,99,255,.22);color:var(--accent2);}
-.nav-item .icon{width:18px;text-align:center;flex-shrink:0;}
-.nav-badge{margin-inline-start:auto;background:var(--accent);color:#fff;font-size:.6rem;padding:2px 7px;border-radius:20px;font-weight:700;}
-.sb-footer{padding:14px 16px;border-top:1px solid var(--border);}
-.sb-user{display:flex;align-items:center;gap:10px;}
-.sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:#fff;}
-.sb-uname{font-size:.8rem;font-weight:500;}
-.sb-role{font-size:.65rem;color:var(--muted);}
+#app{display:flex;flex-direction:column;min-height:100%;}
 
-/* ── TOPBAR ── */
+/* ── TOP BAR ── */
 .topbar{
-  background:var(--card);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:12px;
+  background:var(--bg);
+  display:flex;align-items:center;gap:10px;
   padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));
   height:56px;position:sticky;top:env(safe-area-inset-top,0px);z-index:50;
+  border-bottom:1px solid var(--border);
 }
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--card);z-index:200;}
-.topbar-title{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;flex:1;}
-.search-box{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;}
-.search-box input{background:none;border:none;outline:none;color:var(--text);width:170px;font-size:.82rem;}
-.search-box input::placeholder{color:var(--muted);}
-.btn{padding:7px 16px;border-radius:8px;border:none;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-primary:hover{filter:brightness(1.12);}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
-.btn-ghost:hover{border-color:var(--accent2);color:var(--text);}
-.btn-danger{background:var(--red);color:#fff;}
-.btn-sm{padding:5px 12px;font-size:.78rem;}
-.btn-icon{padding:7px;border-radius:7px;background:var(--card2);border:1px solid var(--border);color:var(--muted);}
-.btn-icon:hover{color:var(--text);border-color:var(--accent2);}
+.tb-brand{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  flex:1;}
+.tb-title{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;flex:1;}
+.tb-actions{display:flex;gap:7px;align-items:center;}
 
 /* ── CONTENT ── */
 #content{
   flex:1;
-  padding:24px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));
+  padding:20px max(16px,env(safe-area-inset-right,0px)) calc(80px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
 }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--nav);border-top:1px solid var(--border);
+  display:flex;align-items:center;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  height:calc(60px + env(safe-area-inset-bottom,0px));
+  z-index:100;
+}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 0;cursor:pointer;gap:3px;color:var(--muted);transition:color .15s;
+}
+.bn-item.active{color:var(--accent2);}
+.bn-icon{font-size:1.3rem;line-height:1;}
+.bn-lbl{font-size:.6rem;letter-spacing:.02em;}
+.bn-fab{
+  width:50px;height:50px;border-radius:16px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;font-weight:300;color:#fff;border:none;flex-shrink:0;
+  box-shadow:0 4px 24px rgba(108,99,255,.55);
+  transition:transform .15s;
+}
+.bn-fab:hover{transform:scale(1.08);}
+
+/* ── PROJECT GRID ── */
+.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(min-width:540px){.projects-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}}
+@media(min-width:900px){.projects-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}}
+
+.project-card{
+  background:var(--card);border:1px solid var(--border);border-radius:22px;
+  overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
+  transition:transform .2s,box-shadow .2s;
+}
+.project-card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.3);}
+.proj-logo{
+  aspect-ratio:1 / 0.9;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.6rem;position:relative;
+}
+.proj-logo-overlay{position:absolute;inset:0;background:rgba(0,0,0,.12);}
+.proj-logo span{position:relative;z-index:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4));}
+.proj-card-body{padding:8px 10px 12px;text-align:center;}
+.proj-card-name{font-family:'Space Grotesk',sans-serif;font-size:.8rem;font-weight:600;line-height:1.3;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.proj-card-status{font-size:.62rem;color:var(--muted);margin-bottom:4px;}
+.proj-bar{height:3px;background:var(--border);border-radius:2px;}
+.proj-bar-fill{height:100%;border-radius:2px;}
+
+/* ── PROJECT DETAIL HERO ── */
+.proj-hero{
+  margin:-20px -16px 24px;
+  padding:max(50px,calc(env(safe-area-inset-top,0px)+30px)) 20px 24px;
+  display:flex;flex-direction:column;align-items:center;
+  position:relative;
+}
+.proj-hero::after{content:"";position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to bottom,transparent,var(--bg));}
+.proj-hero-emoji{font-size:4.5rem;margin-bottom:14px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5));}
+.proj-hero-name{font-family:'Space Grotesk',sans-serif;font-size:1.7rem;font-weight:700;color:#fff;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.4);}
+.proj-hero-desc{font-size:.84rem;color:rgba(255,255,255,.7);text-align:center;margin-top:6px;max-width:320px;text-shadow:0 1px 4px rgba(0,0,0,.5);}
+.proj-hero-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;}
+.proj-hero-actions{display:flex;gap:8px;margin-top:14px;position:relative;z-index:1;}
+.hero-btn{padding:7px 16px;border-radius:10px;border:none;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.18);color:#fff;backdrop-filter:blur(10px);}
+.hero-btn:hover{background:rgba(255,255,255,.28);}
+.hero-btn.danger{background:rgba(239,68,68,.25);color:#fca5a5;}
+
+/* ── STATUS PILL ── */
+.status-pill{padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:600;letter-spacing:.04em;}
+.sp-active{background:rgba(34,197,94,.15);color:var(--green);}
+.sp-paused{background:rgba(245,158,11,.15);color:var(--yellow);}
+.sp-done{background:rgba(100,116,139,.15);color:var(--muted);}
+.sp-active-hero{background:rgba(34,197,94,.2);color:#a7f3d0;}
+.sp-paused-hero{background:rgba(245,158,11,.2);color:#fde68a;}
+.sp-done-hero{background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:18px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:10px 14px;cursor:pointer;font-size:.82rem;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.tab:hover:not(.active){color:var(--text);}
 
 /* ── CARDS ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
@@ -129,47 +148,15 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .card-title{font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:600;}
 
 /* ── STAT TILES ── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
+@media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .15s;}
 .stat-card:hover{border-color:var(--accent2);}
-.stat-icon{font-size:1.3rem;margin-bottom:8px;}
-.stat-val{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+.stat-icon{font-size:1.3rem;margin-bottom:7px;}
+.stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;line-height:1;}
 .stat-label{font-size:.72rem;color:var(--muted);margin-top:4px;}
-.stat-sub{font-size:.7rem;margin-top:7px;}
-.stat-sub.up{color:var(--green);}
 
-/* ── PROJECTS ── */
-.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
-.project-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:border-color .2s,transform .2s;}
-.project-card:hover{border-color:var(--accent2);transform:translateY(-2px);}
-.project-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
-.project-emoji{font-size:2rem;line-height:1;}
-.status-pill{padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:600;letter-spacing:.04em;}
-.sp-active{background:rgba(34,197,94,.12);color:var(--green);}
-.sp-paused{background:rgba(245,158,11,.12);color:var(--yellow);}
-.sp-done{background:rgba(100,116,139,.12);color:var(--muted);}
-.proj-name{font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:600;margin-bottom:4px;}
-.proj-desc{font-size:.78rem;color:var(--muted);margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.proj-meta{display:flex;gap:12px;font-size:.72rem;color:var(--muted);}
-.proj-bar{height:3px;background:var(--border);border-radius:2px;margin-top:12px;}
-.proj-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
-.proj-actions{display:flex;gap:6px;margin-top:12px;justify-content:flex-end;}
-
-/* ── PROJECT DETAIL ── */
-.detail-header{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:18px;}
-.dh-top{display:flex;align-items:flex-start;gap:16px;}
-.dh-emoji{font-size:2.6rem;flex-shrink:0;}
-.dh-info{flex:1;min-width:0;}
-.dh-name{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;}
-.dh-desc{color:var(--muted);font-size:.84rem;margin-top:4px;}
-.dh-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center;}
-.dh-actions{display:flex;gap:7px;flex-shrink:0;}
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:18px;}
-.tab{padding:10px 16px;cursor:pointer;font-size:.84rem;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
-.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
-.tab:hover:not(.active){color:var(--text);}
-
-/* ── TASKS ── */
+/* ── TASK LIST ── */
 .task-list{display:flex;flex-direction:column;gap:7px;}
 .task-row{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;display:flex;align-items:center;gap:11px;}
 .task-check{width:18px;height:18px;border-radius:4px;border:2px solid var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
@@ -182,7 +169,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .pri-low{background:rgba(100,116,139,.12);color:var(--muted);}
 
 /* ── NOTES ── */
-.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
 .note-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;}
 .note-title{font-weight:600;font-size:.85rem;margin-bottom:6px;}
 .note-body{font-size:.8rem;color:var(--muted);white-space:pre-wrap;line-height:1.5;}
@@ -199,9 +186,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .c-detail{font-size:.72rem;color:var(--muted);}
 .c-actions{display:flex;gap:5px;}
 
-/* ── SOCIAL MEDIA ── */
-.platforms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
-.plat-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .2s;}
+/* ── SOCIAL ── */
+.platforms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
+.plat-card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:16px;text-align:center;transition:all .2s;}
 .plat-card.connected{border-color:var(--green);}
 .plat-card:hover{transform:translateY(-2px);}
 .plat-icon{font-size:1.9rem;margin-bottom:7px;}
@@ -212,7 +199,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .plat-btn{margin-top:10px;padding:5px 14px;border-radius:6px;border:none;font-size:.72rem;font-weight:600;cursor:pointer;width:100%;transition:all .15s;}
 .plat-btn.connect{background:rgba(108,99,255,.18);color:var(--accent2);}
 .plat-btn.disconnect{background:rgba(239,68,68,.12);color:var(--red);}
-.pub-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.pub-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px;}
 .pub-title{font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:600;margin-bottom:16px;}
 .plat-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
 .plat-chip{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:.78rem;transition:all .15s;user-select:none;}
@@ -242,7 +229,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .pp-fail{background:rgba(239,68,68,.12);color:var(--red);}
 
 /* ── APPS ── */
-.apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;}
 .app-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:border-color .2s;}
 .app-card.installed{border-color:rgba(108,99,255,.3);}
 .app-icon{font-size:2.4rem;margin-bottom:9px;}
@@ -254,6 +241,17 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .app-btn.install{background:rgba(108,99,255,.14);color:var(--accent2);}
 .app-btn.install:hover{background:rgba(108,99,255,.24);}
 .app-btn.remove{background:rgba(239,68,68,.1);color:var(--red);}
+
+/* ── BUTTONS ── */
+.btn{padding:7px 16px;border-radius:8px;border:none;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{filter:brightness(1.12);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--text);}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-sm{padding:5px 12px;font-size:.78rem;}
+.btn-icon{padding:7px;border-radius:7px;background:var(--card2);border:1px solid var(--border);color:var(--muted);}
+.btn-icon:hover{color:var(--text);border-color:var(--accent2);}
 
 /* ── INPUTS ── */
 .input{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);outline:none;font-size:.85rem;transition:border-color .15s;width:100%;}
@@ -279,16 +277,24 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
 .modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
 
 /* ── TOAST ── */
-#toasts{position:fixed;bottom:max(20px,env(safe-area-inset-bottom,0px));inset-inline-start:20px;z-index:300;display:flex;flex-direction:column;gap:7px;}
-.toast{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:.82rem;display:flex;align-items:center;gap:9px;animation:toastIn .25s ease;min-width:200px;max-width:320px;}
+#toasts{position:fixed;bottom:max(80px,calc(70px + env(safe-area-inset-bottom,0px)));inset-inline-start:16px;z-index:300;display:flex;flex-direction:column;gap:7px;}
+.toast{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:.82rem;display:flex;align-items:center;gap:9px;animation:toastIn .25s ease;min-width:200px;max-width:300px;}
 .toast.success{border-color:var(--green);}
 .toast.error{border-color:var(--red);}
-@keyframes toastIn{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 
-/* ── EMPTY STATE ── */
+/* ── EMPTY ── */
 .empty{text-align:center;padding:44px 20px;color:var(--muted);}
 .empty-icon{font-size:2.6rem;margin-bottom:10px;}
 .empty-text{font-size:.88rem;margin-bottom:14px;}
+
+/* ── BACK BUTTON AREA ── */
+.back-row{margin-bottom:0;}
+
+/* ── SEARCH ── */
+.search-box{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;flex:1;max-width:260px;}
+.search-box input{background:none;border:none;outline:none;color:var(--text);width:100%;font-size:.82rem;}
+.search-box input::placeholder{color:var(--muted);}
 
 /* ── SECTION HEAD ── */
 .section-head{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:20px 0 10px;}
@@ -297,74 +303,51 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-
-/* ── RESPONSIVE ── */
-@media(max-width:680px){
-  .sidebar{transform:translateX(100%);transition:transform .3s;}
-  .sidebar.open{transform:translateX(0);}
-  .main{margin-inline-end:0;}
-  .stats-grid{grid-template-columns:1fr 1fr;}
-  .projects-grid{grid-template-columns:1fr;}
-  .dh-top{flex-wrap:wrap;}
-  .topbar{padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));}
-  .search-box{display:none;}
-  .hamburger{display:flex;}
-}
-.hamburger{display:none;cursor:pointer;}
 </style>
 
-<!-- ═══ APP ═══ -->
 <div id="app">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sb-brand">
-      <div class="sb-logo">⚡ CRM Pro</div>
-      <div class="sb-sub">ניהול פרוייקטים ומדיה</div>
-    </div>
-    <nav class="sb-nav">
-      <div class="sb-section">ראשי</div>
-      <div class="nav-item active" data-view="dashboard" onclick="nav('dashboard')"><span class="icon">🏠</span>דשבורד</div>
-      <div class="nav-item" data-view="projects" onclick="nav('projects')"><span class="icon">📁</span>פרוייקטים<span class="nav-badge" id="badge-proj">0</span></div>
-      <div class="sb-section">כלים</div>
-      <div class="nav-item" data-view="social" onclick="nav('social')"><span class="icon">📡</span>מדיה חברתית</div>
-      <div class="nav-item" data-view="apps" onclick="nav('apps')"><span class="icon">🧩</span>אפליקציות</div>
-      <div class="sb-section">פרוייקט נוכחי</div>
-      <div id="curr-proj-nav" style="padding:4px 10px;font-size:.78rem;color:var(--muted)">—</div>
-    </nav>
-    <div class="sb-footer">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div class="sb-user">
-          <div class="sb-avatar">CRM</div>
-          <div><div class="sb-uname">מנהל מערכת</div><div class="sb-role">Admin</div></div>
-        </div>
-        <button class="btn-icon" onclick="toggleTheme()" title="ערכת נושא">🌙</button>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <div class="main">
-    <header class="topbar">
-      <button class="hamburger btn-icon" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-      <div class="topbar-title" id="page-title">דשבורד</div>
-      <div class="search-box">
+  <!-- TOP BAR -->
+  <header class="topbar" id="topbar">
+    <div class="tb-brand" id="tb-brand">⚡ CRM Pro</div>
+    <div class="tb-title" id="tb-title" style="display:none"></div>
+    <div class="tb-actions">
+      <div class="search-box" id="tb-search">
         <span style="color:var(--muted)">🔍</span>
-        <input type="text" placeholder="חיפוש פרוייקטים..." id="gsearch" oninput="globalSearch(this.value)">
+        <input type="text" placeholder="חיפוש..." id="gsearch" oninput="globalSearch(this.value)">
       </div>
-      <button class="btn btn-primary" id="topbar-btn" onclick="topbarAction()"><span>+</span><span id="topbar-lbl">פרוייקט חדש</span></button>
-    </header>
-    <main id="content"></main>
-  </div>
+      <button class="btn-icon" onclick="toggleTheme()" title="ערכת נושא">🌙</button>
+    </div>
+  </header>
+
+  <main id="content"></main>
 </div>
 
-<!-- ═══ MODALS ═══ -->
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bn-item active" data-view="projects" onclick="nav('projects')">
+    <div class="bn-icon">📁</div>
+    <div class="bn-lbl">פרוייקטים</div>
+  </div>
+  <div class="bn-item" data-view="social" onclick="nav('social')">
+    <div class="bn-icon">📡</div>
+    <div class="bn-lbl">מדיה</div>
+  </div>
+  <button class="bn-fab" id="bn-fab" onclick="topbarAction()">+</button>
+  <div class="bn-item" data-view="apps" onclick="nav('apps')">
+    <div class="bn-icon">🧩</div>
+    <div class="bn-lbl">אפליקציות</div>
+  </div>
+  <div class="bn-item" data-view="dashboard" onclick="nav('dashboard')">
+    <div class="bn-icon">📊</div>
+    <div class="bn-lbl">דשבורד</div>
+  </div>
+</nav>
 
-<!-- Project Form -->
+<!-- ═══ MODALS ═══ -->
 <div class="overlay hidden" id="mod-project">
   <div class="modal">
     <div class="modal-hd"><div class="modal-title" id="mod-proj-title">פרוייקט חדש</div><button class="modal-close" onclick="closeM('mod-project')">✕</button></div>
-    <div class="form-group"><label class="form-label">אמוג'י</label><input class="input" id="pf-emoji" placeholder="📁" maxlength="2"></div>
+    <div class="form-group"><label class="form-label">אמוג'י / לוגו</label><input class="input" id="pf-emoji" placeholder="📁" maxlength="2"></div>
     <div class="form-group"><label class="form-label">שם הפרוייקט *</label><input class="input" id="pf-name" placeholder="שם הפרוייקט..."></div>
     <div class="form-group"><label class="form-label">תיאור</label><textarea class="input" id="pf-desc" placeholder="תיאור קצר..."></textarea></div>
     <div class="form-row">
@@ -375,7 +358,6 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
   </div>
 </div>
 
-<!-- Task Form -->
 <div class="overlay hidden" id="mod-task">
   <div class="modal">
     <div class="modal-hd"><div class="modal-title">משימה חדשה</div><button class="modal-close" onclick="closeM('mod-task')">✕</button></div>
@@ -389,7 +371,6 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
   </div>
 </div>
 
-<!-- Note Form -->
 <div class="overlay hidden" id="mod-note">
   <div class="modal">
     <div class="modal-hd"><div class="modal-title">הערה חדשה</div><button class="modal-close" onclick="closeM('mod-note')">✕</button></div>
@@ -399,7 +380,6 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
   </div>
 </div>
 
-<!-- Contact Form -->
 <div class="overlay hidden" id="mod-contact">
   <div class="modal">
     <div class="modal-hd"><div class="modal-title">איש קשר חדש</div><button class="modal-close" onclick="closeM('mod-contact')">✕</button></div>
@@ -415,7 +395,6 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
   </div>
 </div>
 
-<!-- Platform Connect -->
 <div class="overlay hidden" id="mod-platform">
   <div class="modal">
     <div class="modal-hd"><div class="modal-title" id="plat-modal-title">חבר פלטפורמה</div><button class="modal-close" onclick="closeM('mod-platform')">✕</button></div>
@@ -423,7 +402,6 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
   </div>
 </div>
 
-<!-- Custom App Form -->
 <div class="overlay hidden" id="mod-app">
   <div class="modal">
     <div class="modal-hd"><div class="modal-title">הוסף אפליקציה</div><button class="modal-close" onclick="closeM('mod-app')">✕</button></div>
@@ -437,10 +415,9 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
   </div>
 </div>
 
-<!-- Confirm Dialog -->
 <div class="overlay hidden" id="mod-confirm">
   <div class="modal modal-sm">
-    <div class="modal-hd"><div class="modal-title" id="confirm-title">אישור</div><button class="modal-close" onclick="closeM('mod-confirm')">✕</button></div>
+    <div class="modal-hd"><div class="modal-title" id="confirm-title">אישור מחיקה</div><button class="modal-close" onclick="closeM('mod-confirm')">✕</button></div>
     <p id="confirm-msg" style="color:var(--muted);font-size:.88rem;margin-bottom:20px;line-height:1.5"></p>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('mod-confirm')">ביטול</button>
@@ -450,7 +427,6 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
 </div>
 
 <div id="toasts"></div>
-
 <input type="file" id="media-input" multiple accept="image/*,video/*" style="display:none" onchange="handleMedia(this)">
 
 <script>
@@ -459,7 +435,7 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
 // ═══════════════════════════════════════════════════════════════
 const SK = 'crm_pro_v3';
 let S = {
-  view: 'dashboard', pid: null, tab: 'overview',
+  view: 'projects', pid: null, tab: 'overview',
   projects: [], posts: [], apps: [],
   conns: {
     facebook:  { on:false, token:'', page:'' },
@@ -472,6 +448,25 @@ let S = {
 };
 function load(){try{const d=localStorage.getItem(SK);if(d){const p=JSON.parse(d);S={...S,...p};if(!S.conns)S.conns={};if(!S.posts)S.posts=[];if(!S.apps)S.apps=[];}}catch(e){}}
 function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
+
+// Project color palettes
+const PALETTES=[
+  ['#8b5cf6','#ec4899'],
+  ['#3b82f6','#06b6d4'],
+  ['#f43f5e','#fb923c'],
+  ['#312e81','#6d28d9'],
+  ['#059669','#10b981'],
+  ['#f59e0b','#ef4444'],
+  ['#0891b2','#6c63ff'],
+];
+const SEED_PAL={'seed-bi':0,'seed-cm':1,'seed-pb':2,'seed-kb':3,'seed-game':4};
+function projPalIdx(p){
+  if(SEED_PAL[p.id]!==undefined) return SEED_PAL[p.id];
+  let h=0;for(const c of p.id)h=(h*31+c.charCodeAt(0))>>>0;
+  return h%PALETTES.length;
+}
+function projGrad(p){const[a,b]=PALETTES[projPalIdx(p)];return`linear-gradient(135deg,${a},${b})`;}
+function projColor1(p){return PALETTES[projPalIdx(p)][0];}
 
 const PLATS = {
   facebook:  {name:'Facebook', icon:'📘', fields:[{id:'token',label:'Access Token',type:'password',ph:'EAAxxxxx...'},{id:'page',label:'Page ID',type:'text',ph:'page_id'}]},
@@ -500,16 +495,20 @@ function nav(view){
   syncNav(); syncTopbar(); render();
 }
 function syncNav(){
-  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.view===S.view));
-  document.getElementById('badge-proj').textContent=S.projects.length;
-  const p=S.projects.find(x=>x.id===S.pid);
-  document.getElementById('curr-proj-nav').textContent=p?`${p.emoji||'📁'} ${p.name}`:'—';
+  document.querySelectorAll('.bn-item').forEach(el=>{
+    const v=el.dataset.view;
+    el.classList.toggle('active', v===S.view||(S.view==='detail'&&v==='projects'));
+  });
 }
-const PAGE_TITLES={dashboard:'דשבורד',projects:'פרוייקטים',social:'מדיה חברתית',apps:'אפליקציות',detail:'פרוייקט'};
-const PAGE_ACTIONS={dashboard:'פרוייקט חדש',projects:'פרוייקט חדש',social:'פרסם',apps:'הוסף אפליקציה',detail:'ערוך'};
 function syncTopbar(){
-  document.getElementById('page-title').textContent=PAGE_TITLES[S.view]||'CRM';
-  document.getElementById('topbar-lbl').textContent=PAGE_ACTIONS[S.view]||'פעולה';
+  const isBrand=S.view==='projects'||S.view==='dashboard';
+  document.getElementById('tb-brand').style.display=isBrand?'':'none';
+  document.getElementById('tb-title').style.display=isBrand?'none':'';
+  const titles={social:'מדיה חברתית',apps:'אפליקציות',detail:'פרוייקט'};
+  document.getElementById('tb-title').textContent=titles[S.view]||'';
+  document.getElementById('tb-search').style.display=(S.view==='projects'||S.view==='dashboard')?'':'none';
+  const fabLabels={projects:'+ פרוייקט',social:'פרסם',apps:'+ אפליקציה',detail:'ערוך',dashboard:'+ פרוייקט'};
+  document.getElementById('bn-fab').title=fabLabels[S.view]||'+';
 }
 function topbarAction(){
   const a={
@@ -521,7 +520,7 @@ function topbarAction(){
 }
 function render(){
   const c=document.getElementById('content');c.innerHTML='';
-  ({dashboard:renderDash,projects:renderProjects,social:renderSocial,apps:renderApps,detail:renderDetail}[S.view]||renderDash)();
+  ({dashboard:renderDash,projects:renderProjects,social:renderSocial,apps:renderApps,detail:renderDetail}[S.view]||renderProjects)();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -533,31 +532,16 @@ function renderDash(){
   const done=allTasks.filter(t=>t.done).length;
   const connCount=Object.values(S.conns).filter(x=>x.on).length;
   const sentPosts=S.posts.filter(p=>p.status==='sent').length;
-
   c.innerHTML=`
   <div class="stats-grid">
-    <div class="stat-card" onclick="nav('projects')"><div class="stat-icon">📁</div><div class="stat-val">${S.projects.length}</div><div class="stat-label">פרוייקטים</div><div class="stat-sub up">${S.projects.filter(p=>p.status==='active').length} פעילים</div></div>
-    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">${done}</div><div class="stat-label">משימות הושלמו</div><div class="stat-sub">${allTasks.length} סה"כ</div></div>
-    <div class="stat-card" onclick="nav('social')"><div class="stat-icon">📡</div><div class="stat-val">${connCount}</div><div class="stat-label">פלטפורמות</div><div class="stat-sub">${6-connCount} ממתינות</div></div>
-    <div class="stat-card"><div class="stat-icon">🚀</div><div class="stat-val">${sentPosts}</div><div class="stat-label">פוסטים פורסמו</div><div class="stat-sub">${S.posts.length} סה"כ</div></div>
+    <div class="stat-card" onclick="nav('projects')"><div class="stat-icon">📁</div><div class="stat-val">${S.projects.length}</div><div class="stat-label">פרוייקטים</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">${done}/${allTasks.length}</div><div class="stat-label">משימות</div></div>
+    <div class="stat-card" onclick="nav('social')"><div class="stat-icon">📡</div><div class="stat-val">${connCount}</div><div class="stat-label">פלטפורמות מחוברות</div></div>
+    <div class="stat-card" onclick="nav('social')"><div class="stat-icon">🚀</div><div class="stat-val">${sentPosts}</div><div class="stat-label">פוסטים שנשלחו</div></div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div class="card">
-      <div class="card-header"><div class="card-title">⚡ פרוייקטים אחרונים</div><button class="btn btn-ghost btn-sm" onclick="nav('projects')">הכל</button></div>
-      ${S.projects.length===0?`<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">אין פרוייקטים עדיין</div><button class="btn btn-primary btn-sm" onclick="openProjectModal()">+ צור ראשון</button></div>`:
-        S.projects.slice(-5).reverse().map(p=>`
-          <div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openProject('${p.id}')">
-            <span style="font-size:1.5rem">${p.emoji||'📁'}</span>
-            <div style="flex:1;min-width:0"><div style="font-size:.85rem;font-weight:500">${p.name}</div><div style="font-size:.7rem;color:var(--muted)">${(p.tasks||[]).length} משימות · ${p.category||'כללי'}</div></div>
-            <span class="status-pill sp-${p.status}">${sLabel(p.status)}</span>
-          </div>`).join('')}
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">📡 פלטפורמות</div><button class="btn btn-ghost btn-sm" onclick="nav('social')">חבר</button></div>
-      ${Object.entries(PLATS).map(([k,v])=>{const c=S.conns[k]||{};return`<div style="display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:1.2rem">${v.icon}</span><div style="flex:1;font-size:.82rem;font-weight:500">${v.name}</div><span class="plat-status ${c.on?'on':'off'}" style="font-size:.72rem">${c.on?'● מחובר':'○ לא מחובר'}</span></div>`;}).join('')}
-    </div>
-  </div>
-  ${S.posts.length>0?`<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">🕐 פוסטים אחרונים</div></div>${postsTableHTML('all',5)}</div>`:''}
+  <div class="section-head">הפרוייקטים שלי</div>
+  <div class="projects-grid" style="margin-bottom:20px">${S.projects.slice(0,6).map(projCard).join('')}</div>
+  ${S.posts.length>0?`<div class="card"><div class="card-header"><div class="card-title">🕐 פוסטים אחרונים</div></div>${postsTableHTML('all',5)}</div>`:''}
   `;
 }
 
@@ -566,30 +550,26 @@ function renderDash(){
 // ═══════════════════════════════════════════════════════════════
 function renderProjects(){
   const c=document.getElementById('content');
-  if(S.projects.length===0){c.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">אין פרוייקטים עדיין. צור את הראשון!</div><button class="btn btn-primary" onclick="openProjectModal()">+ פרוייקט חדש</button></div>`;return;}
-  c.innerHTML=`
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-      <button class="btn btn-ghost btn-sm" onclick="filterP('all')">הכל (${S.projects.length})</button>
-      <button class="btn btn-ghost btn-sm" onclick="filterP('active')">פעיל (${S.projects.filter(p=>p.status==='active').length})</button>
-      <button class="btn btn-ghost btn-sm" onclick="filterP('paused')">מושהה (${S.projects.filter(p=>p.status==='paused').length})</button>
-      <button class="btn btn-ghost btn-sm" onclick="filterP('done')">הושלם (${S.projects.filter(p=>p.status==='done').length})</button>
-    </div>
-    <div class="projects-grid" id="proj-grid">${S.projects.map(projCard).join('')}</div>
-  `;
+  if(S.projects.length===0){
+    c.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">אין פרוייקטים עדיין</div><button class="btn btn-primary" onclick="openProjectModal()">+ פרוייקט חדש</button></div>`;
+    return;
+  }
+  c.innerHTML=`<div class="projects-grid" id="proj-grid">${S.projects.map(projCard).join('')}</div>`;
 }
 function projCard(p){
   const tasks=p.tasks||[];const done=tasks.filter(t=>t.done).length;
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  const grad=projGrad(p);
+  const col1=projColor1(p);
   return`<div class="project-card" onclick="openProject('${p.id}')">
-    <div class="project-card-top"><div class="project-emoji">${p.emoji||'📁'}</div><span class="status-pill sp-${p.status}">${sLabel(p.status)}</span></div>
-    <div class="proj-name">${p.name}</div>
-    <div class="proj-desc">${p.description||'אין תיאור'}</div>
-    <div class="proj-meta"><span>✅ ${tasks.length}</span><span>📝 ${(p.notes||[]).length}</span><span>👥 ${(p.contacts||[]).length}</span></div>
-    <div class="proj-bar"><div class="proj-bar-fill" style="width:${pct}%"></div></div>
-    <div style="font-size:.68rem;color:var(--muted);margin-top:4px;text-align:left;font-variant-numeric:tabular-nums">${pct}%</div>
-    <div class="proj-actions" onclick="event.stopPropagation()">
-      <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">✏️</button>
-      <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:none" onclick="confirmDelete('פרוייקט "${p.name}" יימחק לצמיתות.',()=>deleteProject('${p.id}'))">🗑️</button>
+    <div class="proj-logo" style="background:${grad}">
+      <div class="proj-logo-overlay"></div>
+      <span>${p.emoji||'📁'}</span>
+    </div>
+    <div class="proj-card-body">
+      <div class="proj-card-name">${p.name}</div>
+      <div class="proj-card-status">${sLabel(p.status)} · ${pct}%</div>
+      <div class="proj-bar"><div class="proj-bar-fill" style="width:${pct}%;background:${col1}"></div></div>
     </div>
   </div>`;
 }
@@ -603,32 +583,36 @@ function filterP(status){
 // PROJECT DETAIL
 // ═══════════════════════════════════════════════════════════════
 function openProject(id){S.pid=id;S.tab='overview';S.view='detail';history.replaceState(null,'','#'+id);syncNav();syncTopbar();render();}
-function copyProjectLink(id){const url=location.origin+location.pathname+'#'+id;navigator.clipboard.writeText(url).then(()=>{const btn=document.getElementById('copy-link-btn');if(btn){const old=btn.textContent;btn.textContent='✅ הועתק!';setTimeout(()=>{btn.textContent=old;},2000);}});}
+function copyProjectLink(id){
+  const url=location.origin+location.pathname+'#'+id;
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn=document.getElementById('copy-link-btn');
+    if(btn){const old=btn.textContent;btn.textContent='✅ הועתק!';setTimeout(()=>{btn.textContent=old;},2000);}
+  });
+}
 
 function renderDetail(){
   const p=S.projects.find(x=>x.id===S.pid);if(!p){nav('projects');return;}
   const c=document.getElementById('content');
   const tasks=p.tasks||[];const done=tasks.filter(t=>t.done).length;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  const grad=projGrad(p);
+  const spHero={'active':'sp-active-hero','paused':'sp-paused-hero','done':'sp-done-hero'}[p.status]||'sp-active-hero';
   c.innerHTML=`
-    <div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="nav('projects')">← חזרה</button></div>
-    <div class="detail-header">
-      <div class="dh-top">
-        <div class="dh-emoji">${p.emoji||'📁'}</div>
-        <div class="dh-info">
-          <div class="dh-name">${p.name}</div>
-          <div class="dh-desc">${p.description||'אין תיאור'}</div>
-          <div class="dh-meta">
-            <span class="status-pill sp-${p.status}">${sLabel(p.status)}</span>
-            ${p.category?`<span style="font-size:.72rem;color:var(--muted)">📂 ${p.category}</span>`:''}
-            <span style="font-size:.72rem;color:var(--muted)">✅ ${done}/${tasks.length}</span>
-            <span style="font-size:.72rem;color:var(--muted)">📅 ${new Date(p.createdAt).toLocaleDateString('he-IL')}</span>
-          </div>
-        </div>
-        <div class="dh-actions">
-          <button id="copy-link-btn" class="btn btn-ghost btn-sm" onclick="copyProjectLink('${p.id}')">🔗 קישור</button>
-          <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">✏️ ערוך</button>
-          <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:none" onclick="confirmDelete('פרוייקט "${p.name}" יימחק לצמיתות.',()=>deleteProject('${p.id}'))">🗑️</button>
-        </div>
+    <div class="proj-hero" style="background:${grad}">
+      <div class="proj-hero-emoji">${p.emoji||'📁'}</div>
+      <div class="proj-hero-name">${p.name}</div>
+      <div class="proj-hero-desc">${p.description||''}</div>
+      <div class="proj-hero-meta">
+        <span class="status-pill ${spHero}">${sLabel(p.status)}</span>
+        ${p.category?`<span style="font-size:.7rem;background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);padding:3px 10px;border-radius:20px">📂 ${p.category}</span>`:''}
+        <span style="font-size:.7rem;background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);padding:3px 10px;border-radius:20px">✅ ${done}/${tasks.length}</span>
+      </div>
+      <div class="proj-hero-actions">
+        <button onclick="nav('projects')" class="hero-btn">← חזרה</button>
+        <button id="copy-link-btn" onclick="copyProjectLink('${p.id}')" class="hero-btn">🔗 קישור</button>
+        <button onclick="openProjectModal('${p.id}')" class="hero-btn">✏️ ערוך</button>
+        <button onclick="confirmDelete('פרוייקט &quot;${p.name}&quot; יימחק לצמיתות.',()=>deleteProject('${p.id}'))" class="hero-btn danger">🗑️</button>
       </div>
     </div>
     <div class="tabs" id="detail-tabs">
@@ -655,90 +639,75 @@ function tabLbl(t){return{overview:'📊 סקירה',tasks:'✅ משימות',no
 function tabOverview(p,body){
   const tasks=p.tasks||[];const done=tasks.filter(t=>t.done).length;const pct=tasks.length?Math.round(done/tasks.length*100):0;
   body.innerHTML=`
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px">
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px">
     ${[['✅',`${done}/${tasks.length}`,'משימות'],['📝',(p.notes||[]).length,'הערות'],['👥',(p.contacts||[]).length,'קשרים'],['🚀',(p.campaigns||[]).length,'קמפיינים']].map(([ic,v,lb])=>`
-    <div class="card" style="text-align:center"><div style="font-size:1.5rem;margin-bottom:8px">${ic}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums">${v}</div><div style="font-size:.72rem;color:var(--muted);margin-top:4px">${lb}</div></div>`).join('')}
+    <div class="card" style="text-align:center"><div style="font-size:1.5rem;margin-bottom:8px">${ic}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700">${v}</div><div style="font-size:.72rem;color:var(--muted);margin-top:4px">${lb}</div></div>`).join('')}
   </div>
   ${tasks.filter(t=>!t.done).length>0?`<div class="card"><div class="card-header"><div class="card-title">⚡ משימות פתוחות</div><button class="btn btn-ghost btn-sm" onclick="switchTab('tasks')">הכל</button></div><div class="task-list">${tasks.filter(t=>!t.done).slice(0,4).map(t=>taskRow(t,p.id)).join('')}</div></div>`:''}
+  ${(p.notes||[]).length>0?`<div class="card" style="margin-top:14px"><div class="card-header"><div class="card-title">📝 הערות אחרונות</div><button class="btn btn-ghost btn-sm" onclick="switchTab('notes')">הכל</button></div><div class="notes-grid">${(p.notes||[]).slice(0,2).map(n=>noteCard(n,p.id)).join('')}</div></div>`:''}
   `;
 }
+
 function tabTasks(p,body){
+  const tasks=p.tasks||[];
+  const open=tasks.filter(t=>!t.done);const closed=tasks.filter(t=>t.done);
   body.innerHTML=`
-    <div class="add-row">
-      <input class="input" id="qt-input" placeholder="הוסף משימה מהירה..." onkeydown="if(event.key==='Enter')quickTask()">
-      <button class="btn btn-ghost" onclick="openM('mod-task')">⚙️</button>
-      <button class="btn btn-primary" onclick="quickTask()">+</button>
-    </div>
-    <div style="display:flex;gap:7px;margin-bottom:12px">
-      <button class="btn btn-ghost btn-sm" onclick="filterTasks('all')">הכל</button>
-      <button class="btn btn-ghost btn-sm" onclick="filterTasks('open')">פתוחות</button>
-      <button class="btn btn-ghost btn-sm" onclick="filterTasks('done')">הושלמו</button>
-    </div>
-    <div class="task-list" id="task-list">
-      ${(p.tasks||[]).length===0?`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">אין משימות</div></div>`:
-        (p.tasks||[]).map(t=>taskRow(t,p.id)).join('')}
-    </div>
+  <div class="add-row"><input class="input" id="qt-inp" placeholder="משימה חדשה מהירה..." onkeydown="if(event.key==='Enter')quickTask('${p.id}')"><button class="btn btn-primary btn-sm" onclick="openM('mod-task')">+</button></div>
+  ${open.length>0?`<div class="task-list">${open.map(t=>taskRow(t,p.id)).join('')}</div>`:'<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px">🎉 כל המשימות הושלמו!</div>'}
+  ${closed.length>0?`<div class="section-head" style="margin-top:16px">הושלמו (${closed.length})</div><div class="task-list" style="opacity:.5">${closed.map(t=>taskRow(t,p.id)).join('')}</div>`:''}
   `;
 }
-function taskRow(t,pid){return`
-  <div class="task-row" id="task-${t.id}">
+function taskRow(t,pid){
+  return`<div class="task-row">
     <div class="task-check${t.done?' done':''}" onclick="toggleTask('${pid}','${t.id}')">${t.done?'✓':''}</div>
     <div class="task-text${t.done?' done':''}" style="flex:1">${t.text}</div>
-    ${t.due?`<span style="font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums">${t.due}</span>`:''}
-    <span class="pri-pill pri-${t.priority||'med'}">${priLbl(t.priority)}</span>
-    <button onclick="deleteTask('${pid}','${t.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0 3px">✕</button>
-  </div>`;}
+    ${t.due?`<span style="font-size:.68rem;color:var(--muted)">${new Date(t.due).toLocaleDateString('he-IL')}</span>`:''}
+    <span class="pri-pill pri-${t.priority||'med'}">${priLbl(t.priority||'med')}</span>
+    <button onclick="deleteTask('${pid}','${t.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:2px 6px">✕</button>
+  </div>`;
+}
+
 function tabNotes(p,body){
   body.innerHTML=`
-    <div style="margin-bottom:14px"><button class="btn btn-primary" onclick="openM('mod-note')">+ הוסף הערה</button></div>
-    ${(p.notes||[]).length===0?`<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">אין הערות עדיין</div></div>`:
-      `<div class="notes-grid">${(p.notes||[]).map(n=>`
-      <div class="note-card">
-        <button class="note-del" onclick="deleteNote('${p.id}','${n.id}')">✕</button>
-        <div class="note-title">${n.title||'הערה'}</div>
-        <div class="note-body">${n.body}</div>
-        <div class="note-date">${new Date(n.createdAt).toLocaleDateString('he-IL')}</div>
-      </div>`).join('')}</div>`}
+  <button class="btn btn-primary btn-sm" style="margin-bottom:14px" onclick="openM('mod-note')">+ הערה חדשה</button>
+  ${(p.notes||[]).length>0?`<div class="notes-grid">${(p.notes||[]).map(n=>noteCard(n,p.id)).join('')}</div>`:'<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">אין הערות עדיין</div></div>'}
   `;
 }
+function noteCard(n,pid){
+  return`<div class="note-card">
+    <button class="note-del" onclick="deleteNote('${pid}','${n.id}')">✕</button>
+    <div class="note-title">${n.title||'הערה'}</div>
+    <div class="note-body">${n.body}</div>
+    <div class="note-date">${new Date(n.createdAt).toLocaleDateString('he-IL')}</div>
+  </div>`;
+}
+
 function tabContacts(p,body){
   body.innerHTML=`
-    <div style="margin-bottom:14px"><button class="btn btn-primary" onclick="openM('mod-contact')">+ הוסף איש קשר</button></div>
-    ${(p.contacts||[]).length===0?`<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">אין אנשי קשר עדיין</div></div>`:
-      `<div class="contacts-list">${(p.contacts||[]).map(con=>`
-      <div class="contact-row">
-        <div class="c-avatar">${con.name[0].toUpperCase()}</div>
-        <div class="c-info">
-          <div class="c-name">${con.name}${con.role?` <span style="color:var(--muted);font-size:.72rem">(${con.role})</span>`:''}</div>
-          <div class="c-detail">${[con.phone,con.email].filter(Boolean).join(' · ')}</div>
-        </div>
-        <div class="c-actions">
-          ${con.phone?`<a href="tel:${con.phone}" class="btn btn-icon btn-sm" onclick="event.stopPropagation()" title="חייג">📞</a>`:''}
-          ${con.email?`<a href="mailto:${con.email}" class="btn btn-icon btn-sm" onclick="event.stopPropagation()" title="שלח מייל">✉️</a>`:''}
-          <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:none" onclick="deleteContact('${p.id}','${con.id}')">✕</button>
-        </div>
-      </div>`).join('')}</div>`}
+  <button class="btn btn-primary btn-sm" style="margin-bottom:14px" onclick="openM('mod-contact')">+ איש קשר</button>
+  ${(p.contacts||[]).length>0?`<div class="contacts-list">${(p.contacts||[]).map(ct=>contactRow(ct,p.id)).join('')}</div>`:'<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">אין אנשי קשר עדיין</div></div>'}
   `;
 }
-function tabCampaigns(p,body){
-  const projectPosts=S.posts.filter(x=>x.projectId===p.id);
-  body.innerHTML=`
-    <div style="margin-bottom:14px;display:flex;gap:10px;align-items:center">
-      <span style="color:var(--muted);font-size:.84rem">קמפיינים ופוסטים ששויכו לפרוייקט</span>
-      <button class="btn btn-primary btn-sm" onclick="nav('social')">📡 מרכז המדיה</button>
+function contactRow(ct,pid){
+  return`<div class="contact-row">
+    <div class="c-avatar">${ct.name[0]||'?'}</div>
+    <div class="c-info">
+      <div class="c-name">${ct.name}</div>
+      <div class="c-detail">${[ct.role,ct.phone,ct.email].filter(Boolean).join(' · ')}</div>
     </div>
-    ${projectPosts.length===0?`<div class="empty"><div class="empty-icon">🚀</div><div class="empty-text">אין קמפיינים עדיין</div></div>`:
-      projectPosts.map(post=>`
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-          <div style="font-weight:600;font-size:.87rem">${post.title||post.text?.slice(0,50)||'פוסט'}</div>
-          <div style="display:flex;gap:5px">${(post.platforms||[]).map(pl=>`<span title="${PLATS[pl]?.name}">${PLATS[pl]?.icon||''}</span>`).join('')}</div>
-        </div>
-        <div style="display:flex;gap:14px;font-size:.72rem;color:var(--muted)">
-          <span>תאריך: ${new Date(post.createdAt).toLocaleDateString('he-IL')}</span>
-          <span>סטטוס: <span class="post-pill pp-${post.status}">${postStatusLbl(post.status)}</span></span>
-        </div>
-      </div>`).join('')}
+    <div class="c-actions">
+      ${ct.phone?`<a href="tel:${ct.phone}" class="btn btn-ghost btn-sm">📞</a>`:''}
+      <button onclick="confirmDelete('מחק ${ct.name}?',()=>deleteContact('${pid}','${ct.id}'))" class="btn btn-ghost btn-sm">✕</button>
+    </div>
+  </div>`;
+}
+
+function tabCampaigns(p,body){
+  const proj=p;
+  const camps=S.posts.filter(x=>x.projectId===proj.id);
+  body.innerHTML=`
+  <button class="btn btn-primary btn-sm" style="margin-bottom:14px" onclick="nav('social')">+ קמפיין / פוסט חדש</button>
+  ${camps.length>0?`<div class="card"><table class="posts-table"><thead><tr><th>כותרת</th><th>פלטפורמות</th><th>סטטוס</th></tr></thead><tbody>${camps.map(postRow).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-icon">🚀</div><div class="empty-text">אין קמפיינים עדיין</div></div>'}
   `;
 }
 
@@ -747,78 +716,103 @@ function tabCampaigns(p,body){
 // ═══════════════════════════════════════════════════════════════
 function renderSocial(){
   const c=document.getElementById('content');
+  const platKeys=Object.keys(PLATS);
   c.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;min-width:0">
-      <div>
-        <div class="section-head">פלטפורמות מחוברות</div>
-        <div class="platforms-grid" id="plats-grid">
-          ${Object.entries(PLATS).map(([k,v])=>{const cn=S.conns[k]||{};return`
-          <div class="plat-card${cn.on?' connected':''}">
-            <div class="plat-icon">${v.icon}</div>
-            <div class="plat-name">${v.name}</div>
-            <div class="plat-status ${cn.on?'on':'off'}">${cn.on?'● מחובר':'○ לא מחובר'}</div>
-            <button class="plat-btn ${cn.on?'disconnect':'connect'}" onclick="togglePlat('${k}')">${cn.on?'נתק':'חבר'}</button>
-          </div>`;}).join('')}
-        </div>
-      </div>
-      <div>
-        <div class="section-head">יצירת תוכן</div>
-        <div class="pub-box">
-          <div class="form-group"><label class="form-label">כותרת</label><input class="input" id="pub-title" placeholder="כותרת הפוסט..."></div>
-          <div class="form-group"><label class="form-label">טקסט / קאפשן</label><textarea class="input" id="pub-text" placeholder="כתוב כאן..."></textarea></div>
-          <div class="form-group">
-            <label class="form-label">מדיה (תמונה / וידאו)</label>
-            <div class="media-drop" onclick="document.getElementById('media-input').click()">
-              <div style="font-size:1.6rem;margin-bottom:5px">📎</div>
-              <div style="font-size:.8rem;color:var(--muted)">לחץ להעלאת קבצים<br><small>תמונות ווידאו לכל הפלטפורמות</small></div>
-            </div>
-            <div class="media-previews" id="media-prev"></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">בחר פלטפורמות</label>
-            <div class="plat-chips" id="pub-chips">
-              ${Object.entries(PLATS).map(([k,v])=>{const on=S.conns[k]?.on;return`<div class="plat-chip${on?'':' disabled'}" data-plat="${k}" onclick="toggleChip(this,'${k}')">${v.icon} ${v.name}${!on?` <span style="font-size:.6rem;color:var(--red)">(לא מחובר)</span>`:''}</div>`;}).join('')}
-            </div>
-          </div>
-          <div class="form-group"><label class="form-label">שייך לפרוייקט</label>
-            <select class="input" id="pub-proj"><option value="">— ללא שיוך —</option>${S.projects.map(p=>`<option value="${p.id}">${p.emoji||'📁'} ${p.name}</option>`).join('')}</select>
-          </div>
-          <div class="sched-row">
-            <label><input type="radio" name="pub-time" value="now" checked onchange="toggleSched(this)"> פרסם עכשיו</label>
-            <label><input type="radio" name="pub-time" value="later" onchange="toggleSched(this)"> תזמן</label>
-            <input class="input" type="datetime-local" id="pub-sched" style="display:none">
-          </div>
-          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="publishPost()">🚀 פרסם</button>
-        </div>
-      </div>
+  <div class="section-head">פלטפורמות</div>
+  <div class="platforms-grid">
+    ${platKeys.map(k=>{const pl=PLATS[k];const conn=S.conns[k]||{};return`
+    <div class="plat-card${conn.on?' connected':''}">
+      <div class="plat-icon">${pl.icon}</div>
+      <div class="plat-name">${pl.name}</div>
+      <div class="plat-status ${conn.on?'on':'off'}">${conn.on?'✓ מחובר':'לא מחובר'}</div>
+      <button class="plat-btn ${conn.on?'disconnect':'connect'}" onclick="openPlatModal('${k}')">${conn.on?'נתק / ערוך':'חבר'}</button>
+    </div>`;}).join('')}
+  </div>
+  <div class="pub-box">
+    <div class="pub-title">📤 פרסם תוכן</div>
+    <div class="form-group"><label class="form-label">כותרת</label><input class="input" id="post-title" placeholder="כותרת הפוסט..."></div>
+    <div class="form-group"><label class="form-label">טקסט</label><textarea class="input" id="post-text" placeholder="תוכן הפוסט..." style="min-height:90px"></textarea></div>
+    <div class="form-group"><label class="form-label">פרוייקט (אופציונלי)</label>
+      <select class="input" id="post-proj"><option value="">—</option>${S.projects.map(p=>`<option value="${p.id}">${p.emoji||'📁'} ${p.name}</option>`).join('')}</select>
     </div>
-    <div class="card" style="margin-top:20px">
-      <div class="card-header">
-        <div class="card-title">📋 היסטוריית פוסטים</div>
-        <select class="input" id="filter-posts" onchange="refreshPostsTable(this.value)" style="font-size:.78rem;padding:5px 10px;width:auto">
-          <option value="all">הכל</option><option value="sent">נשלח</option><option value="scheduled">מתוזמן</option><option value="draft">טיוטה</option>
-        </select>
-      </div>
-      <div id="posts-table-wrap">${postsTableHTML('all')}</div>
+    <div class="form-group"><label class="form-label">פלטפורמות</label>
+      <div class="plat-chips">${platKeys.map(k=>{const pl=PLATS[k];const conn=S.conns[k]||{};return`<div class="plat-chip${!conn.on?' disabled':''}" data-plat="${k}" onclick="toggleChip(this,'${k}')">${pl.icon} ${pl.name}</div>`;}).join('')}</div>
+    </div>
+    <div class="form-group"><label class="form-label">מדיה (תמונות / סרטונים)</label>
+      <div class="media-drop" onclick="document.getElementById('media-input').click()">📎 לחץ להעלאת קבצים</div>
+      <div class="media-previews" id="media-prev"></div>
+    </div>
+    <div class="sched-row">
+      <label><input type="checkbox" id="sched-cb" onchange="document.getElementById('sched-dt').style.display=this.checked?'':'none'"> תזמן לתאריך</label>
+      <input class="input" id="sched-dt" type="datetime-local" style="display:none;max-width:230px">
+    </div>
+    <button class="btn btn-primary" onclick="publishPost()">🚀 פרסם</button>
+  </div>
+  ${S.posts.length>0?`<div class="card" style="margin-top:20px"><div class="card-header"><div class="card-title">🕐 היסטוריית פוסטים</div></div>${postsTableHTML('all',20)}</div>`:''}
+  `;
+}
+
+function toggleChip(el,k){if(el.classList.contains('disabled'))return;el.classList.toggle('selected');}
+function openPlatModal(k){
+  const pl=PLATS[k];const conn=S.conns[k]||{};
+  document.getElementById('plat-modal-title').textContent=`${pl.icon} ${pl.name}`;
+  document.getElementById('plat-modal-body').innerHTML=`
+    ${pl.fields.map(f=>`<div class="form-group"><label class="form-label">${f.label}</label><input class="input" id="plat-f-${f.id}" type="${f.type}" placeholder="${f.ph}" value="${conn[f.id]||''}"></div>`).join('')}
+    <div class="modal-foot">
+      ${conn.on?`<button class="btn btn-danger" onclick="disconnectPlat('${k}')">נתק</button>`:''}
+      <button class="btn btn-ghost" onclick="closeM('mod-platform')">ביטול</button>
+      <button class="btn btn-primary" onclick="connectPlat('${k}')">שמור וחבר</button>
     </div>
   `;
-  window._mediaFiles=[];
+  openM('mod-platform');
 }
-function refreshPostsTable(filter){const w=document.getElementById('posts-table-wrap');if(w)w.innerHTML=postsTableHTML(filter);}
+function connectPlat(k){
+  const pl=PLATS[k];const data={on:true};
+  pl.fields.forEach(f=>{data[f.id]=document.getElementById('plat-f-'+f.id).value;});
+  S.conns[k]=data;save();closeM('mod-platform');renderSocial();toast('✓ '+pl.name+' מחובר','success');
+}
+function disconnectPlat(k){
+  S.conns[k]={on:false};save();closeM('mod-platform');renderSocial();toast(PLATS[k].name+' נותק');
+}
+function publishPost(){
+  const title=document.getElementById('post-title')?.value?.trim();
+  const text=document.getElementById('post-text')?.value?.trim();
+  if(!text&&!title){toast('נא להזין תוכן','error');return;}
+  const platforms=[...document.querySelectorAll('.plat-chip.selected')].map(el=>el.dataset.plat);
+  if(!platforms.length){toast('נא לבחור פלטפורמה אחת לפחות','error');return;}
+  const scheduledAt=document.getElementById('sched-cb')?.checked?document.getElementById('sched-dt')?.value:null;
+  const isLater=scheduledAt&&new Date(scheduledAt)>new Date();
+  const projectId=document.getElementById('post-proj')?.value||null;
+  S.posts.push({id:uid(),title:title||text.slice(0,40),text,platforms,status:isLater?'scheduled':'sent',scheduledAt:scheduledAt?new Date(scheduledAt).getTime():null,projectId,createdAt:Date.now(),mediaCount:window._mediaFiles?.length||0});
+  save();window._mediaFiles=[];toast('🚀 '+(isLater?'פוסט תוזמן':'פוסט נשלח'),'success');
+  if(S.view==='social')renderSocial();
+  else if(S.view==='detail')renderTab('campaigns');
+}
 function postsTableHTML(filter,limit){
-  const list=(filter==='all'?S.posts:S.posts.filter(p=>p.status===filter));
-  const rows=(limit?list.slice(-limit).reverse():list.slice().reverse());
-  if(rows.length===0)return`<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">אין פוסטים</div></div>`;
-  return`<div style="overflow-x:auto"><table class="posts-table"><thead><tr><th>כותרת</th><th>פלטפורמות</th><th>תאריך</th><th>תזמון</th><th>סטטוס</th><th></th></tr></thead><tbody>
-    ${rows.map(p=>`<tr>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title||p.text?.slice(0,40)||'—'}</td>
-      <td><div class="post-plats">${(p.platforms||[]).map(pl=>PLATS[pl]?.icon||'').join(' ')}</div></td>
-      <td style="font-variant-numeric:tabular-nums;white-space:nowrap">${new Date(p.createdAt).toLocaleDateString('he-IL')}</td>
-      <td style="white-space:nowrap">${p.scheduledAt?new Date(p.scheduledAt).toLocaleString('he-IL'):'—'}</td>
-      <td><span class="post-pill pp-${p.status}">${postStatusLbl(p.status)}</span></td>
-      <td><button onclick="deletePost('${p.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer">🗑️</button></td>
-    </tr>`).join('')}
-  </tbody></table></div>`;
+  let list=filter==='all'?S.posts:S.posts.filter(x=>x.projectId===filter);
+  list=list.slice(-limit).reverse();
+  if(!list.length)return'<div style="color:var(--muted);padding:14px;font-size:.85rem">אין פוסטים</div>';
+  const statusLbl=s=>({sent:'נשלח',scheduled:'מתוזמן',draft:'טיוטה',failed:'נכשל'}[s]||s);
+  const statusCls=s=>({sent:'pp-sent',scheduled:'pp-sched',draft:'pp-draft',failed:'pp-fail'}[s]||'pp-draft');
+  return`<table class="posts-table"><thead><tr><th>כותרת</th><th>פלטפורמות</th><th>סטטוס</th></tr></thead><tbody>${list.map(postRow).join('')}</tbody></table>`;
+}
+function postRow(p){
+  const statusLbl=s=>({sent:'נשלח',scheduled:'מתוזמן',draft:'טיוטה',failed:'נכשל'}[s]||s);
+  const statusCls=s=>({sent:'pp-sent',scheduled:'pp-sched',draft:'pp-draft',failed:'pp-fail'}[s]||'pp-draft');
+  return`<tr><td>${p.title||p.text?.slice(0,30)||'—'}</td><td><div class="post-plats">${(p.platforms||[]).map(k=>`<span>${PLATS[k]?.icon||k}</span>`).join('')}</div></td><td><span class="post-pill ${statusCls(p.status)}">${statusLbl(p.status)}</span></td></tr>`;
+}
+function handleMedia(input){
+  if(!window._mediaFiles)window._mediaFiles=[];
+  const prev=document.getElementById('media-prev');if(!prev)return;
+  Array.from(input.files).forEach(f=>{
+    window._mediaFiles.push(f);
+    const wrap=document.createElement('div');wrap.className='thumb-wrap';
+    if(f.type.startsWith('image/')){const img=document.createElement('img');img.className='thumb-img';img.src=URL.createObjectURL(f);wrap.appendChild(img);}
+    else{const v=document.createElement('div');v.className='thumb-vid';v.textContent='🎬';wrap.appendChild(v);}
+    const del=document.createElement('button');del.className='thumb-del';del.textContent='✕';del.onclick=()=>{wrap.remove();};
+    wrap.appendChild(del);prev.appendChild(wrap);
+  });
+  input.value='';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -826,247 +820,167 @@ function postsTableHTML(filter,limit){
 // ═══════════════════════════════════════════════════════════════
 function renderApps(){
   const c=document.getElementById('content');
-  const installed=S.apps.filter(a=>a.installed);
-  const userApps=S.apps.filter(a=>a.custom);
+  const installed=S.apps;
+  const catalog=APP_CATALOG.filter(a=>!installed.find(x=>x.id===a.id));
   c.innerHTML=`
-    ${installed.length>0?`<div class="section-head">⚡ מותקנות</div><div class="apps-grid" style="margin-bottom:22px">${installed.map(a=>`
-    <div class="app-card installed"><div class="app-icon">${a.icon}</div><div class="app-name">${a.name}</div><div class="app-desc">${a.desc}</div>
-      ${a.url?`<a href="${a.url}" target="_blank" rel="noopener"><button class="app-btn open" style="margin-bottom:6px">פתח</button></a>`:`<button class="app-btn open" style="margin-bottom:6px" onclick="toast('${a.name} — בקרוב!','info')">פתח</button>`}
-      <button class="app-btn remove" onclick="confirmDelete('להסיר ${a.name}?',()=>removeApp('${a.id}'))">הסר</button>
-    </div>`).join('')}</div>`:''}
-    <div class="section-head">🛒 קטלוג אפליקציות</div>
-    <div class="apps-grid" style="margin-bottom:22px">
-      ${APP_CATALOG.filter(a=>!installed.find(i=>i.id===a.id)).map(a=>`
-      <div class="app-card"><div class="app-icon">${a.icon}</div><div class="app-name">${a.name}</div><div class="app-desc">${a.desc}</div><button class="app-btn install" onclick="installApp('${a.id}')">+ התקן</button></div>`).join('')}
+  ${installed.length>0?`<div class="section-head">מותקנות</div><div class="apps-grid">${installed.map(a=>appCard(a,true)).join('')}</div>`:''}
+  <div class="section-head">קטלוג</div>
+  <div class="apps-grid">${catalog.map(a=>appCard(a,false)).join('')}
+    <div class="app-card" style="cursor:pointer;border-style:dashed" onclick="openM('mod-app')">
+      <div class="app-icon">➕</div>
+      <div class="app-name">הוסף מותאם</div>
+      <div class="app-desc">הוסף קישור לכלי חיצוני</div>
     </div>
-    ${userApps.length>0?`<div class="section-head">🔧 מותאמות אישית</div><div class="apps-grid" style="margin-bottom:22px">${userApps.map(a=>`
-    <div class="app-card installed"><div class="app-icon">${a.icon}</div><div class="app-name">${a.name}</div><div class="app-desc">${a.desc}</div>
-      ${a.url?`<a href="${a.url}" target="_blank" rel="noopener"><button class="app-btn open" style="margin-bottom:6px">פתח</button></a>`:`<button class="app-btn open" style="opacity:.5;cursor:default;margin-bottom:6px" disabled>אין קישור</button>`}
-      <button class="app-btn remove" onclick="confirmDelete('להסיר ${a.name}?',()=>removeApp('${a.id}'))">הסר</button>
-    </div>`).join('')}</div>`:''}
-    <div style="border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border-color .15s" onclick="openM('mod-app')" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor=''">
-      <div style="font-size:2rem;margin-bottom:7px">+</div>
-      <div style="font-size:.85rem;color:var(--muted)">הוסף אפליקציה מותאמת אישית</div>
-    </div>
+  </div>
   `;
+}
+function appCard(a,inst){
+  return`<div class="app-card${inst?' installed':''}">
+    <div class="app-icon">${a.icon}</div>
+    <div class="app-name">${a.name}</div>
+    <div class="app-desc">${a.desc||''}</div>
+    ${inst?`<div style="display:flex;gap:7px">
+      ${a.url?`<button class="app-btn open" onclick="window.open('${a.url}','_blank')">פתח</button>`:`<button class="app-btn open" disabled>פתוח</button>`}
+      ${a.custom?`<button class="app-btn remove" onclick="confirmDelete('הסר ${a.name}?',()=>removeApp('${a.id}'))">הסר</button>`:''}
+    </div>`:`<button class="app-btn install" onclick="installApp('${a.id}')">התקן</button>`}
+  </div>`;
+}
+function installApp(id){
+  const a=APP_CATALOG.find(x=>x.id===id);if(!a)return;
+  if(!S.apps.find(x=>x.id===id)){S.apps.push({...a,installed:true});}
+  save();renderApps();toast('✓ '+a.name+' הותקן','success');
+}
+function removeApp(id){
+  S.apps=S.apps.filter(x=>x.id!==id);save();renderApps();
+}
+function saveApp(){
+  const name=document.getElementById('af-name').value.trim();if(!name){toast('חסר שם','error');return;}
+  S.apps.push({id:uid(),name,icon:document.getElementById('af-icon').value||'🔧',desc:document.getElementById('af-desc').value||'',url:document.getElementById('af-url').value||'',installed:true,custom:true});
+  save();closeM('mod-app');renderApps();toast('✓ אפליקציה נוספה','success');
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ACTIONS
+// PROJECT CRUD
 // ═══════════════════════════════════════════════════════════════
+let _openProjectModal_id=null;
 function openProjectModal(id){
   _editPid=id||null;
-  if(id){
-    const p=S.projects.find(x=>x.id===id);if(!p)return;
-    document.getElementById('mod-proj-title').textContent='ערוך פרוייקט';
-    ['pf-emoji','pf-name','pf-desc','pf-status','pf-cat'].forEach(k=>{const el=document.getElementById(k);if(el)el.value={pf:p}[k]||({['pf-emoji']:p.emoji||'',['pf-name']:p.name,['pf-desc']:p.description||'',['pf-status']:p.status,['pf-cat']:p.category||''}[k]||'');});
-  }else{
-    document.getElementById('mod-proj-title').textContent='פרוייקט חדש';
-    ['pf-emoji','pf-name','pf-desc','pf-cat'].forEach(k=>{const el=document.getElementById(k);if(el)el.value='';});
-    const st=document.getElementById('pf-status');if(st)st.value='active';
-  }
+  document.getElementById('mod-proj-title').textContent=id?'ערוך פרוייקט':'פרוייקט חדש';
+  const p=id?S.projects.find(x=>x.id===id):null;
+  document.getElementById('pf-emoji').value=p?.emoji||'';
+  document.getElementById('pf-name').value=p?.name||'';
+  document.getElementById('pf-desc').value=p?.description||'';
+  document.getElementById('pf-status').value=p?.status||'active';
+  document.getElementById('pf-cat').value=p?.category||'';
   openM('mod-project');
 }
 function saveProject(){
-  const name=document.getElementById('pf-name').value.trim();
-  if(!name){toast('נא להזין שם','error');return;}
+  const name=document.getElementById('pf-name').value.trim();if(!name){toast('שם חובה','error');return;}
   if(_editPid){
-    const p=S.projects.find(x=>x.id===_editPid);if(!p)return;
-    p.name=name;p.emoji=document.getElementById('pf-emoji').value||'📁';
-    p.description=document.getElementById('pf-desc').value;
-    p.status=document.getElementById('pf-status').value;
-    p.category=document.getElementById('pf-cat').value;
-    toast('פרוייקט עודכן ✓','success');
+    const p=S.projects.find(x=>x.id===_editPid);if(p){
+      p.name=name;p.emoji=document.getElementById('pf-emoji').value||p.emoji;
+      p.description=document.getElementById('pf-desc').value;
+      p.status=document.getElementById('pf-status').value;
+      p.category=document.getElementById('pf-cat').value;
+    }
   }else{
     S.projects.push({id:uid(),name,emoji:document.getElementById('pf-emoji').value||'📁',description:document.getElementById('pf-desc').value,status:document.getElementById('pf-status').value,category:document.getElementById('pf-cat').value,tasks:[],notes:[],contacts:[],campaigns:[],createdAt:Date.now()});
-    toast('פרוייקט נוצר ✓','success');
   }
-  save();closeM('mod-project');syncTopbar();render();
+  save();closeM('mod-project');
+  if(S.view==='detail')renderDetail();else renderProjects();
+  toast('✓ פרוייקט נשמר','success');
 }
-function deleteProject(id){S.projects=S.projects.filter(p=>p.id!==id);save();toast('פרוייקט נמחק','info');nav('projects');}
+function deleteProject(id){
+  S.projects=S.projects.filter(x=>x.id!==id);save();nav('projects');toast('פרוייקט נמחק');
+}
 
-// Tasks
+// ═══════════════════════════════════════════════════════════════
+// TASK / NOTE / CONTACT CRUD
+// ═══════════════════════════════════════════════════════════════
 function saveTask(){
-  const text=document.getElementById('tf-text').value.trim();if(!text){toast('נא להזין תיאור','error');return;}
+  const text=document.getElementById('tf-text').value.trim();if(!text){toast('חסר תיאור','error');return;}
   const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
-  if(!p.tasks)p.tasks=[];
   p.tasks.push({id:uid(),text,done:false,priority:document.getElementById('tf-pri').value,due:document.getElementById('tf-due').value,notes:document.getElementById('tf-notes').value,createdAt:Date.now()});
-  save();closeM('mod-task');toast('משימה נוספה ✓','success');renderTab('tasks');
+  save();closeM('mod-task');renderTab('tasks');toast('✓ משימה נוספה','success');
 }
-function quickTask(){
-  const el=document.getElementById('qt-input');const text=el?.value?.trim();if(!text)return;
-  const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
-  if(!p.tasks)p.tasks=[];
+function quickTask(pid){
+  const inp=document.getElementById('qt-inp');if(!inp)return;
+  const text=inp.value.trim();if(!text)return;
+  const p=S.projects.find(x=>x.id===pid);if(!p)return;
   p.tasks.push({id:uid(),text,done:false,priority:'med',createdAt:Date.now()});
-  save();el.value='';toast('משימה נוספה ✓','success');renderTab('tasks');
+  save();inp.value='';renderTab('tasks');
 }
 function toggleTask(pid,tid){
   const p=S.projects.find(x=>x.id===pid);if(!p)return;
-  const t=(p.tasks||[]).find(x=>x.id===tid);if(!t)return;
-  t.done=!t.done;save();
-  const el=document.getElementById(`task-${tid}`);
-  if(el){el.querySelector('.task-check').classList.toggle('done',t.done);el.querySelector('.task-check').textContent=t.done?'✓':'';el.querySelector('.task-text').classList.toggle('done',t.done);}
+  const t=p.tasks.find(x=>x.id===tid);if(!t)return;
+  t.done=!t.done;save();renderTab('tasks');
 }
 function deleteTask(pid,tid){
   const p=S.projects.find(x=>x.id===pid);if(!p)return;
-  p.tasks=(p.tasks||[]).filter(t=>t.id!==tid);save();
-  document.getElementById(`task-${tid}`)?.remove();
+  p.tasks=p.tasks.filter(x=>x.id!==tid);save();renderTab('tasks');
 }
-function filterTasks(filter){
-  const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
-  const l=document.getElementById('task-list');if(!l)return;
-  const tasks=(p.tasks||[]).filter(t=>filter==='all'?true:filter==='done'?t.done:!t.done);
-  l.innerHTML=tasks.length===0?`<div class="empty" style="padding:24px"><div class="empty-text">אין משימות</div></div>`:tasks.map(t=>taskRow(t,p.id)).join('');
-}
-
-// Notes
 function saveNote(){
-  const body=document.getElementById('nf-body').value.trim();if(!body){toast('נא להזין תוכן','error');return;}
+  const body=document.getElementById('nf-body').value.trim();if(!body){toast('חסר תוכן','error');return;}
   const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
-  if(!p.notes)p.notes=[];
   p.notes.push({id:uid(),title:document.getElementById('nf-title').value,body,createdAt:Date.now()});
-  save();closeM('mod-note');toast('הערה נשמרה ✓','success');renderTab('notes');
+  save();closeM('mod-note');renderTab('notes');toast('✓ הערה נשמרה','success');
 }
 function deleteNote(pid,nid){
   const p=S.projects.find(x=>x.id===pid);if(!p)return;
-  p.notes=(p.notes||[]).filter(n=>n.id!==nid);save();renderTab('notes');
+  p.notes=p.notes.filter(x=>x.id!==nid);save();renderTab('notes');
 }
-
-// Contacts
 function saveContact(){
-  const name=document.getElementById('cf-name').value.trim();if(!name){toast('נא להזין שם','error');return;}
+  const name=document.getElementById('cf-name').value.trim();if(!name){toast('שם חובה','error');return;}
   const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
-  if(!p.contacts)p.contacts=[];
   p.contacts.push({id:uid(),name,role:document.getElementById('cf-role').value,phone:document.getElementById('cf-phone').value,email:document.getElementById('cf-email').value,createdAt:Date.now()});
-  save();closeM('mod-contact');toast('איש קשר נוסף ✓','success');renderTab('contacts');
+  save();closeM('mod-contact');renderTab('contacts');toast('✓ איש קשר נוסף','success');
 }
 function deleteContact(pid,cid){
   const p=S.projects.find(x=>x.id===pid);if(!p)return;
-  p.contacts=(p.contacts||[]).filter(c=>c.id!==cid);save();renderTab('contacts');
+  p.contacts=p.contacts.filter(x=>x.id!==cid);save();renderTab('contacts');
 }
 
-// Platform
-function togglePlat(key){
-  const cn=S.conns[key]||{};
-  if(cn.on){confirmDelete(`לנתק ${PLATS[key].name}?`,()=>{S.conns[key]={on:false,token:''};save();toast(`${PLATS[key].name} נותק`,'info');render();});return;}
-  const plat=PLATS[key];
-  document.getElementById('plat-modal-title').textContent=`חבר ${plat.icon} ${plat.name}`;
-  document.getElementById('plat-modal-body').innerHTML=`
-    <div style="background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:.78rem;color:var(--muted);line-height:1.5">
-      כדי לחבר ${plat.name} תצטרך API credentials רשמיים מ-<strong>${plat.name} Developer Platform</strong>.
-    </div>
-    ${plat.fields.map(f=>`<div class="form-group"><label class="form-label">${f.label}</label><input class="input" id="pf-${f.id}" type="${f.type}" placeholder="${f.ph}"></div>`).join('')}
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-platform')">ביטול</button><button class="btn btn-primary" onclick="connectPlat('${key}')">חבר</button></div>
-  `;
-  openM('mod-platform');
-}
-function connectPlat(key){
-  const plat=PLATS[key];const data={on:true};
-  plat.fields.forEach(f=>{data[f.id]=document.getElementById(`pf-${f.id}`)?.value||'';});
-  if(!data.token){toast('נא להזין Token','error');return;}
-  S.conns[key]=data;save();closeM('mod-platform');
-  toast(`${plat.name} חובר בהצלחה ✓`,'success');render();
-}
+// ═══════════════════════════════════════════════════════════════
+// MODALS / UTILS
+// ═══════════════════════════════════════════════════════════════
+function openM(id){document.getElementById(id).classList.remove('hidden');}
+function closeM(id){document.getElementById(id).classList.add('hidden');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay:not(.hidden)').forEach(el=>el.classList.add('hidden'));});
+document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.add('hidden');}));
 
-// Chips
-function toggleChip(el,key){
-  if(el.classList.contains('disabled')){toast(`${PLATS[key].name} לא מחובר — חבר אותו תחילה`,'error');return;}
-  el.classList.toggle('selected');
-}
-function toggleSched(r){const el=document.getElementById('pub-sched');if(el)el.style.display=r.value==='later'?'block':'none';}
-function handleMedia(input){
-  window._mediaFiles=window._mediaFiles||[];
-  const prev=document.getElementById('media-prev');
-  Array.from(input.files).forEach(file=>{
-    window._mediaFiles.push(file);
-    const wrap=document.createElement('div');wrap.className='thumb-wrap';
-    if(file.type.startsWith('image/')){const img=document.createElement('img');img.className='thumb-img';img.src=URL.createObjectURL(file);wrap.appendChild(img);}
-    else{const d=document.createElement('div');d.className='thumb-vid';d.textContent='🎬';wrap.appendChild(d);}
-    const del=document.createElement('button');del.className='thumb-del';del.textContent='×';del.onclick=()=>{wrap.remove();};
-    wrap.appendChild(del);prev?.appendChild(wrap);
-  });
-}
-
-function publishPost(){
-  const title=document.getElementById('pub-title')?.value?.trim()||'';
-  const text=document.getElementById('pub-text')?.value?.trim()||'';
-  if(!title&&!text){toast('נא להזין טקסט או כותרת','error');return;}
-  const chips=document.querySelectorAll('#pub-chips .plat-chip.selected');
-  const platforms=Array.from(chips).map(c=>c.dataset.plat);
-  if(!platforms.length){toast('נא לבחור פלטפורמה אחת לפחות','error');return;}
-  const isLater=document.querySelector('input[name="pub-time"]:checked')?.value==='later';
-  const scheduledAt=isLater?document.getElementById('pub-sched')?.value:null;
-  if(isLater&&!scheduledAt){toast('נא לבחור תאריך לתזמון','error');return;}
-  const projectId=document.getElementById('pub-proj')?.value||null;
-  S.posts.push({id:uid(),title,text,platforms,status:isLater?'scheduled':'sent',scheduledAt:scheduledAt?new Date(scheduledAt).getTime():null,projectId,createdAt:Date.now(),mediaCount:window._mediaFiles?.length||0});
-  save();
-  toast(`${isLater?'פוסט תוזמן 📅':'פוסט פורסם 🚀'} ל-${platforms.map(p=>PLATS[p]?.name).join(', ')}`,'success');
-  ['pub-title','pub-text'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  const prev=document.getElementById('media-prev');if(prev)prev.innerHTML='';
-  window._mediaFiles=[];
-  document.querySelectorAll('#pub-chips .plat-chip').forEach(c=>c.classList.remove('selected'));
-  refreshPostsTable('all');
-}
-function deletePost(id){S.posts=S.posts.filter(p=>p.id!==id);save();refreshPostsTable(document.getElementById('filter-posts')?.value||'all');}
-
-// Apps
-function installApp(id){
-  const cat=APP_CATALOG.find(a=>a.id===id);if(!cat||S.apps.find(a=>a.id===id))return;
-  S.apps.push({...cat,installed:true});save();toast(`${cat.name} הותקן ✓`,'success');render();
-}
-function removeApp(id){S.apps=S.apps.filter(a=>a.id!==id);save();toast('הוסרה','info');render();}
-function saveApp(){
-  const name=document.getElementById('af-name').value.trim();if(!name){toast('נא להזין שם','error');return;}
-  S.apps.push({id:uid(),name,icon:document.getElementById('af-icon').value||'🔧',desc:document.getElementById('af-desc').value||'',url:document.getElementById('af-url').value||'',installed:true,custom:true});
-  save();closeM('mod-app');toast('אפליקציה נוספה ✓','success');render();
-}
-
-// Search
-function globalSearch(q){
-  q=q.toLowerCase().trim();if(!q){render();return;}
-  if(S.view==='projects'){
-    const g=document.getElementById('proj-grid');if(!g)return;
-    const f=S.projects.filter(p=>p.name.toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q));
-    g.innerHTML=f.length===0?`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)">לא נמצאו תוצאות עבור "${q}"</div>`:f.map(projCard).join('');
-  }
-}
-
-// Confirm dialog (no browser confirm())
 function confirmDelete(msg,cb){
   document.getElementById('confirm-msg').textContent=msg;
-  document.getElementById('confirm-ok').onclick=()=>{closeM('mod-confirm');cb();};
+  const ok=document.getElementById('confirm-ok');
+  ok.onclick=()=>{closeM('mod-confirm');cb();};
   openM('mod-confirm');
 }
 
-// Theme toggle
-function toggleTheme(){
-  const r=document.documentElement;
-  const cur=r.getAttribute('data-theme');
-  const next=cur==='dark'?'light':cur==='light'?null:'dark';
-  if(next)r.setAttribute('data-theme',next);else r.removeAttribute('data-theme');
-  const btn=document.querySelector('.btn-icon[onclick="toggleTheme()"]');
-  if(btn)btn.textContent=next==='light'?'🌙':next==='dark'?'☀️':'🌙';
+function toast(msg,type='info'){
+  const t=document.createElement('div');
+  t.className='toast'+(type==='success'?' success':type==='error'?' error':'');
+  t.innerHTML=`<span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>t.remove(),3200);
 }
 
-// Modals
-function openM(id){document.getElementById(id).classList.remove('hidden');}
-function closeM(id){document.getElementById(id).classList.add('hidden');}
-document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.add('hidden');}));
+function toggleTheme(){
+  const cur=document.documentElement.dataset.theme||'dark';
+  document.documentElement.dataset.theme=cur==='dark'?'light':'dark';
+}
 
-// Toast
-function toast(msg,type='info'){
-  const c=document.getElementById('toasts');
-  const el=document.createElement('div');el.className=`toast ${type}`;
-  el.innerHTML=`<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||'ℹ️'}</span> ${msg}`;
-  c.appendChild(el);
-  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),320);},3000);
+function globalSearch(q){
+  if(!q){renderProjects();return;}
+  const lo=q.toLowerCase();
+  const res=S.projects.filter(p=>p.name.toLowerCase().includes(lo)||p.description?.toLowerCase().includes(lo));
+  const c=document.getElementById('content');
+  if(S.view!=='projects'){S.view='projects';syncNav();syncTopbar();}
+  c.innerHTML=`<div class="projects-grid">${res.length?res.map(projCard).join(''):'<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)">לא נמצאו פרוייקטים</div>'}</div>`;
 }
 
 // Helpers
 function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
 function sLabel(s){return{active:'פעיל',paused:'מושהה',done:'הושלם'}[s]||s;}
 function priLbl(p){return{high:'גבוה',med:'בינוני',low:'נמוך'}[p]||'—';}
-function postStatusLbl(s){return{sent:'נשלח',scheduled:'מתוזמן',draft:'טיוטה',failed:'נכשל'}[s]||s;}
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
@@ -1077,6 +991,7 @@ const _SEED_IDS={'ביונד אינטימה':'seed-bi','קליניקמייט':'s
 let _migrated=false;
 S.projects.forEach(p=>{if(_SEED_IDS[p.name]&&p.id!==_SEED_IDS[p.name]){p.id=_SEED_IDS[p.name];_migrated=true;}});
 if(_migrated)save();
+
 if(S.projects.length===0){
   const now=Date.now();
   S.projects=[{
@@ -1142,6 +1057,7 @@ if(S.projects.length===0){
   }];
   save();
 }
+
 syncNav();syncTopbar();
 const _startHash=location.hash.slice(1);
 if(_startHash&&S.projects.find(x=>x.id===_startHash)){openProject(_startHash);}
