@@ -22,10 +22,6 @@
       {
         "source": "/kadur",
         "destination": "/kadur/index.html"
-      },
-      {
-        "source": "/games",
-        "destination": "/games/index.html"
       }
     ],
     "headers": [
