@@ -18,13 +18,13 @@
 ## 3. פרחי באך
 - **מה זה:** 38 פרחי באך ופרח החירום: דפדוף, אבחון עצמי, תערובת אישית עם הוראות שימוש, יומן מעקב.
 - **איפה:** `bach/index.html`, כתובת `/bach/` על דומיין ה-CRM.
-- **ריפו עצמאי:** https://github.com/hen27e-alt/bach-flowers-site (פרטי) עם האפליקציה, הגדרות Firebase ו-Vercel ו-workflow. טרם נפרס (פרויקט Firebase `bach-flowers-site` צריך להיווצר). `bach-flowers1-site` (ציבורי) נשאר ריק.
+- **ריפו עצמאי:** https://github.com/hen27e-alt/bach-flowers-site (פרטי) עם האפליקציה, הגדרות Firebase ו-Vercel ו-workflow. פרויקט Firebase: `bach-flowers-8d531` (נוצר). נמסר שקיים גם פרויקט Vercel; הכתובת הציבורית עדיין לא ידועה לי. `bach-flowers1-site` (ציבורי) נשאר ריק.
 - **הערה:** תוכן הפרחים נכתב בסשן הזה ולא נבדק על ידי מטפל. מוצג כתוכן משלים בלבד.
 
 ## 4. כדור בדולח
 - **מה זה:** כדור בדולח אינטראקטיבי: שאלות לכדור, קלף היום, מזלות, נומרולוגיה, יומן.
 - **איפה:** `kadur/index.html`, כתובת `/kadur/`.
-- **ריפו עצמאי:** https://github.com/hen27e-alt/kadur-habdolach (ציבורי). מכיל את האפליקציה, `firebase.json`, `.firebaserc` (פרויקט `kadur-habdolach`, צריך ליצור ב-Firebase), `vercel.json`, workflow לפריסה ו-README. טרם נפרס.
+- **ריפו עצמאי:** https://github.com/hen27e-alt/kadur-habdolach (ציבורי). מכיל את האפליקציה, `firebase.json`, `.firebaserc` (פרויקט `kadur-habdolach`, צריך ליצור ב-Firebase), `vercel.json`, workflow לפריסה ו-README. פרויקט Firebase: `kad-ball` (נוצר). נמסר שקיים גם פרויקט Vercel; הכתובת הציבורית עדיין לא ידועה לי.
 - **הערה:** המענים נוצרים מקומית (בלי AI חיצוני) ומסומנים כבידור בלבד.
 
 ## 5. ערב משחקים
