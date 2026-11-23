@@ -12,7 +12,7 @@
 - **אבטחת קלט** — כל טקסט משתמש עובר `esc()` לפני `innerHTML`.
 
 ## אפליקציות מתארחות
-`bach/`, `kadur/`, `games/` הן דפים עצמאיים, אותו origin כמו ה-CRM. כפתור "← CRM" בכל אחת מופיע רק בתוך iframe וקורא ל-`window.parent.closeBrowser()`.
+`bach/`, `kadur/`, `games/` הן עותקי דפים עצמאיים באותו origin כמו ה-CRM. ה-CRM עצמו פותח את גרסאות ה-Vercel של פרחי באך וכדור בדולח (ריפוזיטוריז נפרדים); העותקים כאן נשארים כגיבוי. כפתור "← CRM" בכל אחת מופיע רק בתוך iframe וקורא ל-`window.parent.closeBrowser()`.
 
 ## גרסת ה-Artifact
 ב-claude.ai ה-CRM מתפרסם בלי עטיפת `<html>`; בריפו נשמרת גרסה עטופה (`doctype`, `charset`, `viewport`, `dir="rtl"`). ההבדל היחיד הוא העטיפה.

@@ -7,8 +7,8 @@ CRM שמשמש גם כשרת האירוח: כל האפליקציות שלי נפ
 |---|---|---|
 | ביונד אינטימה | https://byondintima-d1d4e.web.app/ (אתר נפרד, לא חלק מהריפו הזה) | באוויר |
 | ClinicMate | https://clinicmate.co.il/ (אתר נפרד, לא חלק מהריפו הזה) | באוויר (לפי הנמסר, לא נבדק מכאן) |
-| פרחי באך | `/bach/` | מתארח כאן |
-| כדור בדולח | `/kadur/` | מתארח כאן |
+| פרחי באך | https://bach-flowers-site.vercel.app/ (Vercel, ריפו `bach-flowers-site`) | באוויר (לפי הנמסר, לא נבדק מכאן) |
+| כדור בדולח | https://kadur-habdolach.vercel.app/ (Vercel, ריפו `kadur-habdolach`) | באוויר (לפי הנמסר, לא נבדק מכאן) |
 | ערב משחקים | `/games/` | בפיתוח (דף זמני) |
 
 הסטטוס המלא, הריפוזיטוריז והצעדים הבאים לכל אפליקציה: [`docs/PROJECTS.md`](docs/PROJECTS.md).
@@ -17,7 +17,7 @@ CRM שמשמש גם כשרת האירוח: כל האפליקציות שלי נפ
 ## מבנה
 ```
 index.html        ה-CRM (דף אחד, localStorage: crm_pro_v3)
-bach/ kadur/ games/   אפליקציות מתארחות (דף אחד כל אחת, אותו origin)
+bach/ kadur/ games/   עותקי גיבוי של האפליקציות (ה-CRM פותח את גרסאות ה-Vercel). games/ הוא דף זמני
 docs/             תיעוד לכל פרויקט (לא מתפרסם)
 firebase.json     הגדרות hosting
 .github/workflows/firebase-deploy.yml   פריסה אוטומטית ב-push ל-main

@@ -1068,8 +1068,8 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;',
 const REG={
   'seed-bi':  {name:'ביונד אינטימה',en:'BYOND INTIMA',tag:'חוויות זוגיות מודרכות',desc:'מארזי ערבים לזוגות עם מלווה דיגיטלי, משחקים ויועץ AI. החנות והאזור האישי של הזוג.',url:'https://byondintima-d1d4e.web.app/',g:['#3A1712','#0A0809'],ac:'#C9A66B'},
   'seed-cm':  {name:'ClinicMate',en:'CLINICMATE',tag:'ניהול קליניקה חכם',desc:'מערכת לניהול קליניקה: יומן תורים, תיקי מטופלים ומעקב טיפולים.',url:'https://clinicmate.co.il/',g:['#0F766E','#1E3A8A'],ac:'#2DD4BF'},
-  'seed-pb':  {name:'פרחי באך',en:'BACH FLOWERS',tag:'מצאו את הפרח שלכם',desc:'38 פרחי באך ופרח החירום: אבחון עצמי, תערובת אישית ויומן מעקב יומי.',url:'bach/',g:['#C2577A','#5B3A86'],ac:'#F4A8C0'},
-  'seed-kb':  {name:'כדור בדולח',en:'CRYSTAL BALL',tag:'שאלו את הכדור',desc:'כדור בדולח אינטראקטיבי: שאלות לכדור, קלף היום, מזלות ונומרולוגיה.',url:'kadur/',g:['#3B1D8A','#07051A'],ac:'#A78BFA'},
+  'seed-pb':  {name:'פרחי באך',en:'BACH FLOWERS',tag:'מצאו את הפרח שלכם',desc:'38 פרחי באך ופרח החירום: אבחון עצמי, תערובת אישית ויומן מעקב יומי.',url:'https://bach-flowers-site.vercel.app/',g:['#C2577A','#5B3A86'],ac:'#F4A8C0'},
+  'seed-kb':  {name:'כדור בדולח',en:'CRYSTAL BALL',tag:'שאלו את הכדור',desc:'כדור בדולח אינטראקטיבי: שאלות לכדור, קלף היום, מזלות ונומרולוגיה.',url:'https://kadur-habdolach.vercel.app/',g:['#3B1D8A','#07051A'],ac:'#A78BFA'},
   'seed-game':{name:'ערב משחקים',en:'GAME NIGHT',tag:'משחקים לחברים ולזוגות',desc:'אוסף משחקי חברה וטריוויה לערבים עם חברים ועם בני זוג.',url:'games/',deploy:'dev',g:['#EA580C','#9D174D'],ac:'#FDBA74'}
 };
 const _petals=[0,1,2,3,4,5,6,7].map(i=>`<ellipse cx="0" cy="-12.5" rx="5.6" ry="11" fill="#fff" fill-opacity="${i%2?'.72':'.92'}" transform="rotate(${i*45})"/>`).join('');
@@ -1312,7 +1312,7 @@ function priLbl(p){return{high:'גבוה',med:'בינוני',low:'נמוך'}[p]|
 load();
 // Migrate existing projects: stable IDs, real names, real URLs
 const _OLD_NAMES={'ביונד אינטימה':'seed-bi','קליניקמייט':'seed-cm','ClinicMate':'seed-cm','פרחי באך':'seed-pb','כדור בדולח':'seed-kb','אפליקציית משחקים':'seed-game','ערב משחקים':'seed-game'};
-const _STALE_URL=/github\.io|^(byond|clinicmate)\/$/i;
+const _STALE_URL=/github\.io|^(byond|clinicmate|bach|kadur)\/$/i;
 let _migrated=false;
 S.projects.forEach(p=>{
   if(_OLD_NAMES[p.name]&&p.id!==_OLD_NAMES[p.name]){p.id=_OLD_NAMES[p.name];_migrated=true;}
@@ -1353,7 +1353,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'רעיון מרכזי',body:'מערכת CRM ייעודית למטפלים — טיפול בתיקי מטופלים, תזכורות אוטומטיות, וניהול תשלומים במקום אחד.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:'seed-pb',name:'פרחי באך',emoji:'🌸',url:'bach/',
+    id:'seed-pb',name:'פרחי באך',emoji:'🌸',url:'https://bach-flowers-site.vercel.app/',
     description:'38 פרחי באך ופרח החירום: אבחון עצמי, תערובת אישית ויומן מעקב יומי.',
     status:'active',category:'בריאות',
     tasks:[
@@ -1365,7 +1365,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'קהל יעד',body:'מטפלים הוליסטיים, אנשים המחפשים רפואה משלימה, ומתעניינים בבריאות רגשית טבעית.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:'seed-kb',name:'כדור בדולח',emoji:'🔮',url:'kadur/',
+    id:'seed-kb',name:'כדור בדולח',emoji:'🔮',url:'https://kadur-habdolach.vercel.app/',
     description:'כדור בדולח אינטראקטיבי: שאלות לכדור, קלף היום, מזלות ונומרולוגיה.',
     status:'active',category:'בידור',
     tasks:[

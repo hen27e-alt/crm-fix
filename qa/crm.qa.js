@@ -28,11 +28,9 @@ ok((await pg.locator('#browser-ext-link').getAttribute('href'))==='https://clini
 ok(await pg.locator('#browser-no-url.hidden').count()===1,'clinicmate does not ask for a domain');
 await pg.click('.pl-btn');
 // bach & kadur load same-origin
-for(const [name,sel] of [['פרחי באך','bach'],['כדור בדולח','kadur']]){
-  await pg.click(`.poster:has-text("${name}")`);await pg.waitForTimeout(1500);
-  const fr=pg.frames().find(f=>f.url().includes('/'+sel));
-  ok(!!fr,name+' iframe loaded');
-  ok(await pg.locator('#pl-loading.done').count()===1,name+' loading overlay dismissed');
+for(const [name,url] of [['פרחי באך','https://bach-flowers-site.vercel.app/'],['כדור בדולח','https://kadur-habdolach.vercel.app/']]){
+  await pg.click(`.poster:has-text("${name}")`);
+  ok((await pg.locator('#browser-ext-link').getAttribute('href'))===url,name+' opens '+url);
   await pg.click('.pl-btn');
 }
 // 2 CRUD + XSS
