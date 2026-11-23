@@ -35,7 +35,7 @@
   --ease:cubic-bezier(.2,.8,.2,1);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{background:var(--bg);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{background:var(--bg);scroll-behavior:smooth;-webkit-text-size-adjust:100%;overflow-x:hidden}
 body{
   font-family:var(--f-ui);color:var(--ink);background:var(--bg);
   min-height:100vh;min-height:100dvh;line-height:1.6;font-size:16px;
@@ -66,7 +66,7 @@ button{cursor:pointer;background:none;border:0}
 /* ============================================================
    App shell
    ============================================================ */
-.app{position:relative;z-index:2;max-width:900px;margin:0 auto;padding:0 max(16px,var(--sar)) 0 max(16px,var(--sal))}
+.app{position:relative;z-index:2;max-width:900px;margin:0 auto;overflow-x:clip;padding:0 max(16px,var(--sar)) 0 max(16px,var(--sal))}
 .top{
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
   padding:calc(var(--sat) + 10px) 0 6px;min-height:calc(var(--sat) + 62px)
@@ -114,6 +114,7 @@ button{cursor:pointer;background:none;border:0}
   transition:border-color .2s,box-shadow .2s;font-size:16px
 }
 .field::placeholder{color:#7468a6}
+.field:focus-visible,.select:focus-visible{outline:none}
 .field:focus,.select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(230,194,122,.18)}
 .select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(0% + 20px) 52%,calc(0% + 15px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-inline-start:36px}
 .select option{background:#120a3b;color:var(--ink)}
@@ -201,7 +202,7 @@ input[type=date].field{min-height:48px;color-scheme:dark}
 .orb canvas{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:50%}
 .orb-core{position:absolute;inset:0;border-radius:50%;pointer-events:none;mix-blend-mode:screen;
   background:radial-gradient(circle at 50% 52%,rgba(255,244,214,.95),rgba(196,160,255,.55) 20%,rgba(124,58,237,.18) 42%,transparent 62%);
-  opacity:calc(var(--energy) * .75);transform:scale(calc(.55 + var(--energy)*.55))}
+  opacity:calc(var(--energy) * .5);transform:scale(calc(.5 + var(--energy)*.5))}
 .orb-depth{position:absolute;inset:0;border-radius:50%;pointer-events:none;
   background:radial-gradient(circle at 50% 46%,transparent 52%,rgba(4,1,18,.62) 100%)}
 .orb-word{
@@ -322,6 +323,7 @@ input[type=date].field{min-height:48px;color-scheme:dark}
 .sign-hero .glyph{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;flex:none;border:1px solid var(--line-gold);background:radial-gradient(circle at 35% 30%,rgba(230,194,122,.28),rgba(124,58,237,.2) 60%,transparent);box-shadow:0 0 30px rgba(230,194,122,.2)}
 .sign-hero .glyph svg{width:40px;height:40px;stroke:var(--gold-3)}
 .sign-hero h3{font-size:28px}
+.master-tag{font-size:11.5px;color:var(--gold);border:1px solid var(--line-gold);border-radius:999px;padding:1px 9px;font-family:var(--f-ui);font-weight:600;letter-spacing:.4px}
 .facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .mood{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(124,58,237,.28),rgba(192,38,211,.16));border:1px solid rgba(167,139,250,.3)}
 .mood b{font-family:var(--f-display);font-size:21px;color:var(--gold-3)}
@@ -338,6 +340,7 @@ input[type=date].field{min-height:48px;color-scheme:dark}
    Numerology
    ============================================================ */
 .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.nums .panel{margin-top:0}
 .num-orb{text-align:center;padding:14px 4px 12px}
 .num-orb .n{
   width:66px;height:66px;margin:0 auto 6px;border-radius:50%;display:grid;place-items:center;
@@ -392,6 +395,7 @@ input[type=date].field{min-height:48px;color-scheme:dark}
   .app{padding-inline:32px}
   .view-head h2{font-size:38px}
   .ball-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:36px;align-items:start;margin-top:10px}
+  .ball-col{position:sticky;top:12px}
   .stage{width:min(34vw,340px)}
   .signs{grid-template-columns:repeat(6,1fr)}
   .daily-wrap{display:grid;grid-template-columns:260px 1fr;gap:28px;align-items:start}
@@ -482,10 +486,10 @@ input[type=date].field{min-height:48px;color-scheme:dark}
               </button>
             </div>
           </form>
+          <article class="panel answer" id="answer" hidden aria-live="polite"></article>
           <div class="chips-title">או בחרו שאלה מוכנה</div>
           <div class="chips" id="chips"></div>
           <button class="link-btn" id="shakeBtn" type="button" hidden>הפעלת ניעור הטלפון כדי לשאול</button>
-          <article class="panel answer" id="answer" hidden aria-live="polite"></article>
         </div>
       </div>
     </section>
@@ -672,7 +676,7 @@ const ICON = {
    1. ORACLE DATA
    ============================================================ */
 const CATS = {
-  love:     { name:'אהבה ויחסים',      w:1,   kw:['אהב','אוהב','זוגיות','בן זוג','בת זוג','חבר שלי','חברה שלי','חתונ','נישוא','להתחתן','רומנ','דייט','גרוש','אקס','מאוהב','מתאהב','נפש תאומה','יחסים','פרידה','להיפרד','בגיד','מחזר','געגוע','נשיק','הצעת נישואין','בני זוג','זוג$','קשר$','אהוב'] },
+  love:     { name:'אהבה ויחסים',      w:1,   kw:['אהב','אוהב','זוגיות','בן זוג','בת זוג','חבר שלי','חברה שלי','חתונ','נישוא','להתחתן','רומנ','דייט','גרוש','אקס','מאוהב','מתאהב','נפש תאומה','נפש התאומה','נפשי התאומה','יחסים','פרידה','להיפרד','בגיד','מחזר','געגוע','נשיק','הצעת נישואין','בני זוג','זוג$','קשר$','אהוב'] },
   career:   { name:'קריירה ועבודה',    w:1,   kw:['קריירה','עבוד','משרה','מעסיק','בוס$','מנהל','קידום','ראיון','מקצוע','פיטור','להתפטר','התפטר','עסק','סטארט','לקוח','פרויקט','תפקיד','תואר$','מבחן','אוניברסיט','קורס','מכללה','עובד','משרד','קולגה','הצלחה מקצועית'] },
   money:    { name:'כסף ושפע',         w:1,   kw:['כסף','כספ','הכנסה','משכורת','הלוואה','משכנתא','השקע','מניות','קריפטו','ביטקוין','לוטו','פיס$','הימור','רווח','הפסד','חוב','עשיר','עושר','דירה','רכב','ירושה','תשלום','בנק','חיסכון','חסכון','שפע','מצב כלכלי','מצבי הכלכלי','כלכל'] },
   health:   { name:'בריאות ואנרגיה',   w:1,   kw:['בריאות','בריא','חולה','מחלה','רופא','כאב','ניתוח','דיאט','משקל','לרדת','כושר','ספורט','מתח$','חרדה','דיכאון','שינה','להבריא','החלמ','אנרגיה','עייפות','טיפול','תרופ','פוריות','בדיקה','בדיקות','חיוניות'] },
@@ -793,7 +797,7 @@ const BALL_WORDS = {
   neg:['עצירה','זהירות','ערפל','התבוננות','האטה']
 };
 const LUCKY_COLORS = [
-  {n:'זהב',h:'#E6C27A'},{n:'סגול',h:'#8B5CF6'},{n:'טורקיז',h:'#22D3EE'},{n:'אדום עמוק',h:'#E11D48'},{n:'ירוק יער',h:'#22C55E'},
+  {n:'זהב',h:'#E6C27A'},{n:'סגול',h:'#8B5CF6'},{n:'טורקיז',h:'#22D3EE'},{n:'אדום',h:'#E11D48'},{n:'ירוק יער',h:'#22C55E'},
   {n:'כחול ים',h:'#3B82F6'},{n:'ורוד',h:'#F472B6'},{n:'כסוף',h:'#CBD5E1'},{n:'כתום',h:'#FB923C'},{n:'לבן פנינה',h:'#F5F3FF'}
 ];
 
@@ -981,7 +985,7 @@ function cardFrontSVG(i, reversed){
 <circle cx="100" cy="158" r="78" fill="url(#${id}h)"/>
 <circle cx="100" cy="158" r="64" fill="none" stroke="url(#${id}g)" stroke-width="1" opacity=".55"/>
 <circle cx="100" cy="158" r="68" fill="none" stroke="url(#${id}g)" stroke-width=".6" stroke-dasharray="1.5 4" opacity=".7"/>
-<g transform="translate(100 158)${reversed ? ' rotate(180)' : ''}"><g transform="scale(1)">${gl}</g></g>
+<g transform="translate(100 158)${reversed ? ' rotate(180)' : ''}"><g transform="scale(1.16)">${gl}</g></g>
 <rect x="5" y="5" width="190" height="310" rx="10" fill="none" stroke="url(#${id}g)" stroke-width="2.6"/>
 <rect x="13" y="13" width="174" height="294" rx="6" fill="none" stroke="url(#${id}g)" stroke-width="1" opacity=".75"/>
 <g fill="url(#${id}g)"><path d="M13 22l5-5 5 5-5 5zM187 22l-5-5-5 5 5 5zM13 298l5-5 5 5-5 5zM187 298l-5-5-5 5 5 5z" transform="translate(0 0)"/></g>
@@ -1097,15 +1101,15 @@ const NUMS = {
      life:'מסלול של חמלה, סיום ונתינה. יש בכם לב רחב וראייה רחבה, ותחושת שליחות לתרום ולעזור, ולעיתים לסגור מעגלים כדי להתחדש.',
      gifts:'נדיבות, חכמה רגשית, השראה', shadow:'אכזבה מהעולם, קושי לשחרר, הקרבה יתרה', tip:'למדו לשחרר בעדינות, ולתת מתוך שפע ולא מתוך חסר.',
      name:'העולם פוגש בכם אדם נדיב ובעל נוכחות מאירה, שמעורר השראה.'},
-  11:{t:'המאיר, מספר על',
+  11:{t:'המאיר',master:1,
      life:'מספר על של אינטואיציה והארה. אתם רגישים לרעיונות ולאנשים, ומעוררים השראה בלי מאמץ. הרגישות הזאת היא מתנה, והיא דורשת עיגון.',
      gifts:'חזון, אינטואיציה, השראה', shadow:'מתח עצבים, ביקורת עצמית, אי יציבות', tip:'התמידו בשגרה מארגנת, והאור שלכם יבער בלי לשרוף.',
      name:'העולם פוגש בכם אדם נוכח, כמעט נבואי, שמעורר סקרנות ואמון.'},
-  22:{t:'האדריכל, מספר על',
+  22:{t:'האדריכל',master:1,
      life:'מספר על של בנייה בקנה מידה גדול. חזון מעשי יחד עם יכולת ביצוע מאפשרים לכם להקים משהו שמשרת רבים, ולהפוך חלום למבנה.',
      gifts:'חזון מעשי, ארגון, כושר מנהיגות', shadow:'לחץ עצמי, פחד מכישלון, עומס', tip:'פצלו את החזון הגדול לצעדים קטנים והתחילו מהיום.',
      name:'העולם פוגש בכם אדם עם נוכחות של בנאי גדול, שמעורר תחושת ביטחון ומשימה.'},
-  33:{t:'המורה המרפא, מספר על',
+  33:{t:'המורה המרפא',master:1,
      life:'מספר על נדיר של אהבה והוראה. אתם נולדתם לטפח, ללמד ולרפא, ולהוות דוגמה אישית ברוח ובמעשה.',
      gifts:'חמלה עמוקה, הוראה, ריפוי', shadow:'נטילת עול רגשי של אחרים, מרטירולוגיה, שחיקה', tip:'הציבו גבולות עדינים, אי אפשר לרפא מתוך תשישות.',
      name:'העולם פוגש בכם אדם חם ומאיר, שאנשים מרגישים לידו מובנים ובטוחים.'}
@@ -1375,12 +1379,15 @@ function orbBuild(){
   const r = rng(99), n = (window.innerWidth < 600 ? 64 : 88) * (reduceMotion() ? .6 : 1);
   o.parts = [];
   for (let i = 0; i < n; i++){
-    const rad = .03 + Math.pow(r(), 1.35) * .46;
+    const rad = .05 + Math.pow(r(), 1.05) * .43;
     const ci = r() < .5 ? 0 : r() < .55 ? 1 : r() < .6 ? 2 : r() < .5 ? 4 : 3;
     o.parts.push({ r:rad, th:r() * 6.283, w:(.18 + r() * .34) / (rad * 3 + .28) * (r() < .12 ? -.6 : 1), s:.09 + r() * .2, c:ci, a:.2 + r() * .4, ph:r() * 6.283 });
   }
   o.clouds = [];
   for (let i = 0; i < 6; i++) o.clouds.push({ a0:r() * 6.283, w:(.05 + r() * .1) * (i % 2 ? -1 : 1), rr:.06 + r() * .16, s:.7 + r() * .5, al:.2 + r() * .22, c:i % 3 === 0 ? 1 : i % 3 === 1 ? 0 : 2 });
+  o.tendrils = [];
+  const tcols = ['rgb(167,139,250)', 'rgb(232,121,249)', 'rgb(103,232,249)', 'rgb(196,181,253)', 'rgb(167,139,250)'];
+  for (let i = 0; i < 5; i++) o.tendrils.push({ a0:i * 1.257 + r(), w:(.08 + r() * .1) * (i % 2 ? -.7 : 1), sweep:(1.8 + r() * 1.8) * (i % 2 ? -1 : 1), ph:r() * 6.28, col:tcols[i], lw:.006 + r() * .006 });
   o.glints = [];
   for (let i = 0; i < 12; i++) o.glints.push({ x:.18 + r() * .64, y:.18 + r() * .64, ph:r() * 6.283, sp:.6 + r() * 1.6, s:.012 + r() * .018 });
 }
@@ -1407,15 +1414,27 @@ function orbDraw(dt){
   ctx.globalCompositeOperation = 'lighter';
   for (const cl of o.clouds){
     const a = cl.a0 + t * cl.w, x = c + Math.cos(a) * cl.rr * S, y = c + Math.sin(a * .9) * cl.rr * S, s = cl.s * S * (1 + e * .22);
-    ctx.globalAlpha = cl.al * (.6 + e * .9);
+    ctx.globalAlpha = cl.al * (.5 + e * .55);
     ctx.drawImage(o.sprites[cl.c], x - s / 2, y - s / 2, s, s);
+  }
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const td of o.tendrils){
+    ctx.beginPath();
+    for (let i = 0; i <= 18; i++){
+      const u = i / 18, rr = (.04 + u * .44) * S, a = td.a0 + t * td.w + u * td.sweep + Math.sin(t * .45 + td.ph + u * 3) * .22;
+      const x = c + Math.cos(a) * rr, y = c + Math.sin(a) * rr * .94;
+      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    }
+    ctx.strokeStyle = td.col;
+    ctx.globalAlpha = .05 + e * .08; ctx.lineWidth = S * .06; ctx.stroke();
+    ctx.globalAlpha = .16 + e * .34; ctx.lineWidth = S * td.lw * (1 + e); ctx.stroke();
   }
   for (const p of o.parts){
     p.th += p.w * dt * speed;
     const rr = p.r * (1 + .09 * Math.sin(t * .6 + p.ph)) * (1 - e * .12);
     const x = c + Math.cos(p.th) * rr * S, y = c + Math.sin(p.th) * rr * S * .94;
-    const s = p.s * S * (.85 + e * .55);
-    ctx.globalAlpha = Math.min(1, p.a * (.5 + e * 1.0) * (.72 + .28 * Math.sin(t * 1.1 + p.ph)));
+    const s = p.s * S * (.85 + e * .25);
+    ctx.globalAlpha = Math.min(1, p.a * (.42 + e * .62) * (.72 + .28 * Math.sin(t * 1.1 + p.ph)));
     ctx.drawImage(o.sprites[p.c], x - s / 2, y - s / 2, s, s);
   }
   ctx.globalAlpha = 1;
@@ -1902,10 +1921,11 @@ function buildSignGrid(){
   $('#signGrid').innerHTML = SIGNS.map(s => `
     <button type="button" class="sign" data-s="${s.id}" aria-pressed="${Z.sign === s.id}">${signSVG(s)}<span>${esc(s.n)}</span><small>${mine === s.id ? 'המזל שלי' : esc(s.el)}</small></button>`).join('');
 }
-function selectSign(id){
+function selectSign(id, scroll){
   Z.sign = id; buildSignGrid(); renderHoro();
+  if (scroll) setTimeout(() => { try { $('#horoInfo').scrollIntoView({ behavior:reduceMotion() ? 'auto' : 'smooth', block:'start' }); } catch (e) {} }, 80);
 }
-$('#signGrid').addEventListener('click', e => { const b = e.target.closest('.sign'); if (b){ chime('tick'); selectSign(b.dataset.s); } });
+$('#signGrid').addEventListener('click', e => { const b = e.target.closest('.sign'); if (b){ chime('tick'); selectSign(b.dataset.s, true); } });
 function setDayOffset(o){
   Z.off = o; $('#dayToday').setAttribute('aria-pressed', String(o === 0)); $('#dayTomorrow').setAttribute('aria-pressed', String(o === 1)); renderHoro();
 }
@@ -1926,7 +1946,7 @@ $('#detectSign').addEventListener('click', () => {
   const s = signFromDate(d, m);
   store.set('birth', { d, m }); store.set('sign', s.id);
   out.style.color = 'var(--good)'; out.textContent = 'המזל שלכם הוא ' + s.n + ', ' + s.range + '. נשמר במכשיר.';
-  chime('reveal'); selectSign(s.id);
+  chime('reveal'); selectSign(s.id, true);
 });
 
 /* ============================================================
@@ -1954,7 +1974,7 @@ function analyzeName(name){
 }
 function lifePath(y, m, d){ return reduceKeep(reduceKeep(d) + reduceKeep(m) + reduceKeep(y)); }
 function numOrb(label, sub, n){
-  return `<div class="panel num-orb ${[11, 22, 33].includes(n) ? 'master' : ''}"><div class="n">${n || '—'}</div><small>${esc(label)}</small><b>${esc(n ? NUMS[n].t.replace(', מספר על', '') : sub)}</b></div>`;
+  return `<div class="panel num-orb ${[11, 22, 33].includes(n) ? 'master' : ''}"><div class="n">${n || '—'}</div><small>${esc(label)}</small><b>${esc(n ? NUMS[n].t : sub)}</b></div>`;
 }
 $('#numForm').addEventListener('submit', e => {
   e.preventDefault();
@@ -1976,7 +1996,7 @@ $('#numForm').addEventListener('submit', e => {
   const body = [];
   if (lp){
     const N = NUMS[lp];
-    html += `<section class="panel num-sec"><div class="eyebrow">מסלול חיים</div><h3>${lp} · ${esc(N.t)}</h3><p>${esc(N.life)}</p>
+    html += `<section class="panel num-sec"><div class="eyebrow">מסלול חיים</div><h3>${lp} · ${esc(N.t)}${N.master ? ' <span class="master-tag">מספר על</span>' : ''}</h3><p>${esc(N.life)}</p>
       <p><b style="color:var(--gold)">מתנות:</b> ${esc(N.gifts)}</p><p><b style="color:var(--violet-2)">אתגרים:</b> ${esc(N.shadow)}</p><p><b style="color:var(--good)">עצה:</b> ${esc(N.tip)}</p></section>`;
     body.push('מסלול חיים ' + lp + ' (' + N.t + '): ' + N.life);
   }
@@ -1986,14 +2006,14 @@ $('#numForm').addEventListener('submit', e => {
       const parts = []; if (it.h) parts.push(it.h); if (it.l) parts.push(it.l + ' לועזית');
       return `<span>${esc(it.w)}<b>${parts.join(' + ')}</b></span>`;
     }).join('');
-    html += `<section class="panel num-sec"><div class="eyebrow">מספר השם</div><h3>${nn} · ${esc(N.t)}</h3><p>${esc(N.name)}</p>
+    html += `<section class="panel num-sec"><div class="eyebrow">מספר השם</div><h3>${nn} · ${esc(N.t)}${N.master ? ' <span class="master-tag">מספר על</span>' : ''}</h3><p>${esc(N.name)}</p>
       <p><b style="color:var(--gold)">מתנות:</b> ${esc(N.gifts)}</p>
       <div class="gem">${chips}</div>
       <div class="hint-line">${an.he ? 'גימטריה (מספר הכרחי, אותיות סופיות כרגילות): ' + an.he + (an.gad !== an.he ? '. גימטריה גדולה (ך 500, ם 600, ן 700, ף 800, ץ 900): ' + an.gad : '') + '. ' : ''}${an.la ? 'אותיות לועזיות לפי פיתגורס: ' + an.la + '. ' : ''}מספר השם הוא סכום הערכים, מצומצם לספרה בודדת (11, 22 ו-33 נשמרים).</div></section>`;
     body.push('מספר שם ' + nn + (an.he ? ' (גימטריה ' + an.he + ')' : '') + ' (' + N.t + '): ' + N.name);
   }
   if (lp && nn){
-    const a = NUMS[lp].t.replace(', מספר על', ''), b = NUMS[nn].t.replace(', מספר על', '');
+    const a = NUMS[lp].t, b = NUMS[nn].t;
     const mix = lp === nn
       ? 'מסלול החיים ומספר השם שלכם זהים, והם מחזקים זה את זה: מה שאתם בפנים הוא גם מה שהעולם רואה.'
       : `החיבור בין ${a} (מסלול החיים) לבין ${b} (מספר השם) יוצר שילוב ייחודי: התכונות של האחד מאזנות את האחר, ושווה לשאול היכן כל אחד מהם בא לידי ביטוי בחייכם.`;
