@@ -1,0 +1,9 @@
+{
+  "currency": "ILS",
+  "points": { "perShekel": 1 },
+  "tiers": [
+    { "id": "member", "label": "חבר/ה", "minSpendAgorot": 0, "discountPct": 0 },
+    { "id": "silver", "label": "כסף", "minSpendAgorot": 20000, "discountPct": 5 },
+    { "id": "gold", "label": "זהב", "minSpendAgorot": 60000, "discountPct": 10 }
+  ]
+}

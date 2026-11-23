@@ -1,0 +1,27 @@
+{
+  "appId": "my-site",
+  "region": "europe-west1",
+  "siteUrl": "https://example.com",
+  "returnPath": "/",
+  "webhookUrl": "",
+  "currency": "ILS",
+  "provider": "payplus",
+  "enforceAppCheck": false,
+  "payplus": {
+    "environment": "sandbox"
+  },
+  "points": {
+    "perShekel": 1
+  },
+  "tiers": [
+    { "id": "member", "minSpendAgorot": 0, "discountPct": 0 },
+    { "id": "silver", "minSpendAgorot": 20000, "discountPct": 5 },
+    { "id": "gold", "minSpendAgorot": 60000, "discountPct": 10 }
+  ],
+  "limits": {
+    "maxLines": 20,
+    "maxQtyPerLine": 10,
+    "maxPendingOrdersPerHour": 5,
+    "maxOrderTotalAgorot": 1000000
+  }
+}

@@ -1,0 +1,83 @@
+rules_version = '2';
+
+// Club Kit - Firestore security rules.
+// Principles (see CONTRACT.md):
+//  * default deny;
+//  * orders / members / entitlements are written ONLY by Cloud Functions (Admin SDK bypasses rules);
+//  * clients read only their own data and only active products;
+//  * users/{uid}: owner only, strict field allow-list, types and lengths.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // ---- products: public catalogue, active items only (queries must filter on active == true) ----
+    match /products/{productId} {
+      allow read: if resource.data.active == true;
+      allow write: if false;
+    }
+
+    // ---- orders: owner can read; nobody can write from a client ----
+    match /orders/{orderId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ---- members (club state): owner read-only ----
+    match /members/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // ---- users profile ----
+    match /users/{uid} {
+      // Allowed fields: displayName, email?, phone?, marketingConsent, termsAcceptedAt?, createdAt
+      function allowedKeys() {
+        return request.resource.data.keys().hasOnly(['displayName', 'email', 'phone', 'marketingConsent', 'termsAcceptedAt', 'createdAt']);
+      }
+
+      function validTypes() {
+        let d = request.resource.data;
+        return d.displayName is string && d.displayName.size() <= 100
+          && d.marketingConsent is bool
+          && d.createdAt is timestamp
+          && (!('email' in d) || (d.email is string && d.email.size() <= 254))
+          && (!('phone' in d) || (d.phone is string && d.phone.size() <= 20))
+          && (!('termsAcceptedAt' in d) || d.termsAcceptedAt is timestamp);
+      }
+
+      allow read: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && allowedKeys()
+        && request.resource.data.keys().hasAll(['displayName', 'marketingConsent', 'createdAt'])
+        && validTypes();
+
+      allow update: if isOwner(uid)
+        && allowedKeys()
+        && validTypes()
+        // createdAt is immutable
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Deleting an account goes through the deleteMyAccount function (it also removes orders' PII and the Auth user).
+      allow delete: if false;
+
+      // Entitlements: owner read-only; written by functions only.
+      match /entitlements/{feature} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+    }
+
+    // ---- everything else: denied ----
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
