@@ -1,0 +1,1138 @@
+<title>CRM Pro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: fixed sidebar + scrollable main, full dark-first */
+:root {
+  --bg:      #07080f;
+  --card:    #0f1018;
+  --card2:   #161720;
+  --border:  rgba(255,255,255,0.07);
+  --accent:  #6c63ff;
+  --accent2: #a78bfa;
+  --green:   #22c55e;
+  --yellow:  #f59e0b;
+  --red:     #ef4444;
+  --cyan:    #06b6d4;
+  --pink:    #ec4899;
+  --text:    #e2e8f0;
+  --muted:   #64748b;
+  --sidebar: #0a0b16;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:      #f1f3fa;
+    --card:    #ffffff;
+    --card2:   #eef0f8;
+    --border:  rgba(0,0,0,0.08);
+    --accent:  #5b52e8;
+    --accent2: #7c6fe8;
+    --green:   #16a34a;
+    --yellow:  #d97706;
+    --red:     #dc2626;
+    --cyan:    #0891b2;
+    --pink:    #db2777;
+    --text:    #1a1b2e;
+    --muted:   #64748b;
+    --sidebar: #1a1b2e;
+    color-scheme: light;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#07080f;--card:#0f1018;--card2:#161720;--border:rgba(255,255,255,0.07);
+  --accent:#6c63ff;--accent2:#a78bfa;--green:#22c55e;--yellow:#f59e0b;
+  --red:#ef4444;--cyan:#06b6d4;--pink:#ec4899;--text:#e2e8f0;--muted:#64748b;
+  --sidebar:#0a0b16;color-scheme:dark;
+}
+:root[data-theme="light"] {
+  --bg:#f1f3fa;--card:#ffffff;--card2:#eef0f8;--border:rgba(0,0,0,0.08);
+  --accent:#5b52e8;--accent2:#7c6fe8;--green:#16a34a;--yellow:#d97706;
+  --red:#dc2626;--cyan:#0891b2;--pink:#db2777;--text:#1a1b2e;--muted:#64748b;
+  --sidebar:#1a1b2e;color-scheme:light;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;font-size:14px;overflow-x:hidden;}
+button{cursor:pointer;font-family:inherit;}
+input,textarea,select{font-family:inherit;}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;text-wrap:balance;}
+font-variant-numeric{tabular-nums;}
+
+#app{display:flex;min-height:100%;position:relative;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:220px;min-width:220px;background:var(--sidebar);
+  border-inline-end:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;inset-inline-end:0;height:100%;z-index:100;
+}
+.main{
+  margin-inline-end:220px;display:flex;flex-direction:column;min-height:100%;flex:1;
+  padding-inline-start:max(0px,env(safe-area-inset-left,0px));
+  padding-inline-end:max(0px,env(safe-area-inset-right,0px));
+}
+.sb-brand{padding:18px 16px 14px;border-bottom:1px solid var(--border);}
+.sb-logo{font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sb-sub{font-size:.65rem;color:var(--muted);margin-top:2px;letter-spacing:.06em;}
+.sb-nav{flex:1;padding:12px 8px;overflow-y:auto;}
+.sb-section{font-size:.6rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;padding:10px 10px 4px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:8px;margin-bottom:2px;cursor:pointer;
+  color:var(--muted);font-size:.88rem;transition:background .15s,color .15s;
+}
+.nav-item:hover{background:rgba(108,99,255,.12);color:var(--text);}
+.nav-item.active{background:rgba(108,99,255,.22);color:var(--accent2);}
+.nav-item .icon{width:18px;text-align:center;flex-shrink:0;}
+.nav-badge{margin-inline-start:auto;background:var(--accent);color:#fff;font-size:.6rem;padding:2px 7px;border-radius:20px;font-weight:700;}
+.sb-footer{padding:14px 16px;border-top:1px solid var(--border);}
+.sb-user{display:flex;align-items:center;gap:10px;}
+.sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:#fff;}
+.sb-uname{font-size:.8rem;font-weight:500;}
+.sb-role{font-size:.65rem;color:var(--muted);}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--card);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));
+  height:56px;position:sticky;top:env(safe-area-inset-top,0px);z-index:50;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--card);z-index:200;}
+.topbar-title{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;flex:1;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;}
+.search-box input{background:none;border:none;outline:none;color:var(--text);width:170px;font-size:.82rem;}
+.search-box input::placeholder{color:var(--muted);}
+.btn{padding:7px 16px;border-radius:8px;border:none;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{filter:brightness(1.12);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--text);}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-sm{padding:5px 12px;font-size:.78rem;}
+.btn-icon{padding:7px;border-radius:7px;background:var(--card2);border:1px solid var(--border);color:var(--muted);}
+.btn-icon:hover{color:var(--text);border-color:var(--accent2);}
+
+/* ── CONTENT ── */
+#content{
+  flex:1;
+  padding:24px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));
+}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:600;}
+
+/* ── STAT TILES ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;}
+.stat-card:hover{border-color:var(--accent2);}
+.stat-icon{font-size:1.3rem;margin-bottom:8px;}
+.stat-val{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+.stat-label{font-size:.72rem;color:var(--muted);margin-top:4px;}
+.stat-sub{font-size:.7rem;margin-top:7px;}
+.stat-sub.up{color:var(--green);}
+
+/* ── PROJECTS ── */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
+.project-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:border-color .2s,transform .2s;}
+.project-card:hover{border-color:var(--accent2);transform:translateY(-2px);}
+.project-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.project-emoji{font-size:2rem;line-height:1;}
+.status-pill{padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:600;letter-spacing:.04em;}
+.sp-active{background:rgba(34,197,94,.12);color:var(--green);}
+.sp-paused{background:rgba(245,158,11,.12);color:var(--yellow);}
+.sp-done{background:rgba(100,116,139,.12);color:var(--muted);}
+.proj-name{font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:600;margin-bottom:4px;}
+.proj-desc{font-size:.78rem;color:var(--muted);margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.proj-meta{display:flex;gap:12px;font-size:.72rem;color:var(--muted);}
+.proj-bar{height:3px;background:var(--border);border-radius:2px;margin-top:12px;}
+.proj-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.proj-actions{display:flex;gap:6px;margin-top:12px;justify-content:flex-end;}
+
+/* ── PROJECT DETAIL ── */
+.detail-header{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:18px;}
+.dh-top{display:flex;align-items:flex-start;gap:16px;}
+.dh-emoji{font-size:2.6rem;flex-shrink:0;}
+.dh-info{flex:1;min-width:0;}
+.dh-name{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;}
+.dh-desc{color:var(--muted);font-size:.84rem;margin-top:4px;}
+.dh-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center;}
+.dh-actions{display:flex;gap:7px;flex-shrink:0;}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+.tab{padding:10px 16px;cursor:pointer;font-size:.84rem;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.tab:hover:not(.active){color:var(--text);}
+
+/* ── TASKS ── */
+.task-list{display:flex;flex-direction:column;gap:7px;}
+.task-row{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;display:flex;align-items:center;gap:11px;}
+.task-check{width:18px;height:18px;border-radius:4px;border:2px solid var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.task-check.done{background:var(--green);border-color:var(--green);color:#fff;}
+.task-text{flex:1;font-size:.85rem;}
+.task-text.done{text-decoration:line-through;color:var(--muted);}
+.pri-pill{padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:600;}
+.pri-high{background:rgba(239,68,68,.12);color:var(--red);}
+.pri-med{background:rgba(245,158,11,.12);color:var(--yellow);}
+.pri-low{background:rgba(100,116,139,.12);color:var(--muted);}
+
+/* ── NOTES ── */
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.note-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;}
+.note-title{font-weight:600;font-size:.85rem;margin-bottom:6px;}
+.note-body{font-size:.8rem;color:var(--muted);white-space:pre-wrap;line-height:1.5;}
+.note-date{font-size:.65rem;color:var(--muted);margin-top:8px;}
+.note-del{position:absolute;top:9px;inset-inline-start:9px;background:none;border:none;color:var(--muted);cursor:pointer;opacity:0;transition:opacity .15s;font-size:.85rem;}
+.note-card:hover .note-del{opacity:1;}
+
+/* ── CONTACTS ── */
+.contacts-list{display:flex;flex-direction:column;gap:8px;}
+.contact-row{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:13px;}
+.c-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;flex-shrink:0;color:#fff;}
+.c-info{flex:1;min-width:0;}
+.c-name{font-size:.87rem;font-weight:500;}
+.c-detail{font-size:.72rem;color:var(--muted);}
+.c-actions{display:flex;gap:5px;}
+
+/* ── SOCIAL MEDIA ── */
+.platforms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+.plat-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .2s;}
+.plat-card.connected{border-color:var(--green);}
+.plat-card:hover{transform:translateY(-2px);}
+.plat-icon{font-size:1.9rem;margin-bottom:7px;}
+.plat-name{font-size:.8rem;font-weight:600;margin-bottom:3px;}
+.plat-status{font-size:.68rem;}
+.plat-status.on{color:var(--green);}
+.plat-status.off{color:var(--muted);}
+.plat-btn{margin-top:10px;padding:5px 14px;border-radius:6px;border:none;font-size:.72rem;font-weight:600;cursor:pointer;width:100%;transition:all .15s;}
+.plat-btn.connect{background:rgba(108,99,255,.18);color:var(--accent2);}
+.plat-btn.disconnect{background:rgba(239,68,68,.12);color:var(--red);}
+.pub-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.pub-title{font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:600;margin-bottom:16px;}
+.plat-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.plat-chip{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:.78rem;transition:all .15s;user-select:none;}
+.plat-chip.selected{background:rgba(108,99,255,.18);border-color:var(--accent2);color:var(--accent2);}
+.plat-chip.disabled{opacity:.35;cursor:not-allowed;}
+.media-drop{border:2px dashed var(--border);border-radius:8px;padding:22px;text-align:center;cursor:pointer;margin-bottom:14px;transition:border-color .15s;}
+.media-drop:hover{border-color:var(--accent);}
+.media-previews{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.thumb-wrap{position:relative;display:inline-block;}
+.thumb-img{width:76px;height:76px;border-radius:8px;object-fit:cover;border:1px solid var(--border);display:block;}
+.thumb-vid{width:76px;height:76px;border-radius:8px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.thumb-del{position:absolute;top:-6px;inset-inline-end:-6px;width:18px;height:18px;background:var(--red);color:#fff;border-radius:50%;border:none;font-size:.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sched-row{display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.sched-row label{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer;}
+
+/* ── POSTS TABLE ── */
+.posts-table{width:100%;border-collapse:collapse;}
+.posts-table th{text-align:right;padding:8px 12px;font-size:.72rem;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;}
+.posts-table td{padding:10px 12px;font-size:.8rem;border-bottom:1px solid rgba(255,255,255,.025);vertical-align:middle;}
+[data-theme="light"] .posts-table td{border-bottom:1px solid rgba(0,0,0,.04);}
+.posts-table tr:hover td{background:rgba(108,99,255,.04);}
+.post-plats{display:flex;gap:5px;}
+.post-pill{padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:600;}
+.pp-sent{background:rgba(34,197,94,.12);color:var(--green);}
+.pp-sched{background:rgba(245,158,11,.12);color:var(--yellow);}
+.pp-draft{background:rgba(100,116,139,.12);color:var(--muted);}
+.pp-fail{background:rgba(239,68,68,.12);color:var(--red);}
+
+/* ── APPS ── */
+.apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.app-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:border-color .2s;}
+.app-card.installed{border-color:rgba(108,99,255,.3);}
+.app-icon{font-size:2.4rem;margin-bottom:9px;}
+.app-name{font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:600;margin-bottom:4px;}
+.app-desc{font-size:.72rem;color:var(--muted);margin-bottom:14px;line-height:1.4;}
+.app-btn{padding:7px;border-radius:7px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;width:100%;}
+.app-btn.open{background:var(--accent);color:#fff;}
+.app-btn.open:hover{filter:brightness(1.12);}
+.app-btn.install{background:rgba(108,99,255,.14);color:var(--accent2);}
+.app-btn.install:hover{background:rgba(108,99,255,.24);}
+.app-btn.remove{background:rgba(239,68,68,.1);color:var(--red);}
+
+/* ── INPUTS ── */
+.input{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);outline:none;font-size:.85rem;transition:border-color .15s;width:100%;}
+.input:focus{border-color:var(--accent);}
+select.input{cursor:pointer;}
+textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px;font-weight:500;}
+.form-row{display:flex;gap:10px;}
+.form-row .form-group{flex:1;min-width:0;}
+.add-row{display:flex;gap:8px;margin-bottom:14px;}
+.add-row .input{flex:1;}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px);}
+.overlay.hidden{display:none;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:500px;max-height:90dvh;overflow-y:auto;}
+.modal-sm{max-width:360px;}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-title{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px;}
+.modal-close:hover{color:var(--text);}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
+
+/* ── TOAST ── */
+#toasts{position:fixed;bottom:max(20px,env(safe-area-inset-bottom,0px));inset-inline-start:20px;z-index:300;display:flex;flex-direction:column;gap:7px;}
+.toast{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:.82rem;display:flex;align-items:center;gap:9px;animation:toastIn .25s ease;min-width:200px;max-width:320px;}
+.toast.success{border-color:var(--green);}
+.toast.error{border-color:var(--red);}
+@keyframes toastIn{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:44px 20px;color:var(--muted);}
+.empty-icon{font-size:2.6rem;margin-bottom:10px;}
+.empty-text{font-size:.88rem;margin-bottom:14px;}
+
+/* ── SECTION HEAD ── */
+.section-head{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:20px 0 10px;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:680px){
+  .sidebar{transform:translateX(100%);transition:transform .3s;}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-inline-end:0;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .projects-grid{grid-template-columns:1fr;}
+  .dh-top{flex-wrap:wrap;}
+  .topbar{padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));}
+  .search-box{display:none;}
+  .hamburger{display:flex;}
+}
+.hamburger{display:none;cursor:pointer;}
+</style>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">⚡ CRM Pro</div>
+      <div class="sb-sub">ניהול פרוייקטים ומדיה</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">ראשי</div>
+      <div class="nav-item active" data-view="dashboard" onclick="nav('dashboard')"><span class="icon">🏠</span>דשבורד</div>
+      <div class="nav-item" data-view="projects" onclick="nav('projects')"><span class="icon">📁</span>פרוייקטים<span class="nav-badge" id="badge-proj">0</span></div>
+      <div class="sb-section">כלים</div>
+      <div class="nav-item" data-view="social" onclick="nav('social')"><span class="icon">📡</span>מדיה חברתית</div>
+      <div class="nav-item" data-view="apps" onclick="nav('apps')"><span class="icon">🧩</span>אפליקציות</div>
+      <div class="sb-section">פרוייקט נוכחי</div>
+      <div id="curr-proj-nav" style="padding:4px 10px;font-size:.78rem;color:var(--muted)">—</div>
+    </nav>
+    <div class="sb-footer">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="sb-user">
+          <div class="sb-avatar">CRM</div>
+          <div><div class="sb-uname">מנהל מערכת</div><div class="sb-role">Admin</div></div>
+        </div>
+        <button class="btn-icon" onclick="toggleTheme()" title="ערכת נושא">🌙</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger btn-icon" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title" id="page-title">דשבורד</div>
+      <div class="search-box">
+        <span style="color:var(--muted)">🔍</span>
+        <input type="text" placeholder="חיפוש פרוייקטים..." id="gsearch" oninput="globalSearch(this.value)">
+      </div>
+      <button class="btn btn-primary" id="topbar-btn" onclick="topbarAction()"><span>+</span><span id="topbar-lbl">פרוייקט חדש</span></button>
+    </header>
+    <main id="content"></main>
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Project Form -->
+<div class="overlay hidden" id="mod-project">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title" id="mod-proj-title">פרוייקט חדש</div><button class="modal-close" onclick="closeM('mod-project')">✕</button></div>
+    <div class="form-group"><label class="form-label">אמוג'י</label><input class="input" id="pf-emoji" placeholder="📁" maxlength="2"></div>
+    <div class="form-group"><label class="form-label">שם הפרוייקט *</label><input class="input" id="pf-name" placeholder="שם הפרוייקט..."></div>
+    <div class="form-group"><label class="form-label">תיאור</label><textarea class="input" id="pf-desc" placeholder="תיאור קצר..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">סטטוס</label><select class="input" id="pf-status"><option value="active">פעיל</option><option value="paused">מושהה</option><option value="done">הושלם</option></select></div>
+      <div class="form-group"><label class="form-label">קטגוריה</label><input class="input" id="pf-cat" placeholder="שיווק, פיתוח..."></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-project')">ביטול</button><button class="btn btn-primary" onclick="saveProject()">שמור</button></div>
+  </div>
+</div>
+
+<!-- Task Form -->
+<div class="overlay hidden" id="mod-task">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">משימה חדשה</div><button class="modal-close" onclick="closeM('mod-task')">✕</button></div>
+    <div class="form-group"><label class="form-label">תיאור המשימה *</label><input class="input" id="tf-text" placeholder="מה צריך לעשות?"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">עדיפות</label><select class="input" id="tf-pri"><option value="high">גבוהה</option><option value="med" selected>בינונית</option><option value="low">נמוכה</option></select></div>
+      <div class="form-group"><label class="form-label">תאריך יעד</label><input class="input" id="tf-due" type="date"></div>
+    </div>
+    <div class="form-group"><label class="form-label">הערות</label><textarea class="input" id="tf-notes" placeholder="הערות..."></textarea></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-task')">ביטול</button><button class="btn btn-primary" onclick="saveTask()">הוסף</button></div>
+  </div>
+</div>
+
+<!-- Note Form -->
+<div class="overlay hidden" id="mod-note">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">הערה חדשה</div><button class="modal-close" onclick="closeM('mod-note')">✕</button></div>
+    <div class="form-group"><label class="form-label">כותרת</label><input class="input" id="nf-title" placeholder="כותרת..."></div>
+    <div class="form-group"><label class="form-label">תוכן</label><textarea class="input" id="nf-body" placeholder="תוכן..." style="min-height:110px"></textarea></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-note')">ביטול</button><button class="btn btn-primary" onclick="saveNote()">שמור</button></div>
+  </div>
+</div>
+
+<!-- Contact Form -->
+<div class="overlay hidden" id="mod-contact">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">איש קשר חדש</div><button class="modal-close" onclick="closeM('mod-contact')">✕</button></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">שם *</label><input class="input" id="cf-name" placeholder="שם מלא..."></div>
+      <div class="form-group"><label class="form-label">תפקיד</label><input class="input" id="cf-role" placeholder="מנהל, לקוח..."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">טלפון</label><input class="input" id="cf-phone" placeholder="050-0000000"></div>
+      <div class="form-group"><label class="form-label">מייל</label><input class="input" id="cf-email" placeholder="email@example.com"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-contact')">ביטול</button><button class="btn btn-primary" onclick="saveContact()">שמור</button></div>
+  </div>
+</div>
+
+<!-- Platform Connect -->
+<div class="overlay hidden" id="mod-platform">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title" id="plat-modal-title">חבר פלטפורמה</div><button class="modal-close" onclick="closeM('mod-platform')">✕</button></div>
+    <div id="plat-modal-body"></div>
+  </div>
+</div>
+
+<!-- Custom App Form -->
+<div class="overlay hidden" id="mod-app">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">הוסף אפליקציה</div><button class="modal-close" onclick="closeM('mod-app')">✕</button></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">אמוג'י</label><input class="input" id="af-icon" placeholder="🔧" maxlength="2" style="max-width:80px"></div>
+      <div class="form-group"><label class="form-label">שם *</label><input class="input" id="af-name" placeholder="שם האפליקציה..."></div>
+    </div>
+    <div class="form-group"><label class="form-label">תיאור</label><input class="input" id="af-desc" placeholder="מה היא עושה?"></div>
+    <div class="form-group"><label class="form-label">URL (אופציונלי)</label><input class="input" id="af-url" placeholder="https://..."></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-app')">ביטול</button><button class="btn btn-primary" onclick="saveApp()">הוסף</button></div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="overlay hidden" id="mod-confirm">
+  <div class="modal modal-sm">
+    <div class="modal-hd"><div class="modal-title" id="confirm-title">אישור</div><button class="modal-close" onclick="closeM('mod-confirm')">✕</button></div>
+    <p id="confirm-msg" style="color:var(--muted);font-size:.88rem;margin-bottom:20px;line-height:1.5"></p>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('mod-confirm')">ביטול</button>
+      <button class="btn btn-danger" id="confirm-ok">מחק</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<input type="file" id="media-input" multiple accept="image/*,video/*" style="display:none" onchange="handleMedia(this)">
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+const SK = 'crm_pro_v3';
+let S = {
+  view: 'dashboard', pid: null, tab: 'overview',
+  projects: [], posts: [], apps: [],
+  conns: {
+    facebook:  { on:false, token:'', page:'' },
+    instagram: { on:false, token:'', user:'' },
+    youtube:   { on:false, token:'', channel:'' },
+    telegram:  { on:false, token:'', chat:'' },
+    whatsapp:  { on:false, token:'', phone:'' },
+    tiktok:    { on:false, token:'' }
+  }
+};
+function load(){try{const d=localStorage.getItem(SK);if(d){const p=JSON.parse(d);S={...S,...p};if(!S.conns)S.conns={};if(!S.posts)S.posts=[];if(!S.apps)S.apps=[];}}catch(e){}}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
+
+const PLATS = {
+  facebook:  {name:'Facebook', icon:'📘', fields:[{id:'token',label:'Access Token',type:'password',ph:'EAAxxxxx...'},{id:'page',label:'Page ID',type:'text',ph:'page_id'}]},
+  instagram: {name:'Instagram',icon:'📸', fields:[{id:'token',label:'Access Token',type:'password',ph:'IGxxxxxxxxx'},{id:'user',label:'Business Account ID',type:'text',ph:'12345678'}]},
+  youtube:   {name:'YouTube',  icon:'▶️', fields:[{id:'token',label:'API Key / OAuth',type:'password',ph:'AIzaxxxxxxx'},{id:'channel',label:'Channel ID',type:'text',ph:'UCxxxxxxxx'}]},
+  telegram:  {name:'Telegram', icon:'✈️', fields:[{id:'token',label:'Bot Token',type:'password',ph:'123456:ABCxxxx'},{id:'chat',label:'Chat ID / ערוץ',type:'text',ph:'@mychannel'}]},
+  whatsapp:  {name:'WhatsApp', icon:'💬', fields:[{id:'token',label:'API Token',type:'password',ph:'EAAxxxxxx'},{id:'phone',label:'Phone Number ID',type:'text',ph:'1234567890'}]},
+  tiktok:    {name:'TikTok',   icon:'🎵', fields:[{id:'token',label:'Access Token',type:'password',ph:'ttxxxxxx'}]}
+};
+const APP_CATALOG = [
+  {id:'analytics',icon:'📊',name:'אנליטיקס',desc:'דשבורד נתונים ומטריקות',builtin:true},
+  {id:'calendar', icon:'📅',name:'לוח שנה', desc:'תזמון ואירועים',builtin:true},
+  {id:'email',    icon:'📧',name:'ניוזלטר',  desc:'ניהול קמפיינים במייל',builtin:true},
+  {id:'files',    icon:'🗂️',name:'קבצים',   desc:'מסמכים ומדיה',builtin:true},
+  {id:'chat',     icon:'💬',name:'צ׳אט',     desc:'תקשורת בין חברי הצוות',builtin:true},
+  {id:'reports',  icon:'📋',name:'דוחות',    desc:'יצירת דוחות ביצועים',builtin:true}
+];
+
+// ═══════════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════════
+let _editPid = null;
+function nav(view){
+  S.view=view;
+  if(view!=='detail')S.pid=null;
+  syncNav(); syncTopbar(); render();
+}
+function syncNav(){
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.view===S.view));
+  document.getElementById('badge-proj').textContent=S.projects.length;
+  const p=S.projects.find(x=>x.id===S.pid);
+  document.getElementById('curr-proj-nav').textContent=p?`${p.emoji||'📁'} ${p.name}`:'—';
+}
+const PAGE_TITLES={dashboard:'דשבורד',projects:'פרוייקטים',social:'מדיה חברתית',apps:'אפליקציות',detail:'פרוייקט'};
+const PAGE_ACTIONS={dashboard:'פרוייקט חדש',projects:'פרוייקט חדש',social:'פרסם',apps:'הוסף אפליקציה',detail:'ערוך'};
+function syncTopbar(){
+  document.getElementById('page-title').textContent=PAGE_TITLES[S.view]||'CRM';
+  document.getElementById('topbar-lbl').textContent=PAGE_ACTIONS[S.view]||'פעולה';
+}
+function topbarAction(){
+  const a={
+    dashboard:()=>openProjectModal(),projects:()=>openProjectModal(),
+    social:()=>publishPost(),apps:()=>openM('mod-app'),
+    detail:()=>openProjectModal(S.pid)
+  };
+  (a[S.view]||function(){})();
+}
+function render(){
+  const c=document.getElementById('content');c.innerHTML='';
+  ({dashboard:renderDash,projects:renderProjects,social:renderSocial,apps:renderApps,detail:renderDetail}[S.view]||renderDash)();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDash(){
+  const c=document.getElementById('content');
+  const allTasks=S.projects.flatMap(p=>p.tasks||[]);
+  const done=allTasks.filter(t=>t.done).length;
+  const connCount=Object.values(S.conns).filter(x=>x.on).length;
+  const sentPosts=S.posts.filter(p=>p.status==='sent').length;
+
+  c.innerHTML=`
+  <div class="stats-grid">
+    <div class="stat-card" onclick="nav('projects')"><div class="stat-icon">📁</div><div class="stat-val">${S.projects.length}</div><div class="stat-label">פרוייקטים</div><div class="stat-sub up">${S.projects.filter(p=>p.status==='active').length} פעילים</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">${done}</div><div class="stat-label">משימות הושלמו</div><div class="stat-sub">${allTasks.length} סה"כ</div></div>
+    <div class="stat-card" onclick="nav('social')"><div class="stat-icon">📡</div><div class="stat-val">${connCount}</div><div class="stat-label">פלטפורמות</div><div class="stat-sub">${6-connCount} ממתינות</div></div>
+    <div class="stat-card"><div class="stat-icon">🚀</div><div class="stat-val">${sentPosts}</div><div class="stat-label">פוסטים פורסמו</div><div class="stat-sub">${S.posts.length} סה"כ</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-header"><div class="card-title">⚡ פרוייקטים אחרונים</div><button class="btn btn-ghost btn-sm" onclick="nav('projects')">הכל</button></div>
+      ${S.projects.length===0?`<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">אין פרוייקטים עדיין</div><button class="btn btn-primary btn-sm" onclick="openProjectModal()">+ צור ראשון</button></div>`:
+        S.projects.slice(-5).reverse().map(p=>`
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openProject('${p.id}')">
+            <span style="font-size:1.5rem">${p.emoji||'📁'}</span>
+            <div style="flex:1;min-width:0"><div style="font-size:.85rem;font-weight:500">${p.name}</div><div style="font-size:.7rem;color:var(--muted)">${(p.tasks||[]).length} משימות · ${p.category||'כללי'}</div></div>
+            <span class="status-pill sp-${p.status}">${sLabel(p.status)}</span>
+          </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📡 פלטפורמות</div><button class="btn btn-ghost btn-sm" onclick="nav('social')">חבר</button></div>
+      ${Object.entries(PLATS).map(([k,v])=>{const c=S.conns[k]||{};return`<div style="display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:1.2rem">${v.icon}</span><div style="flex:1;font-size:.82rem;font-weight:500">${v.name}</div><span class="plat-status ${c.on?'on':'off'}" style="font-size:.72rem">${c.on?'● מחובר':'○ לא מחובר'}</span></div>`;}).join('')}
+    </div>
+  </div>
+  ${S.posts.length>0?`<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">🕐 פוסטים אחרונים</div></div>${postsTableHTML('all',5)}</div>`:''}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROJECTS LIST
+// ═══════════════════════════════════════════════════════════════
+function renderProjects(){
+  const c=document.getElementById('content');
+  if(S.projects.length===0){c.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">אין פרוייקטים עדיין. צור את הראשון!</div><button class="btn btn-primary" onclick="openProjectModal()">+ פרוייקט חדש</button></div>`;return;}
+  c.innerHTML=`
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn btn-ghost btn-sm" onclick="filterP('all')">הכל (${S.projects.length})</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterP('active')">פעיל (${S.projects.filter(p=>p.status==='active').length})</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterP('paused')">מושהה (${S.projects.filter(p=>p.status==='paused').length})</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterP('done')">הושלם (${S.projects.filter(p=>p.status==='done').length})</button>
+    </div>
+    <div class="projects-grid" id="proj-grid">${S.projects.map(projCard).join('')}</div>
+  `;
+}
+function projCard(p){
+  const tasks=p.tasks||[];const done=tasks.filter(t=>t.done).length;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  return`<div class="project-card" onclick="openProject('${p.id}')">
+    <div class="project-card-top"><div class="project-emoji">${p.emoji||'📁'}</div><span class="status-pill sp-${p.status}">${sLabel(p.status)}</span></div>
+    <div class="proj-name">${p.name}</div>
+    <div class="proj-desc">${p.description||'אין תיאור'}</div>
+    <div class="proj-meta"><span>✅ ${tasks.length}</span><span>📝 ${(p.notes||[]).length}</span><span>👥 ${(p.contacts||[]).length}</span></div>
+    <div class="proj-bar"><div class="proj-bar-fill" style="width:${pct}%"></div></div>
+    <div style="font-size:.68rem;color:var(--muted);margin-top:4px;text-align:left;font-variant-numeric:tabular-nums">${pct}%</div>
+    <div class="proj-actions" onclick="event.stopPropagation()">
+      <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">✏️</button>
+      <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:none" onclick="confirmDelete('פרוייקט "${p.name}" יימחק לצמיתות.',()=>deleteProject('${p.id}'))">🗑️</button>
+    </div>
+  </div>`;
+}
+function filterP(status){
+  const g=document.getElementById('proj-grid');if(!g)return;
+  const list=status==='all'?S.projects:S.projects.filter(p=>p.status===status);
+  g.innerHTML=list.length===0?`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)">אין פרוייקטים</div>`:list.map(projCard).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROJECT DETAIL
+// ═══════════════════════════════════════════════════════════════
+function openProject(id){S.pid=id;S.tab='overview';S.view='detail';syncNav();syncTopbar();render();}
+function renderDetail(){
+  const p=S.projects.find(x=>x.id===S.pid);if(!p){nav('projects');return;}
+  const c=document.getElementById('content');
+  const tasks=p.tasks||[];const done=tasks.filter(t=>t.done).length;
+  c.innerHTML=`
+    <div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="nav('projects')">← חזרה</button></div>
+    <div class="detail-header">
+      <div class="dh-top">
+        <div class="dh-emoji">${p.emoji||'📁'}</div>
+        <div class="dh-info">
+          <div class="dh-name">${p.name}</div>
+          <div class="dh-desc">${p.description||'אין תיאור'}</div>
+          <div class="dh-meta">
+            <span class="status-pill sp-${p.status}">${sLabel(p.status)}</span>
+            ${p.category?`<span style="font-size:.72rem;color:var(--muted)">📂 ${p.category}</span>`:''}
+            <span style="font-size:.72rem;color:var(--muted)">✅ ${done}/${tasks.length}</span>
+            <span style="font-size:.72rem;color:var(--muted)">📅 ${new Date(p.createdAt).toLocaleDateString('he-IL')}</span>
+          </div>
+        </div>
+        <div class="dh-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">✏️ ערוך</button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:none" onclick="confirmDelete('פרוייקט "${p.name}" יימחק לצמיתות.',()=>deleteProject('${p.id}'))">🗑️</button>
+        </div>
+      </div>
+    </div>
+    <div class="tabs" id="detail-tabs">
+      ${['overview','tasks','notes','contacts','campaigns'].map(t=>`<div class="tab${S.tab===t?' active':''}" onclick="switchTab('${t}')">${tabLbl(t)}</div>`).join('')}
+    </div>
+    <div id="tab-body"></div>
+  `;
+  renderTab(S.tab);
+}
+function switchTab(t){
+  S.tab=t;
+  document.querySelectorAll('#detail-tabs .tab').forEach((el,i)=>{
+    el.classList.toggle('active',['overview','tasks','notes','contacts','campaigns'][i]===t);
+  });
+  renderTab(t);
+}
+function renderTab(t){
+  const body=document.getElementById('tab-body');if(!body)return;
+  const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
+  ({overview:tabOverview,tasks:tabTasks,notes:tabNotes,contacts:tabContacts,campaigns:tabCampaigns}[t]||tabOverview)(p,body);
+}
+function tabLbl(t){return{overview:'📊 סקירה',tasks:'✅ משימות',notes:'📝 הערות',contacts:'👥 קשרים',campaigns:'🚀 קמפיינים'}[t]||t;}
+
+function tabOverview(p,body){
+  const tasks=p.tasks||[];const done=tasks.filter(t=>t.done).length;const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  body.innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px">
+    ${[['✅',`${done}/${tasks.length}`,'משימות'],['📝',(p.notes||[]).length,'הערות'],['👥',(p.contacts||[]).length,'קשרים'],['🚀',(p.campaigns||[]).length,'קמפיינים']].map(([ic,v,lb])=>`
+    <div class="card" style="text-align:center"><div style="font-size:1.5rem;margin-bottom:8px">${ic}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums">${v}</div><div style="font-size:.72rem;color:var(--muted);margin-top:4px">${lb}</div></div>`).join('')}
+  </div>
+  ${tasks.filter(t=>!t.done).length>0?`<div class="card"><div class="card-header"><div class="card-title">⚡ משימות פתוחות</div><button class="btn btn-ghost btn-sm" onclick="switchTab('tasks')">הכל</button></div><div class="task-list">${tasks.filter(t=>!t.done).slice(0,4).map(t=>taskRow(t,p.id)).join('')}</div></div>`:''}
+  `;
+}
+function tabTasks(p,body){
+  body.innerHTML=`
+    <div class="add-row">
+      <input class="input" id="qt-input" placeholder="הוסף משימה מהירה..." onkeydown="if(event.key==='Enter')quickTask()">
+      <button class="btn btn-ghost" onclick="openM('mod-task')">⚙️</button>
+      <button class="btn btn-primary" onclick="quickTask()">+</button>
+    </div>
+    <div style="display:flex;gap:7px;margin-bottom:12px">
+      <button class="btn btn-ghost btn-sm" onclick="filterTasks('all')">הכל</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterTasks('open')">פתוחות</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterTasks('done')">הושלמו</button>
+    </div>
+    <div class="task-list" id="task-list">
+      ${(p.tasks||[]).length===0?`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">אין משימות</div></div>`:
+        (p.tasks||[]).map(t=>taskRow(t,p.id)).join('')}
+    </div>
+  `;
+}
+function taskRow(t,pid){return`
+  <div class="task-row" id="task-${t.id}">
+    <div class="task-check${t.done?' done':''}" onclick="toggleTask('${pid}','${t.id}')">${t.done?'✓':''}</div>
+    <div class="task-text${t.done?' done':''}" style="flex:1">${t.text}</div>
+    ${t.due?`<span style="font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums">${t.due}</span>`:''}
+    <span class="pri-pill pri-${t.priority||'med'}">${priLbl(t.priority)}</span>
+    <button onclick="deleteTask('${pid}','${t.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0 3px">✕</button>
+  </div>`;}
+function tabNotes(p,body){
+  body.innerHTML=`
+    <div style="margin-bottom:14px"><button class="btn btn-primary" onclick="openM('mod-note')">+ הוסף הערה</button></div>
+    ${(p.notes||[]).length===0?`<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">אין הערות עדיין</div></div>`:
+      `<div class="notes-grid">${(p.notes||[]).map(n=>`
+      <div class="note-card">
+        <button class="note-del" onclick="deleteNote('${p.id}','${n.id}')">✕</button>
+        <div class="note-title">${n.title||'הערה'}</div>
+        <div class="note-body">${n.body}</div>
+        <div class="note-date">${new Date(n.createdAt).toLocaleDateString('he-IL')}</div>
+      </div>`).join('')}</div>`}
+  `;
+}
+function tabContacts(p,body){
+  body.innerHTML=`
+    <div style="margin-bottom:14px"><button class="btn btn-primary" onclick="openM('mod-contact')">+ הוסף איש קשר</button></div>
+    ${(p.contacts||[]).length===0?`<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">אין אנשי קשר עדיין</div></div>`:
+      `<div class="contacts-list">${(p.contacts||[]).map(con=>`
+      <div class="contact-row">
+        <div class="c-avatar">${con.name[0].toUpperCase()}</div>
+        <div class="c-info">
+          <div class="c-name">${con.name}${con.role?` <span style="color:var(--muted);font-size:.72rem">(${con.role})</span>`:''}</div>
+          <div class="c-detail">${[con.phone,con.email].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div class="c-actions">
+          ${con.phone?`<a href="tel:${con.phone}" class="btn btn-icon btn-sm" onclick="event.stopPropagation()" title="חייג">📞</a>`:''}
+          ${con.email?`<a href="mailto:${con.email}" class="btn btn-icon btn-sm" onclick="event.stopPropagation()" title="שלח מייל">✉️</a>`:''}
+          <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:none" onclick="deleteContact('${p.id}','${con.id}')">✕</button>
+        </div>
+      </div>`).join('')}</div>`}
+  `;
+}
+function tabCampaigns(p,body){
+  const projectPosts=S.posts.filter(x=>x.projectId===p.id);
+  body.innerHTML=`
+    <div style="margin-bottom:14px;display:flex;gap:10px;align-items:center">
+      <span style="color:var(--muted);font-size:.84rem">קמפיינים ופוסטים ששויכו לפרוייקט</span>
+      <button class="btn btn-primary btn-sm" onclick="nav('social')">📡 מרכז המדיה</button>
+    </div>
+    ${projectPosts.length===0?`<div class="empty"><div class="empty-icon">🚀</div><div class="empty-text">אין קמפיינים עדיין</div></div>`:
+      projectPosts.map(post=>`
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <div style="font-weight:600;font-size:.87rem">${post.title||post.text?.slice(0,50)||'פוסט'}</div>
+          <div style="display:flex;gap:5px">${(post.platforms||[]).map(pl=>`<span title="${PLATS[pl]?.name}">${PLATS[pl]?.icon||''}</span>`).join('')}</div>
+        </div>
+        <div style="display:flex;gap:14px;font-size:.72rem;color:var(--muted)">
+          <span>תאריך: ${new Date(post.createdAt).toLocaleDateString('he-IL')}</span>
+          <span>סטטוס: <span class="post-pill pp-${post.status}">${postStatusLbl(post.status)}</span></span>
+        </div>
+      </div>`).join('')}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SOCIAL MEDIA
+// ═══════════════════════════════════════════════════════════════
+function renderSocial(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;min-width:0">
+      <div>
+        <div class="section-head">פלטפורמות מחוברות</div>
+        <div class="platforms-grid" id="plats-grid">
+          ${Object.entries(PLATS).map(([k,v])=>{const cn=S.conns[k]||{};return`
+          <div class="plat-card${cn.on?' connected':''}">
+            <div class="plat-icon">${v.icon}</div>
+            <div class="plat-name">${v.name}</div>
+            <div class="plat-status ${cn.on?'on':'off'}">${cn.on?'● מחובר':'○ לא מחובר'}</div>
+            <button class="plat-btn ${cn.on?'disconnect':'connect'}" onclick="togglePlat('${k}')">${cn.on?'נתק':'חבר'}</button>
+          </div>`;}).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="section-head">יצירת תוכן</div>
+        <div class="pub-box">
+          <div class="form-group"><label class="form-label">כותרת</label><input class="input" id="pub-title" placeholder="כותרת הפוסט..."></div>
+          <div class="form-group"><label class="form-label">טקסט / קאפשן</label><textarea class="input" id="pub-text" placeholder="כתוב כאן..."></textarea></div>
+          <div class="form-group">
+            <label class="form-label">מדיה (תמונה / וידאו)</label>
+            <div class="media-drop" onclick="document.getElementById('media-input').click()">
+              <div style="font-size:1.6rem;margin-bottom:5px">📎</div>
+              <div style="font-size:.8rem;color:var(--muted)">לחץ להעלאת קבצים<br><small>תמונות ווידאו לכל הפלטפורמות</small></div>
+            </div>
+            <div class="media-previews" id="media-prev"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">בחר פלטפורמות</label>
+            <div class="plat-chips" id="pub-chips">
+              ${Object.entries(PLATS).map(([k,v])=>{const on=S.conns[k]?.on;return`<div class="plat-chip${on?'':' disabled'}" data-plat="${k}" onclick="toggleChip(this,'${k}')">${v.icon} ${v.name}${!on?` <span style="font-size:.6rem;color:var(--red)">(לא מחובר)</span>`:''}</div>`;}).join('')}
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">שייך לפרוייקט</label>
+            <select class="input" id="pub-proj"><option value="">— ללא שיוך —</option>${S.projects.map(p=>`<option value="${p.id}">${p.emoji||'📁'} ${p.name}</option>`).join('')}</select>
+          </div>
+          <div class="sched-row">
+            <label><input type="radio" name="pub-time" value="now" checked onchange="toggleSched(this)"> פרסם עכשיו</label>
+            <label><input type="radio" name="pub-time" value="later" onchange="toggleSched(this)"> תזמן</label>
+            <input class="input" type="datetime-local" id="pub-sched" style="display:none">
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="publishPost()">🚀 פרסם</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <div class="card-title">📋 היסטוריית פוסטים</div>
+        <select class="input" id="filter-posts" onchange="refreshPostsTable(this.value)" style="font-size:.78rem;padding:5px 10px;width:auto">
+          <option value="all">הכל</option><option value="sent">נשלח</option><option value="scheduled">מתוזמן</option><option value="draft">טיוטה</option>
+        </select>
+      </div>
+      <div id="posts-table-wrap">${postsTableHTML('all')}</div>
+    </div>
+  `;
+  window._mediaFiles=[];
+}
+function refreshPostsTable(filter){const w=document.getElementById('posts-table-wrap');if(w)w.innerHTML=postsTableHTML(filter);}
+function postsTableHTML(filter,limit){
+  const list=(filter==='all'?S.posts:S.posts.filter(p=>p.status===filter));
+  const rows=(limit?list.slice(-limit).reverse():list.slice().reverse());
+  if(rows.length===0)return`<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">אין פוסטים</div></div>`;
+  return`<div style="overflow-x:auto"><table class="posts-table"><thead><tr><th>כותרת</th><th>פלטפורמות</th><th>תאריך</th><th>תזמון</th><th>סטטוס</th><th></th></tr></thead><tbody>
+    ${rows.map(p=>`<tr>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title||p.text?.slice(0,40)||'—'}</td>
+      <td><div class="post-plats">${(p.platforms||[]).map(pl=>PLATS[pl]?.icon||'').join(' ')}</div></td>
+      <td style="font-variant-numeric:tabular-nums;white-space:nowrap">${new Date(p.createdAt).toLocaleDateString('he-IL')}</td>
+      <td style="white-space:nowrap">${p.scheduledAt?new Date(p.scheduledAt).toLocaleString('he-IL'):'—'}</td>
+      <td><span class="post-pill pp-${p.status}">${postStatusLbl(p.status)}</span></td>
+      <td><button onclick="deletePost('${p.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer">🗑️</button></td>
+    </tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// APPS
+// ═══════════════════════════════════════════════════════════════
+function renderApps(){
+  const c=document.getElementById('content');
+  const installed=S.apps.filter(a=>a.installed);
+  const userApps=S.apps.filter(a=>a.custom);
+  c.innerHTML=`
+    ${installed.length>0?`<div class="section-head">⚡ מותקנות</div><div class="apps-grid" style="margin-bottom:22px">${installed.map(a=>`
+    <div class="app-card installed"><div class="app-icon">${a.icon}</div><div class="app-name">${a.name}</div><div class="app-desc">${a.desc}</div>
+      ${a.url?`<a href="${a.url}" target="_blank" rel="noopener"><button class="app-btn open" style="margin-bottom:6px">פתח</button></a>`:`<button class="app-btn open" style="margin-bottom:6px" onclick="toast('${a.name} — בקרוב!','info')">פתח</button>`}
+      <button class="app-btn remove" onclick="confirmDelete('להסיר ${a.name}?',()=>removeApp('${a.id}'))">הסר</button>
+    </div>`).join('')}</div>`:''}
+    <div class="section-head">🛒 קטלוג אפליקציות</div>
+    <div class="apps-grid" style="margin-bottom:22px">
+      ${APP_CATALOG.filter(a=>!installed.find(i=>i.id===a.id)).map(a=>`
+      <div class="app-card"><div class="app-icon">${a.icon}</div><div class="app-name">${a.name}</div><div class="app-desc">${a.desc}</div><button class="app-btn install" onclick="installApp('${a.id}')">+ התקן</button></div>`).join('')}
+    </div>
+    ${userApps.length>0?`<div class="section-head">🔧 מותאמות אישית</div><div class="apps-grid" style="margin-bottom:22px">${userApps.map(a=>`
+    <div class="app-card installed"><div class="app-icon">${a.icon}</div><div class="app-name">${a.name}</div><div class="app-desc">${a.desc}</div>
+      ${a.url?`<a href="${a.url}" target="_blank" rel="noopener"><button class="app-btn open" style="margin-bottom:6px">פתח</button></a>`:`<button class="app-btn open" style="opacity:.5;cursor:default;margin-bottom:6px" disabled>אין קישור</button>`}
+      <button class="app-btn remove" onclick="confirmDelete('להסיר ${a.name}?',()=>removeApp('${a.id}'))">הסר</button>
+    </div>`).join('')}</div>`:''}
+    <div style="border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border-color .15s" onclick="openM('mod-app')" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor=''">
+      <div style="font-size:2rem;margin-bottom:7px">+</div>
+      <div style="font-size:.85rem;color:var(--muted)">הוסף אפליקציה מותאמת אישית</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════
+function openProjectModal(id){
+  _editPid=id||null;
+  if(id){
+    const p=S.projects.find(x=>x.id===id);if(!p)return;
+    document.getElementById('mod-proj-title').textContent='ערוך פרוייקט';
+    ['pf-emoji','pf-name','pf-desc','pf-status','pf-cat'].forEach(k=>{const el=document.getElementById(k);if(el)el.value={pf:p}[k]||({['pf-emoji']:p.emoji||'',['pf-name']:p.name,['pf-desc']:p.description||'',['pf-status']:p.status,['pf-cat']:p.category||''}[k]||'');});
+  }else{
+    document.getElementById('mod-proj-title').textContent='פרוייקט חדש';
+    ['pf-emoji','pf-name','pf-desc','pf-cat'].forEach(k=>{const el=document.getElementById(k);if(el)el.value='';});
+    const st=document.getElementById('pf-status');if(st)st.value='active';
+  }
+  openM('mod-project');
+}
+function saveProject(){
+  const name=document.getElementById('pf-name').value.trim();
+  if(!name){toast('נא להזין שם','error');return;}
+  if(_editPid){
+    const p=S.projects.find(x=>x.id===_editPid);if(!p)return;
+    p.name=name;p.emoji=document.getElementById('pf-emoji').value||'📁';
+    p.description=document.getElementById('pf-desc').value;
+    p.status=document.getElementById('pf-status').value;
+    p.category=document.getElementById('pf-cat').value;
+    toast('פרוייקט עודכן ✓','success');
+  }else{
+    S.projects.push({id:uid(),name,emoji:document.getElementById('pf-emoji').value||'📁',description:document.getElementById('pf-desc').value,status:document.getElementById('pf-status').value,category:document.getElementById('pf-cat').value,tasks:[],notes:[],contacts:[],campaigns:[],createdAt:Date.now()});
+    toast('פרוייקט נוצר ✓','success');
+  }
+  save();closeM('mod-project');syncTopbar();render();
+}
+function deleteProject(id){S.projects=S.projects.filter(p=>p.id!==id);save();toast('פרוייקט נמחק','info');nav('projects');}
+
+// Tasks
+function saveTask(){
+  const text=document.getElementById('tf-text').value.trim();if(!text){toast('נא להזין תיאור','error');return;}
+  const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
+  if(!p.tasks)p.tasks=[];
+  p.tasks.push({id:uid(),text,done:false,priority:document.getElementById('tf-pri').value,due:document.getElementById('tf-due').value,notes:document.getElementById('tf-notes').value,createdAt:Date.now()});
+  save();closeM('mod-task');toast('משימה נוספה ✓','success');renderTab('tasks');
+}
+function quickTask(){
+  const el=document.getElementById('qt-input');const text=el?.value?.trim();if(!text)return;
+  const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
+  if(!p.tasks)p.tasks=[];
+  p.tasks.push({id:uid(),text,done:false,priority:'med',createdAt:Date.now()});
+  save();el.value='';toast('משימה נוספה ✓','success');renderTab('tasks');
+}
+function toggleTask(pid,tid){
+  const p=S.projects.find(x=>x.id===pid);if(!p)return;
+  const t=(p.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.done=!t.done;save();
+  const el=document.getElementById(`task-${tid}`);
+  if(el){el.querySelector('.task-check').classList.toggle('done',t.done);el.querySelector('.task-check').textContent=t.done?'✓':'';el.querySelector('.task-text').classList.toggle('done',t.done);}
+}
+function deleteTask(pid,tid){
+  const p=S.projects.find(x=>x.id===pid);if(!p)return;
+  p.tasks=(p.tasks||[]).filter(t=>t.id!==tid);save();
+  document.getElementById(`task-${tid}`)?.remove();
+}
+function filterTasks(filter){
+  const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
+  const l=document.getElementById('task-list');if(!l)return;
+  const tasks=(p.tasks||[]).filter(t=>filter==='all'?true:filter==='done'?t.done:!t.done);
+  l.innerHTML=tasks.length===0?`<div class="empty" style="padding:24px"><div class="empty-text">אין משימות</div></div>`:tasks.map(t=>taskRow(t,p.id)).join('');
+}
+
+// Notes
+function saveNote(){
+  const body=document.getElementById('nf-body').value.trim();if(!body){toast('נא להזין תוכן','error');return;}
+  const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
+  if(!p.notes)p.notes=[];
+  p.notes.push({id:uid(),title:document.getElementById('nf-title').value,body,createdAt:Date.now()});
+  save();closeM('mod-note');toast('הערה נשמרה ✓','success');renderTab('notes');
+}
+function deleteNote(pid,nid){
+  const p=S.projects.find(x=>x.id===pid);if(!p)return;
+  p.notes=(p.notes||[]).filter(n=>n.id!==nid);save();renderTab('notes');
+}
+
+// Contacts
+function saveContact(){
+  const name=document.getElementById('cf-name').value.trim();if(!name){toast('נא להזין שם','error');return;}
+  const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
+  if(!p.contacts)p.contacts=[];
+  p.contacts.push({id:uid(),name,role:document.getElementById('cf-role').value,phone:document.getElementById('cf-phone').value,email:document.getElementById('cf-email').value,createdAt:Date.now()});
+  save();closeM('mod-contact');toast('איש קשר נוסף ✓','success');renderTab('contacts');
+}
+function deleteContact(pid,cid){
+  const p=S.projects.find(x=>x.id===pid);if(!p)return;
+  p.contacts=(p.contacts||[]).filter(c=>c.id!==cid);save();renderTab('contacts');
+}
+
+// Platform
+function togglePlat(key){
+  const cn=S.conns[key]||{};
+  if(cn.on){confirmDelete(`לנתק ${PLATS[key].name}?`,()=>{S.conns[key]={on:false,token:''};save();toast(`${PLATS[key].name} נותק`,'info');render();});return;}
+  const plat=PLATS[key];
+  document.getElementById('plat-modal-title').textContent=`חבר ${plat.icon} ${plat.name}`;
+  document.getElementById('plat-modal-body').innerHTML=`
+    <div style="background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:.78rem;color:var(--muted);line-height:1.5">
+      כדי לחבר ${plat.name} תצטרך API credentials רשמיים מ-<strong>${plat.name} Developer Platform</strong>.
+    </div>
+    ${plat.fields.map(f=>`<div class="form-group"><label class="form-label">${f.label}</label><input class="input" id="pf-${f.id}" type="${f.type}" placeholder="${f.ph}"></div>`).join('')}
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-platform')">ביטול</button><button class="btn btn-primary" onclick="connectPlat('${key}')">חבר</button></div>
+  `;
+  openM('mod-platform');
+}
+function connectPlat(key){
+  const plat=PLATS[key];const data={on:true};
+  plat.fields.forEach(f=>{data[f.id]=document.getElementById(`pf-${f.id}`)?.value||'';});
+  if(!data.token){toast('נא להזין Token','error');return;}
+  S.conns[key]=data;save();closeM('mod-platform');
+  toast(`${plat.name} חובר בהצלחה ✓`,'success');render();
+}
+
+// Chips
+function toggleChip(el,key){
+  if(el.classList.contains('disabled')){toast(`${PLATS[key].name} לא מחובר — חבר אותו תחילה`,'error');return;}
+  el.classList.toggle('selected');
+}
+function toggleSched(r){const el=document.getElementById('pub-sched');if(el)el.style.display=r.value==='later'?'block':'none';}
+function handleMedia(input){
+  window._mediaFiles=window._mediaFiles||[];
+  const prev=document.getElementById('media-prev');
+  Array.from(input.files).forEach(file=>{
+    window._mediaFiles.push(file);
+    const wrap=document.createElement('div');wrap.className='thumb-wrap';
+    if(file.type.startsWith('image/')){const img=document.createElement('img');img.className='thumb-img';img.src=URL.createObjectURL(file);wrap.appendChild(img);}
+    else{const d=document.createElement('div');d.className='thumb-vid';d.textContent='🎬';wrap.appendChild(d);}
+    const del=document.createElement('button');del.className='thumb-del';del.textContent='×';del.onclick=()=>{wrap.remove();};
+    wrap.appendChild(del);prev?.appendChild(wrap);
+  });
+}
+
+function publishPost(){
+  const title=document.getElementById('pub-title')?.value?.trim()||'';
+  const text=document.getElementById('pub-text')?.value?.trim()||'';
+  if(!title&&!text){toast('נא להזין טקסט או כותרת','error');return;}
+  const chips=document.querySelectorAll('#pub-chips .plat-chip.selected');
+  const platforms=Array.from(chips).map(c=>c.dataset.plat);
+  if(!platforms.length){toast('נא לבחור פלטפורמה אחת לפחות','error');return;}
+  const isLater=document.querySelector('input[name="pub-time"]:checked')?.value==='later';
+  const scheduledAt=isLater?document.getElementById('pub-sched')?.value:null;
+  if(isLater&&!scheduledAt){toast('נא לבחור תאריך לתזמון','error');return;}
+  const projectId=document.getElementById('pub-proj')?.value||null;
+  S.posts.push({id:uid(),title,text,platforms,status:isLater?'scheduled':'sent',scheduledAt:scheduledAt?new Date(scheduledAt).getTime():null,projectId,createdAt:Date.now(),mediaCount:window._mediaFiles?.length||0});
+  save();
+  toast(`${isLater?'פוסט תוזמן 📅':'פוסט פורסם 🚀'} ל-${platforms.map(p=>PLATS[p]?.name).join(', ')}`,'success');
+  ['pub-title','pub-text'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const prev=document.getElementById('media-prev');if(prev)prev.innerHTML='';
+  window._mediaFiles=[];
+  document.querySelectorAll('#pub-chips .plat-chip').forEach(c=>c.classList.remove('selected'));
+  refreshPostsTable('all');
+}
+function deletePost(id){S.posts=S.posts.filter(p=>p.id!==id);save();refreshPostsTable(document.getElementById('filter-posts')?.value||'all');}
+
+// Apps
+function installApp(id){
+  const cat=APP_CATALOG.find(a=>a.id===id);if(!cat||S.apps.find(a=>a.id===id))return;
+  S.apps.push({...cat,installed:true});save();toast(`${cat.name} הותקן ✓`,'success');render();
+}
+function removeApp(id){S.apps=S.apps.filter(a=>a.id!==id);save();toast('הוסרה','info');render();}
+function saveApp(){
+  const name=document.getElementById('af-name').value.trim();if(!name){toast('נא להזין שם','error');return;}
+  S.apps.push({id:uid(),name,icon:document.getElementById('af-icon').value||'🔧',desc:document.getElementById('af-desc').value||'',url:document.getElementById('af-url').value||'',installed:true,custom:true});
+  save();closeM('mod-app');toast('אפליקציה נוספה ✓','success');render();
+}
+
+// Search
+function globalSearch(q){
+  q=q.toLowerCase().trim();if(!q){render();return;}
+  if(S.view==='projects'){
+    const g=document.getElementById('proj-grid');if(!g)return;
+    const f=S.projects.filter(p=>p.name.toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q));
+    g.innerHTML=f.length===0?`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)">לא נמצאו תוצאות עבור "${q}"</div>`:f.map(projCard).join('');
+  }
+}
+
+// Confirm dialog (no browser confirm())
+function confirmDelete(msg,cb){
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-ok').onclick=()=>{closeM('mod-confirm');cb();};
+  openM('mod-confirm');
+}
+
+// Theme toggle
+function toggleTheme(){
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme');
+  const next=cur==='dark'?'light':cur==='light'?null:'dark';
+  if(next)r.setAttribute('data-theme',next);else r.removeAttribute('data-theme');
+  const btn=document.querySelector('.btn-icon[onclick="toggleTheme()"]');
+  if(btn)btn.textContent=next==='light'?'🌙':next==='dark'?'☀️':'🌙';
+}
+
+// Modals
+function openM(id){document.getElementById(id).classList.remove('hidden');}
+function closeM(id){document.getElementById(id).classList.add('hidden');}
+document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.add('hidden');}));
+
+// Toast
+function toast(msg,type='info'){
+  const c=document.getElementById('toasts');
+  const el=document.createElement('div');el.className=`toast ${type}`;
+  el.innerHTML=`<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||'ℹ️'}</span> ${msg}`;
+  c.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),320);},3000);
+}
+
+// Helpers
+function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function sLabel(s){return{active:'פעיל',paused:'מושהה',done:'הושלם'}[s]||s;}
+function priLbl(p){return{high:'גבוה',med:'בינוני',low:'נמוך'}[p]||'—';}
+function postStatusLbl(s){return{sent:'נשלח',scheduled:'מתוזמן',draft:'טיוטה',failed:'נכשל'}[s]||s;}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+load();
+if(S.projects.length===0){
+  const now=Date.now();
+  S.projects=[{
+    id:uid(),name:'ביונד אינטימה',emoji:'💜',
+    description:'משחק לוח אינטימי וחברתי לזוגות וחברים — חוויה ייחודית של קרבה וחשיפה.',
+    status:'active',category:'משחק',
+    tasks:[
+      {id:uid(),text:'עיצוב לוח המשחק וכרטיסיות',done:true,priority:'high',createdAt:now},
+      {id:uid(),text:'פיתוח גרסת אפליקציה מובייל',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'קמפיין שיווק ברשתות חברתיות',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'הגשה לחנויות אפליקציות',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'קונספט',body:'משחק שמביא זוגות וחברים קרובים יותר דרך שאלות ואתגרים מותאמים. כבר יש גרסת לוח — השלב הבא הוא אפליקציה.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:uid(),name:'קליניקמייט',emoji:'🏥',
+    description:'מערכת ניהול חכמה לקליניקות ומטפלים — תיאום תורים, תיקי מטופלים ומעקב טיפולים.',
+    status:'active',category:'SaaS',
+    tasks:[
+      {id:uid(),text:'מפרט דרישות ופונקציות מערכת',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'עיצוב UI/UX לממשק הקליניקה',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'פיתוח מודול תיאום תורים',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'אינטגרציה עם מערכות תשלום',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'רעיון מרכזי',body:'מערכת CRM ייעודית למטפלים — טיפול בתיקי מטופלים, תזכורות אוטומטיות, וניהול תשלומים במקום אחד.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:uid(),name:'פרחי באך',emoji:'🌸',
+    description:'אפליקציה לאבחון עצמי ובחירת פרחי באך — 38 פרחים, מדריך אישי ומעקב טיפול.',
+    status:'active',category:'בריאות',
+    tasks:[
+      {id:uid(),text:'תיעוד כל 38 פרחי באך עם תיאורים',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'בניית שאלון אבחון עצמי',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'עיצוב אפליקציה — פלטה צבעים רכה',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'שיווק לקהל מטפלים הוליסטיים',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'קהל יעד',body:'מטפלים הוליסטיים, אנשים המחפשים רפואה משלימה, ומתעניינים בבריאות רגשית טבעית.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:uid(),name:'כדור בדולח',emoji:'🔮',
+    description:'אפליקציית AI לניחושים, תחזיות ואסטרולוגיה — חוויה מיסטית מתקדמת.',
+    status:'active',category:'בידור',
+    tasks:[
+      {id:uid(),text:'הגדרת קונספט ואופי האפליקציה',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'עיצוב ממשק מיסטי וייחודי',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'שילוב AI לתחזיות מותאמות אישית',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'בניית מנוע אסטרולוגיה',done:false,priority:'med',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'ויב',body:'עיצוב כהה, כוכבים, אנימציות מיסטיות. חוויה שמרגישה אמיתית ומיוחדת — לא עוד אפליקציית הורוסקופ רגילה.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:uid(),name:'אפליקציית משחקים',emoji:'🎮',
+    description:'פלטפורמת משחקים מגוונת — ​מינגלים, טריוויה, אתגרים חברתיים ועוד.',
+    status:'active',category:'משחקים',
+    tasks:[
+      {id:uid(),text:'רשימת משחקים שייכנסו לאפליקציה',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'עיצוב מערכת ניקוד ומשחק מרובה משתתפים',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'פיתוח משחק ראשון כ-MVP',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'אסטרטגיית מונטיזציה',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'גישה',body:'אוסף משחקים חברתיים שאפשר לשחק עם חברים. מתאים למסיבות, ערבי חברים, זוגות. ביונד אינטימה יכול להיות אחד המשחקים פנימה.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  }];
+  save();
+}
+syncNav();syncTopbar();render();
+</script>
