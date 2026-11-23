@@ -426,7 +426,7 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
       <div class="form-group"><label class="form-label">טלפון</label><input class="input" id="cf-phone" placeholder="050-0000000"></div>
       <div class="form-group"><label class="form-label">מייל</label><input class="input" id="cf-email" placeholder="email@example.com"></div>
     </div>
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-contact')">ביטול</button><button class="btn btn-primary" onclick="saveContact()">שמור</button></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('mod-contact')">ביטול</button><button class="btn btn-primary" onclick="saveContact()">הוסף</button></div>
   </div>
 </div>
 
@@ -483,9 +483,6 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
 <input type="file" id="media-input" multiple accept="image/*,video/*" style="display:none" onchange="handleMedia(this)">
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════════════════════════════
 const SK = 'crm_pro_v3';
 let S = {
   view: 'projects', pid: null, tab: 'overview',
@@ -502,7 +499,6 @@ let S = {
 function load(){try{const d=localStorage.getItem(SK);if(d){const p=JSON.parse(d);S={...S,...p};if(!S.conns)S.conns={};if(!S.posts)S.posts=[];if(!S.apps)S.apps=[];}}catch(e){}}
 function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
 
-// Project color palettes
 const PALETTES=[
   ['#8b5cf6','#ec4899'],
   ['#3b82f6','#06b6d4'],
@@ -538,9 +534,6 @@ const APP_CATALOG = [
   {id:'reports',  icon:'📋',name:'דוחות',    desc:'יצירת דוחות ביצועים',builtin:true}
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// NAV
-// ═══════════════════════════════════════════════════════════════
 let _editPid = null;
 function nav(view){
   S.view=view;
@@ -576,9 +569,6 @@ function render(){
   ({dashboard:renderDash,projects:renderProjects,social:renderSocial,apps:renderApps,detail:renderDetail}[S.view]||renderProjects)();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════════════════════
 function renderDash(){
   const c=document.getElementById('content');
   const allTasks=S.projects.flatMap(p=>p.tasks||[]);
@@ -598,9 +588,6 @@ function renderDash(){
   `;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PROJECTS LIST
-// ═══════════════════════════════════════════════════════════════
 function renderProjects(){
   const c=document.getElementById('content');
   if(S.projects.length===0){
@@ -632,9 +619,6 @@ function filterP(status){
   g.innerHTML=list.length===0?`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)">אין פרוייקטים</div>`:list.map(projCard).join('');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PROJECT DETAIL
-// ═══════════════════════════════════════════════════════════════
 function openProject(id){S.pid=id;S.tab='overview';S.view='detail';history.replaceState(null,'','#'+id);syncNav();syncTopbar();render();}
 function copyProjectLink(id){
   const url=location.origin+location.pathname+'#'+id;
@@ -796,9 +780,6 @@ function quickPublish(pid){
   renderTab('campaigns');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SOCIAL MEDIA
-// ═══════════════════════════════════════════════════════════════
 function renderSocial(){
   const c=document.getElementById('content');
   const platKeys=Object.keys(PLATS);
@@ -877,8 +858,6 @@ function postsTableHTML(filter,limit){
   let list=filter==='all'?S.posts:S.posts.filter(x=>x.projectId===filter);
   list=list.slice(-limit).reverse();
   if(!list.length)return'<div style="color:var(--muted);padding:14px;font-size:.85rem">אין פוסטים</div>';
-  const statusLbl=s=>({sent:'נשלח',scheduled:'מתוזמן',draft:'טיוטה',failed:'נכשל'}[s]||s);
-  const statusCls=s=>({sent:'pp-sent',scheduled:'pp-sched',draft:'pp-draft',failed:'pp-fail'}[s]||'pp-draft');
   return`<table class="posts-table"><thead><tr><th>כותרת</th><th>פלטפורמות</th><th>סטטוס</th></tr></thead><tbody>${list.map(postRow).join('')}</tbody></table>`;
 }
 function postRow(p){
@@ -900,9 +879,6 @@ function handleMedia(input){
   input.value='';
 }
 
-// ═══════════════════════════════════════════════════════════════
-// APPS
-// ═══════════════════════════════════════════════════════════════
 function renderApps(){
   const c=document.getElementById('content');
   const installed=S.apps;
@@ -944,9 +920,6 @@ function saveApp(){
   save();closeM('mod-app');renderApps();toast('✓ אפליקציה נוספה','success');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PROJECT CRUD
-// ═══════════════════════════════════════════════════════════════
 let _openProjectModal_id=null;
 function openProjectModal(id){
   _editPid=id||null;
@@ -978,9 +951,6 @@ function saveProject(){
   toast('✓ פרוייקט נשמר','success');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// INTERNAL BROWSER
-// ═══════════════════════════════════════════════════════════════
 let _browserPid=null;
 function openBrowser(pid){
   _browserPid=pid;
@@ -1023,9 +993,6 @@ function deleteProject(id){
   S.projects=S.projects.filter(x=>x.id!==id);save();nav('projects');toast('פרוייקט נמחק');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// TASK / NOTE / CONTACT CRUD
-// ═══════════════════════════════════════════════════════════════
 function saveTask(){
   const text=document.getElementById('tf-text').value.trim();if(!text){toast('חסר תיאור','error');return;}
   const p=S.projects.find(x=>x.id===S.pid);if(!p)return;
@@ -1069,9 +1036,6 @@ function deleteContact(pid,cid){
   p.contacts=p.contacts.filter(x=>x.id!==cid);save();renderTab('contacts');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// MODALS / UTILS
-// ═══════════════════════════════════════════════════════════════
 function openM(id){document.getElementById(id).classList.remove('hidden');}
 function closeM(id){document.getElementById(id).classList.add('hidden');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay:not(.hidden)').forEach(el=>el.classList.add('hidden'));});
@@ -1106,19 +1070,14 @@ function globalSearch(q){
   c.innerHTML=`<div class="projects-grid">${res.length?res.map(projCard).join(''):'<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)">לא נמצאו פרוייקטים</div>'}</div>`;
 }
 
-// Helpers
 function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
 function sLabel(s){return{active:'פעיל',paused:'מושהה',done:'הושלם'}[s]||s;}
 function priLbl(p){return{high:'גבוה',med:'בינוני',low:'נמוך'}[p]||'—';}
 
-// ═══════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
 load();
-// Migrate existing projects to stable IDs and add URLs
 const _SEED_IDS={'ביונד אינטימה':'seed-bi','קליניקמייט':'seed-cm','פרחי באך':'seed-pb','כדור בדולח':'seed-kb','אפליקציית משחקים':'seed-game'};
 const _SEED_URLS={
-  'seed-bi':  'byond/',
+  'seed-bi':  'https://byondintima-d1d4e.web.app/',
   'seed-cm':  'clinicmate/',
   'seed-pb':  'bach/',
   'seed-kb':  'kadur/',
@@ -1134,7 +1093,7 @@ if(_migrated)save();
 if(S.projects.length===0){
   const now=Date.now();
   S.projects=[{
-    id:'seed-bi',name:'ביונד אינטימה',emoji:'💜',url:'byond/',
+    id:'seed-bi',name:'ביונד אינטימה',emoji:'💜',url:'https://byondintima-d1d4e.web.app/',
     description:'משחק לוח אינטימי וחברתי לזוגות וחברים — חוויה ייחודית של קרבה וחשיפה.',
     status:'active',category:'משחק',
     tasks:[
