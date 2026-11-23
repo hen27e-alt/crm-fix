@@ -303,6 +303,40 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* ── INTERNAL BROWSER ── */
+.app-browser{
+  position:fixed;inset:0;z-index:500;
+  background:var(--bg);display:flex;flex-direction:column;
+}
+.app-browser.hidden{display:none;}
+.browser-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
+  background:var(--nav);border-bottom:1px solid var(--border);
+  padding-top:calc(10px + env(safe-area-inset-top,0px));
+  flex-shrink:0;
+}
+.browser-url{
+  flex:1;background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:6px 12px;font-size:.8rem;color:var(--muted);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.browser-frame{flex:1;border:none;width:100%;}
+.browser-no-url{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;color:var(--muted);
+}
+.browser-no-url .big{font-size:3rem;}
+.browser-url-input-wrap{display:flex;gap:8px;width:100%;max-width:400px;}
+
+/* ── QUICK PUBLISH ── */
+.qpub{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+.qpub-title{font-family:'Space Grotesk',sans-serif;font-size:.88rem;font-weight:600;margin-bottom:12px;}
+.qpub-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.qpub-chip{display:flex;align-items:center;gap:4px;padding:5px 11px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:.75rem;transition:all .15s;user-select:none;}
+.qpub-chip.selected{background:rgba(108,99,255,.18);border-color:var(--accent2);color:var(--accent2);}
+.qpub-chip.off{opacity:.4;cursor:not-allowed;}
 </style>
 
 <div id="app">
@@ -350,6 +384,7 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
     <div class="form-group"><label class="form-label">אמוג'י / לוגו</label><input class="input" id="pf-emoji" placeholder="📁" maxlength="2"></div>
     <div class="form-group"><label class="form-label">שם הפרוייקט *</label><input class="input" id="pf-name" placeholder="שם הפרוייקט..."></div>
     <div class="form-group"><label class="form-label">תיאור</label><textarea class="input" id="pf-desc" placeholder="תיאור קצר..."></textarea></div>
+    <div class="form-group"><label class="form-label">🌐 URL האפליקציה / האתר</label><input class="input" id="pf-url" placeholder="https://..." type="url"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">סטטוס</label><select class="input" id="pf-status"><option value="active">פעיל</option><option value="paused">מושהה</option><option value="done">הושלם</option></select></div>
       <div class="form-group"><label class="form-label">קטגוריה</label><input class="input" id="pf-cat" placeholder="שיווק, פיתוח..."></div>
@@ -422,6 +457,24 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('mod-confirm')">ביטול</button>
       <button class="btn btn-danger" id="confirm-ok">מחק</button>
+    </div>
+  </div>
+</div>
+
+<!-- INTERNAL BROWSER -->
+<div class="app-browser hidden" id="app-browser">
+  <div class="browser-bar">
+    <button class="btn-icon" onclick="closeBrowser()" title="סגור">✕</button>
+    <div class="browser-url" id="browser-url-lbl">—</div>
+    <a id="browser-ext-link" href="#" target="_blank" rel="noopener" class="btn-icon" title="פתח בטאב חדש">↗</a>
+  </div>
+  <iframe class="browser-frame" id="browser-frame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"></iframe>
+  <div class="browser-no-url hidden" id="browser-no-url">
+    <div class="big">🌐</div>
+    <div>לא הוגדר URL לפרוייקט זה</div>
+    <div class="browser-url-input-wrap">
+      <input class="input" id="browser-url-inp" placeholder="https://..." style="flex:1">
+      <button class="btn btn-primary" onclick="saveBrowserUrl()">שמור</button>
     </div>
   </div>
 </div>
@@ -610,8 +663,10 @@ function renderDetail(){
       </div>
       <div class="proj-hero-actions">
         <button onclick="nav('projects')" class="hero-btn">← חזרה</button>
-        <button id="copy-link-btn" onclick="copyProjectLink('${p.id}')" class="hero-btn">🔗 קישור</button>
-        <button onclick="openProjectModal('${p.id}')" class="hero-btn">✏️ ערוך</button>
+        <button onclick="openBrowser('${p.id}')" class="hero-btn" style="background:rgba(255,255,255,.25);font-weight:600">🌐 פתח אפליקציה</button>
+        <button onclick="switchTab('campaigns')" class="hero-btn" style="background:rgba(108,99,255,.35);font-weight:600">📡 פרסם</button>
+        <button id="copy-link-btn" onclick="copyProjectLink('${p.id}')" class="hero-btn">🔗</button>
+        <button onclick="openProjectModal('${p.id}')" class="hero-btn">✏️</button>
         <button onclick="confirmDelete('פרוייקט &quot;${p.name}&quot; יימחק לצמיתות.',()=>deleteProject('${p.id}'))" class="hero-btn danger">🗑️</button>
       </div>
     </div>
@@ -703,12 +758,42 @@ function contactRow(ct,pid){
 }
 
 function tabCampaigns(p,body){
-  const proj=p;
-  const camps=S.posts.filter(x=>x.projectId===proj.id);
+  const platKeys=Object.keys(PLATS);
+  const camps=S.posts.filter(x=>x.projectId===p.id);
+  const anyConn=platKeys.some(k=>S.conns[k]?.on);
   body.innerHTML=`
-  <button class="btn btn-primary btn-sm" style="margin-bottom:14px" onclick="nav('social')">+ קמפיין / פוסט חדש</button>
-  ${camps.length>0?`<div class="card"><table class="posts-table"><thead><tr><th>כותרת</th><th>פלטפורמות</th><th>סטטוס</th></tr></thead><tbody>${camps.map(postRow).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-icon">🚀</div><div class="empty-text">אין קמפיינים עדיין</div></div>'}
+  <div class="qpub">
+    <div class="qpub-title">📤 פרסם עכשיו עבור ${p.emoji||'📁'} ${p.name}</div>
+    <div class="form-group"><input class="input" id="qp-title-${p.id}" placeholder="כותרת (אופציונלי)..."></div>
+    <div class="form-group"><textarea class="input" id="qp-text-${p.id}" placeholder="תוכן הפוסט..." style="min-height:80px"></textarea></div>
+    <div class="qpub-chips">
+      ${platKeys.map(k=>{
+        const pl=PLATS[k];const on=S.conns[k]?.on;
+        return`<div class="qpub-chip${!on?' off':''}" data-plat="${k}" onclick="if(!this.classList.contains('off'))this.classList.toggle('selected')">${pl.icon} ${pl.name}${!on?' 🔒':''}</div>`;
+      }).join('')}
+    </div>
+    ${!anyConn?`<div style="font-size:.78rem;color:var(--yellow);margin-bottom:10px">⚠️ חבר פלטפורמות בלשונית המדיה כדי לפרסם</div>`:''}
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="quickPublish('${p.id}')">🚀 פרסם</button>
+      <input type="datetime-local" class="input btn-sm" id="qp-sched-${p.id}" style="max-width:220px;padding:5px 10px" title="תזמן לתאריך (אופציונלי)">
+      <button class="btn btn-ghost btn-sm" onclick="nav('social')" title="הגדרות מדיה">⚙️ חבר פלטפורמות</button>
+    </div>
+  </div>
+  ${camps.length>0?`<div class="card"><div class="card-header"><div class="card-title">היסטוריה (${camps.length})</div></div><table class="posts-table"><thead><tr><th>כותרת</th><th>פלטפורמות</th><th>סטטוס</th></tr></thead><tbody>${camps.map(postRow).join('')}</tbody></table></div>`:''}
   `;
+}
+function quickPublish(pid){
+  const title=document.getElementById('qp-title-'+pid)?.value?.trim();
+  const text=document.getElementById('qp-text-'+pid)?.value?.trim();
+  if(!text&&!title){toast('נא להזין תוכן','error');return;}
+  const platforms=[...document.querySelectorAll(`.qpub-chip.selected:not(.off)`)].map(el=>el.dataset.plat);
+  if(!platforms.length){toast('בחר פלטפורמה מחוברת','error');return;}
+  const schedVal=document.getElementById('qp-sched-'+pid)?.value;
+  const isLater=schedVal&&new Date(schedVal)>new Date();
+  S.posts.push({id:uid(),title:title||text.slice(0,40),text,platforms,status:isLater?'scheduled':'sent',scheduledAt:isLater?new Date(schedVal).getTime():null,projectId:pid,createdAt:Date.now(),mediaCount:0});
+  save();
+  toast('🚀 '+(isLater?'פוסט תוזמן':'פוסט נשלח לכל הפלטפורמות'),'success');
+  renderTab('campaigns');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -870,6 +955,7 @@ function openProjectModal(id){
   document.getElementById('pf-emoji').value=p?.emoji||'';
   document.getElementById('pf-name').value=p?.name||'';
   document.getElementById('pf-desc').value=p?.description||'';
+  document.getElementById('pf-url').value=p?.url||'';
   document.getElementById('pf-status').value=p?.status||'active';
   document.getElementById('pf-cat').value=p?.category||'';
   openM('mod-project');
@@ -880,15 +966,58 @@ function saveProject(){
     const p=S.projects.find(x=>x.id===_editPid);if(p){
       p.name=name;p.emoji=document.getElementById('pf-emoji').value||p.emoji;
       p.description=document.getElementById('pf-desc').value;
+      p.url=document.getElementById('pf-url').value.trim();
       p.status=document.getElementById('pf-status').value;
       p.category=document.getElementById('pf-cat').value;
     }
   }else{
-    S.projects.push({id:uid(),name,emoji:document.getElementById('pf-emoji').value||'📁',description:document.getElementById('pf-desc').value,status:document.getElementById('pf-status').value,category:document.getElementById('pf-cat').value,tasks:[],notes:[],contacts:[],campaigns:[],createdAt:Date.now()});
+    S.projects.push({id:uid(),name,emoji:document.getElementById('pf-emoji').value||'📁',description:document.getElementById('pf-desc').value,url:document.getElementById('pf-url').value.trim(),status:document.getElementById('pf-status').value,category:document.getElementById('pf-cat').value,tasks:[],notes:[],contacts:[],campaigns:[],createdAt:Date.now()});
   }
   save();closeM('mod-project');
   if(S.view==='detail')renderDetail();else renderProjects();
   toast('✓ פרוייקט נשמר','success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INTERNAL BROWSER
+// ═══════════════════════════════════════════════════════════════
+let _browserPid=null;
+function openBrowser(pid){
+  _browserPid=pid;
+  const p=S.projects.find(x=>x.id===pid);
+  const browser=document.getElementById('app-browser');
+  const frame=document.getElementById('browser-frame');
+  const noUrl=document.getElementById('browser-no-url');
+  const urlLbl=document.getElementById('browser-url-lbl');
+  const extLink=document.getElementById('browser-ext-link');
+  browser.classList.remove('hidden');
+  if(p?.url){
+    urlLbl.textContent=p.url;
+    extLink.href=p.url;
+    frame.style.display='';
+    noUrl.classList.add('hidden');
+    frame.src=p.url;
+  }else{
+    urlLbl.textContent='הוסף URL';
+    extLink.href='#';
+    frame.style.display='none';
+    noUrl.classList.remove('hidden');
+    document.getElementById('browser-url-inp').value='';
+    document.getElementById('browser-url-inp').focus();
+  }
+  document.body.style.overflow='hidden';
+}
+function closeBrowser(){
+  document.getElementById('app-browser').classList.add('hidden');
+  document.getElementById('browser-frame').src='about:blank';
+  document.body.style.overflow='';
+}
+function saveBrowserUrl(){
+  const url=document.getElementById('browser-url-inp').value.trim();
+  if(!url){toast('הכנס URL תקין','error');return;}
+  const p=S.projects.find(x=>x.id===_browserPid);
+  if(p){p.url=url;save();toast('✓ URL נשמר','success');}
+  openBrowser(_browserPid);
 }
 function deleteProject(id){
   S.projects=S.projects.filter(x=>x.id!==id);save();nav('projects');toast('פרוייקט נמחק');
