@@ -7,28 +7,45 @@
       "firebase.json",
       ".firebaserc",
       "vercel.json",
+      "README.md",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
-      { "source": "/byond",      "destination": "/byond/index.html" },
-      { "source": "/clinicmate", "destination": "/clinicmate/index.html" },
-      { "source": "/bach",       "destination": "/bach/index.html" },
-      { "source": "/kadur",      "destination": "/kadur/index.html" },
-      { "source": "/games",      "destination": "/games/index.html" }
+      {
+        "source": "/bach",
+        "destination": "/bach/index.html"
+      },
+      {
+        "source": "/kadur",
+        "destination": "/kadur/index.html"
+      },
+      {
+        "source": "/games",
+        "destination": "/games/index.html"
+      }
     ],
     "headers": [
       {
         "source": "**/*.html",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache" },
-          { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "SAMEORIGIN"
+          }
         ]
       },
       {
         "source": "**/*.@(js|css)",
         "headers": [
-          { "key": "Cache-Control", "value": "max-age=31536000" }
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
         ]
       }
     ]
