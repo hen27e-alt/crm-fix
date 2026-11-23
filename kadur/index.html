@@ -39,7 +39,7 @@ html{background:var(--bg);scroll-behavior:smooth;-webkit-text-size-adjust:100%;o
 body{
   font-family:var(--f-ui);color:var(--ink);background:var(--bg);
   min-height:100vh;min-height:100dvh;line-height:1.6;font-size:16px;
-  overflow-x:hidden;direction:rtl;text-align:right;
+  direction:rtl;text-align:right;
   padding-bottom:calc(var(--nav-h) + var(--sab) + 18px);
   -webkit-font-smoothing:antialiased;
 }
@@ -211,6 +211,7 @@ input[type=date].field{min-height:48px;color-scheme:dark}
   text-shadow:0 0 18px rgba(230,194,122,.9),0 0 46px rgba(192,38,211,.75),0 2px 4px rgba(0,0,0,.4);
   opacity:0;filter:blur(16px);transform:scale(1.25);transition:opacity 1.5s ease,filter 1.5s ease,transform 1.7s var(--ease);z-index:3
 }
+.orb-word.short{font-size:clamp(40px,14.5vw,62px)}
 .orb-word.show{opacity:1;filter:blur(0);transform:none}
 .gl{position:absolute;pointer-events:none;border-radius:50%;z-index:4}
 .gl-1{left:13%;top:6.5%;width:46%;height:25%;transform:rotate(-27deg);filter:blur(1.4px);
@@ -1434,7 +1435,7 @@ function orbDraw(dt){
     const rr = p.r * (1 + .09 * Math.sin(t * .6 + p.ph)) * (1 - e * .12);
     const x = c + Math.cos(p.th) * rr * S, y = c + Math.sin(p.th) * rr * S * .94;
     const s = p.s * S * (.85 + e * .25);
-    ctx.globalAlpha = Math.min(1, p.a * (.42 + e * .62) * (.72 + .28 * Math.sin(t * 1.1 + p.ph)));
+    ctx.globalAlpha = Math.min(1, p.a * (.55 + e * .55) * (.72 + .28 * Math.sin(t * 1.1 + p.ph)));
     ctx.drawImage(o.sprites[p.c], x - s / 2, y - s / 2, s, s);
   }
   ctx.globalAlpha = 1;
@@ -1624,7 +1625,7 @@ function reveal(a){
   ui.current = a;
   stageEl.classList.remove('swirl');
   Orb.target = .34;
-  wordEl.textContent = a.ballWord; wordEl.classList.add('show');
+  wordEl.textContent = a.ballWord; wordEl.classList.toggle('short', a.ballWord.length <= 4); wordEl.classList.add('show');
   chime('reveal');
   ansEl.style.opacity = '';
   renderAnswer(a);
@@ -2066,7 +2067,6 @@ window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTi
   const h = (location.hash || '').slice(1);
   if (h && $('#view-' + h)) showView(h, { silent:true });
   startLoop();
-  window.__kadur = { makeAnswer, classify, qType, normQ, analyzeName, reduceKeep, lifePath, signFromDate, TAROT, SIGNS, CATS, CHIPS, INSIGHTS, ADVICE, cardFrontSVG, GLYPHS };
 })();
 
 })();
