@@ -593,7 +593,7 @@ const PALETTES=[
   ['#f59e0b','#ef4444'],
   ['#0891b2','#6c63ff'],
 ];
-const SEED_PAL={'seed-bi':0,'seed-cm':1,'seed-pb':2,'seed-kb':3,'seed-game':4};
+const SEED_PAL={'seed-bi':0,'seed-cm':1,'seed-pb':2,'seed-kb':3,'seed-game':4,'seed-dror':5};
 function projPalIdx(p){
   if(SEED_PAL[p.id]!==undefined) return SEED_PAL[p.id];
   let h=0;for(const c of p.id)h=(h*31+c.charCodeAt(0))>>>0;
@@ -1070,7 +1070,8 @@ const REG={
   'seed-cm':  {name:'ClinicMate',en:'CLINICMATE',tag:'ניהול קליניקה חכם',desc:'מערכת למטפלים: תיקי מטופלים, יומן פגישות, הוצאות וקבלות, עם בידוד מלא בין מטפלים.',url:'https://clinicmate.co.il/',g:['#0F766E','#1E3A8A'],ac:'#2DD4BF'},
   'seed-pb':  {name:'פרחי באך',en:'BACH FLOWERS',tag:'מצאו את הפרח שלכם',desc:'38 פרחי באך ופרח החירום: אבחון עצמי, תערובת אישית ויומן מעקב יומי.',url:'https://bach-flowers-site.vercel.app/',g:['#C2577A','#5B3A86'],ac:'#F4A8C0'},
   'seed-kb':  {name:'כדור בדולח',en:'CRYSTAL BALL',tag:'שאלו את הכדור',desc:'כדור בדולח אינטראקטיבי: שאלות לכדור, קלף היום, מזלות ונומרולוגיה.',url:'https://kadur-habdolach.vercel.app/',g:['#3B1D8A','#07051A'],ac:'#A78BFA'},
-  'seed-game':{name:'ערב משחקים',en:'GAME NIGHT',tag:'משחקים לחברים ולזוגות',desc:'טריוויה, זיהוי שירים, פוקר ובינגו ראש בראש, מסלול שלבים, מטבעות, רמות, אווטארים תלת־ממדיים ופאנל ניהול.',url:'https://erev-mischakim-jfkpt.web.app/',g:['#EA580C','#9D174D'],ac:'#FDBA74'}
+  'seed-game':{name:'ערב משחקים',en:'GAME NIGHT',tag:'משחקים לחברים ולזוגות',desc:'טריוויה, זיהוי שירים, פוקר ובינגו ראש בראש, מסלול שלבים, מטבעות, רמות, אווטארים תלת־ממדיים ופאנל ניהול.',url:'https://erev-mischakim-jfkpt.web.app/',g:['#EA580C','#9D174D'],ac:'#FDBA74'},
+  'seed-dror':{name:'אצל דרור',en:'ETZEL DROR',tag:'מנות מיוחדות משף דרור',desc:'אתר המותג של שף דרור: בשר, רטבים וסלטים, בישול ארוך, תבשילים ודברים מיוחדים. אתר טיפוגרפי עם תפריט, גלריה, מאמרים וטופס יצירת קשר.',url:'https://claude.ai/artifact/VeYn1FfsdYR9ssQZbc9j2D',g:['#96593B','#2B2622'],ac:'#E8C9AE'}
 };
 const _petals=[0,1,2,3,4,5,6,7].map(i=>`<ellipse cx="0" cy="-12.5" rx="5.6" ry="11" fill="#fff" fill-opacity="${i%2?'.72':'.92'}" transform="rotate(${i*45})"/>`).join('');
 const LOGOS={
@@ -1078,7 +1079,8 @@ const LOGOS={
   'seed-cm':'<defs><linearGradient id="lcg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14B8A6"/><stop offset="1" stop-color="#2563EB"/></linearGradient></defs><rect width="64" height="64" fill="url(#lcg)"/><path d="M43 23A15 15 0 1 0 43 41" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M31 25v14M24 32h14" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
   'seed-pb':'<defs><linearGradient id="lpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0A6BC"/><stop offset="1" stop-color="#8E63B5"/></linearGradient></defs><rect width="64" height="64" fill="url(#lpg)"/><g transform="translate(32 32)">'+_petals+'<circle r="5.6" fill="#F7D774"/><circle r="5.6" fill="none" stroke="#C9962B" stroke-width="1.2"/></g>',
   'seed-kb':'<defs><radialGradient id="lkb" cx=".5" cy=".3" r=".9"><stop offset="0" stop-color="#2E1F6B"/><stop offset="1" stop-color="#07051A"/></radialGradient><radialGradient id="lks" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#E9D5FF"/><stop offset=".45" stop-color="#8B5CF6"/><stop offset="1" stop-color="#3B0764"/></radialGradient></defs><rect width="64" height="64" fill="url(#lkb)"/><path d="M19 52q13-7 26 0l-2 4H21z" fill="#E6C27A"/><circle cx="32" cy="30" r="17" fill="url(#lks)"/><ellipse cx="25.5" cy="21.5" rx="5.5" ry="3" fill="#fff" fill-opacity=".55" transform="rotate(-32 25.5 21.5)"/><path d="M38.5 27l1.5 3.8 3.8 1.5-3.8 1.5-1.5 3.8-1.5-3.8-3.8-1.5 3.8-1.5z" fill="#E6C27A"/>',
-  'seed-game':'<defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FB923C"/><stop offset="1" stop-color="#DB2777"/></linearGradient></defs><rect width="64" height="64" fill="url(#lgg)"/><g transform="rotate(-12 32 32)"><rect x="15" y="15" width="34" height="34" rx="9" fill="#fff"/><g fill="#DB2777"><circle cx="24" cy="24" r="3.2"/><circle cx="40" cy="24" r="3.2"/><circle cx="32" cy="32" r="3.2"/><circle cx="24" cy="40" r="3.2"/><circle cx="40" cy="40" r="3.2"/></g></g>'
+  'seed-game':'<defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FB923C"/><stop offset="1" stop-color="#DB2777"/></linearGradient></defs><rect width="64" height="64" fill="url(#lgg)"/><g transform="rotate(-12 32 32)"><rect x="15" y="15" width="34" height="34" rx="9" fill="#fff"/><g fill="#DB2777"><circle cx="24" cy="24" r="3.2"/><circle cx="40" cy="24" r="3.2"/><circle cx="32" cy="32" r="3.2"/><circle cx="24" cy="40" r="3.2"/><circle cx="40" cy="40" r="3.2"/></g></g>',
+  'seed-dror':'<defs><linearGradient id="ldg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8D7C7"/><stop offset=".5" stop-color="#C98B5E"/><stop offset="1" stop-color="#7A472E"/></linearGradient><radialGradient id="ldbg" cx=".3" cy=".25" r=".9"><stop offset="0" stop-color="#3A2A1F"/><stop offset="1" stop-color="#140E0A"/></radialGradient></defs><rect width="64" height="64" fill="url(#ldbg)"/><rect x="5.5" y="5.5" width="53" height="53" rx="10" fill="none" stroke="url(#ldg)" stroke-opacity=".55"/><text x="32" y="45" text-anchor="middle" font-family="Georgia,\'Times New Roman\',serif" font-size="34" fill="url(#ldg)">ד</text>'
 };
 function logoHTML(p,s){
   s=s||48;
@@ -1324,6 +1326,24 @@ S.projects.forEach(p=>{
   }
 });
 if(S.view==='apps'||!S.view)S.view='home';
+// Add newly-registered apps that existing (non-empty) installs don't have yet
+if(S.projects.length>0&&!S.projects.find(p=>p.id==='seed-dror')){
+  const now=Date.now();
+  S.projects.push({
+    id:'seed-dror',name:'אצל דרור',emoji:'🍽️',url:'https://claude.ai/artifact/VeYn1FfsdYR9ssQZbc9j2D',
+    description:'אתר המותג של שף דרור: בשר, רטבים וסלטים, בישול ארוך, תבשילים ודברים מיוחדים.',
+    status:'active',category:'מזון',
+    tasks:[
+      {id:uid(),text:'חיבור תמונות אמיתיות של המנות',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'חיבור טופס יצירת הקשר לשירות שליחה אמיתי',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'הוספת מוצרים ראשונים לכל קטגוריה',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'קמפיין השקה ברשתות החברתיות',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'סטטוס',body:'האתר פורסם כ-Artifact ב-claude.ai (לא דומיין עצמאי עדיין). תמונות הן איורי SVG כי Artifact לא טוען תמונות חיצוניות.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  });
+  _migrated=true;
+}
 if(_migrated)save();
 
 if(S.projects.length===0){
@@ -1387,6 +1407,18 @@ if(S.projects.length===0){
       {id:uid(),text:'אסטרטגיית מונטיזציה',done:false,priority:'low',createdAt:now}
     ],
     notes:[{id:uid(),title:'גישה',body:'אוסף משחקים חברתיים שאפשר לשחק עם חברים. מתאים למסיבות, ערבי חברים, זוגות. ביונד אינטימה יכול להיות אחד המשחקים פנימה.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:'seed-dror',name:'אצל דרור',emoji:'🍽️',url:'https://claude.ai/artifact/VeYn1FfsdYR9ssQZbc9j2D',
+    description:'אתר המותג של שף דרור: בשר, רטבים וסלטים, בישול ארוך, תבשילים ודברים מיוחדים.',
+    status:'active',category:'מזון',
+    tasks:[
+      {id:uid(),text:'חיבור תמונות אמיתיות של המנות',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'חיבור טופס יצירת הקשר לשירות שליחה אמיתי',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'הוספת מוצרים ראשונים לכל קטגוריה',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'קמפיין השקה ברשתות החברתיות',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'סטטוס',body:'האתר פורסם כ-Artifact ב-claude.ai (לא דומיין עצמאי עדיין). תמונות הן איורי SVG כי Artifact לא טוען תמונות חיצוניות.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   }];
   save();
