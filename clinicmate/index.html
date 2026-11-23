@@ -1,0 +1,118 @@
+<!doctype html><html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>קליניקמייט</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700&family=Space+Grotesk:wght@700&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%;font-family:'Heebo',sans-serif;background:#020c18;color:#e0f2fe;overflow-x:hidden}
+.bg-mesh{position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 20% 10%,rgba(59,130,246,.25) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(6,182,212,.2) 0%,transparent 60%);pointer-events:none}
+.app{max-width:430px;margin:0 auto;padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:18px;position:relative;z-index:1}
+.topbar{display:flex;align-items:center;gap:10px;padding:8px 0}
+.back-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#e0f2fe;border-radius:12px;padding:8px 14px;font-family:'Heebo',sans-serif;font-size:.85rem;cursor:pointer;transition:background .15s}
+.back-btn:hover{background:rgba(255,255,255,.15)}
+.tb-spacer{flex:1}
+.badge{font-size:.7rem;background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;border-radius:20px;padding:4px 10px;font-weight:600}
+.hero{padding:16px 0 4px}
+.hero-row{display:flex;align-items:center;gap:14px}
+.hero-logo{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;box-shadow:0 8px 24px rgba(59,130,246,.4)}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;background:linear-gradient(135deg,#60a5fa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:.8rem;color:rgba(224,242,254,.5);margin-top:3px}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:14px;padding:12px;text-align:center}
+.stat-num{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,#60a5fa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-lbl{font-size:.68rem;color:rgba(224,242,254,.45);margin-top:2px}
+.section-title{font-size:.75rem;font-weight:700;color:rgba(224,242,254,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.appt-list{display:flex;flex-direction:column;gap:8px}
+.appt{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.appt-time{font-family:'Space Grotesk',sans-serif;font-size:.8rem;font-weight:700;color:#60a5fa;min-width:44px}
+.appt-info{flex:1}
+.appt-name{font-weight:600;font-size:.9rem}
+.appt-type{font-size:.72rem;color:rgba(224,242,254,.45);margin-top:1px}
+.appt-status{font-size:.68rem;border-radius:8px;padding:3px 8px;font-weight:600}
+.status-confirmed{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.status-pending{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:none;border-radius:14px;padding:14px;font-family:'Heebo',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn:hover{opacity:.85}
+.btn-primary{background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff}
+.btn-secondary{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);color:#60a5fa}
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.qa-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;transition:background .15s}
+.qa-btn:hover{background:rgba(255,255,255,.1)}
+.qa-icon{font-size:1.3rem}
+.qa-lbl{font-size:.6rem;color:rgba(224,242,254,.45);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="app">
+  <div class="topbar">
+    <button class="back-btn" onclick="try{window.parent.closeBrowser()}catch(e){history.back()}">← CRM</button>
+    <div class="tb-spacer"></div>
+    <div class="badge">Beta</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-row">
+      <div class="hero-logo">🏥</div>
+      <div>
+        <h1>קליניקמייט</h1>
+        <p>מערכת ניהול חכמה לקליניקות ומטפלים</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">12</div><div class="stat-lbl">תורים היום</div></div>
+    <div class="stat"><div class="stat-num">48</div><div class="stat-lbl">מטופלים</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-lbl">ממתינים</div></div>
+  </div>
+
+  <div>
+    <div class="section-title">פעולות מהירות</div>
+    <div class="quick-actions">
+      <div class="qa-btn" onclick="alert('בקרוב!')"><div class="qa-icon">📅</div><div class="qa-lbl">תור חדש</div></div>
+      <div class="qa-btn" onclick="alert('בקרוב!')"><div class="qa-icon">👤</div><div class="qa-lbl">מטופל חדש</div></div>
+      <div class="qa-btn" onclick="alert('בקרוב!')"><div class="qa-icon">📋</div><div class="qa-lbl">תיק טיפול</div></div>
+      <div class="qa-btn" onclick="alert('בקרוב!')"><div class="qa-icon">💳</div><div class="qa-lbl">תשלום</div></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-title">תורים להיום — ראשון 23.11</div>
+    <div class="appt-list">
+      <div class="appt">
+        <div class="appt-time">09:00</div>
+        <div class="appt-info">
+          <div class="appt-name">מיכל לוי</div>
+          <div class="appt-type">טיפול בוגר • 60 דק'</div>
+        </div>
+        <div class="appt-status status-confirmed">אושר</div>
+      </div>
+      <div class="appt">
+        <div class="appt-time">10:30</div>
+        <div class="appt-info">
+          <div class="appt-name">יוסי כהן</div>
+          <div class="appt-type">ייעוץ ראשוני • 45 דק'</div>
+        </div>
+        <div class="appt-status status-pending">ממתין</div>
+      </div>
+      <div class="appt">
+        <div class="appt-time">12:00</div>
+        <div class="appt-info">
+          <div class="appt-name">רחל ברק</div>
+          <div class="appt-type">מעקב • 30 דק'</div>
+        </div>
+        <div class="appt-status status-confirmed">אושר</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="alert('בקרוב!')">📅 תור חדש</button>
+    <button class="btn btn-secondary" onclick="alert('בקרוב!')">📊 דוחות</button>
+  </div>
+</div>
+</body>
+</html>

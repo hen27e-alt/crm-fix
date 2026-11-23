@@ -1,0 +1,123 @@
+<!doctype html><html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>אפליקציית משחקים</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700&family=Space+Grotesk:wght@700&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%;font-family:'Heebo',sans-serif;background:#020f09;color:#d1fae5;overflow-x:hidden}
+.bg-mesh{position:fixed;inset:0;background:radial-gradient(ellipse 70% 60% at 30% 10%,rgba(5,150,105,.22) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 70% 80%,rgba(16,185,129,.18) 0%,transparent 55%);pointer-events:none}
+.app{max-width:430px;margin:0 auto;padding:16px;min-height:100vh;display:flex;flex-direction:column;gap:18px;position:relative;z-index:1}
+.topbar{display:flex;align-items:center;gap:10px;padding:8px 0}
+.back-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#d1fae5;border-radius:12px;padding:8px 14px;font-family:'Heebo',sans-serif;font-size:.85rem;cursor:pointer}
+.tb-spacer{flex:1}
+.badge{font-size:.7rem;background:linear-gradient(135deg,#059669,#10b981);color:#fff;border-radius:20px;padding:4px 10px;font-weight:600}
+.hero{padding:12px 0 4px;display:flex;align-items:center;gap:14px}
+.hero-logo{width:60px;height:60px;border-radius:20px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;box-shadow:0 8px 24px rgba(5,150,105,.4);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(5,150,105,.4)}50%{box-shadow:0 8px 32px rgba(5,150,105,.65)}}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;background:linear-gradient(135deg,#4ade80,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:.8rem;color:rgba(209,250,229,.45);margin-top:3px}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:rgba(5,150,105,.1);border:1px solid rgba(5,150,105,.2);border-radius:14px;padding:12px;text-align:center}
+.stat-num{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,#4ade80,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-lbl{font-size:.68rem;color:rgba(209,250,229,.4);margin-top:2px}
+.section-title{font-size:.75rem;font-weight:700;color:rgba(209,250,229,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.game-card{border-radius:18px;padding:16px;cursor:pointer;transition:transform .18s;position:relative;overflow:hidden;min-height:120px;display:flex;flex-direction:column;justify-content:space-between}
+.game-card:hover{transform:scale(1.03)}
+.gc-trivia{background:linear-gradient(135deg,#064e3b,#065f46)}
+.gc-dare{background:linear-gradient(135deg,#1a2e05,#166534)}
+.gc-charades{background:linear-gradient(135deg,#052e16,#15803d)}
+.gc-quiz{background:linear-gradient(135deg,#0a2a0a,#14532d)}
+.gc-byond{background:linear-gradient(135deg,#2e1065,#4c1d95)}
+.gc-fast{background:linear-gradient(135deg,#431407,#7c2d12)}
+.gc-cat{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45)}
+.gc-name{font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:700;color:#fff;margin-top:3px}
+.gc-emoji{position:absolute;top:12px;left:12px;font-size:1.4rem;opacity:.8}
+.gc-players{font-size:.7rem;color:rgba(255,255,255,.4);margin-top:auto;padding-top:8px}
+.gc-new{position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:.55rem;font-weight:700;border-radius:8px;padding:2px 6px;text-transform:uppercase}
+.featured{background:linear-gradient(135deg,rgba(5,150,105,.18),rgba(16,185,129,.12));border:1px solid rgba(5,150,105,.3);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:opacity .15s}
+.featured:hover{opacity:.85}
+.feat-icon{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.feat-info{flex:1}
+.feat-title{font-weight:700;font-size:.95rem}
+.feat-sub{font-size:.75rem;color:rgba(209,250,229,.45);margin-top:2px}
+.feat-arrow{color:rgba(209,250,229,.3);font-size:1.1rem}
+.lobby-btn{background:linear-gradient(135deg,#059669,#10b981);border:none;border-radius:16px;padding:16px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;width:100%;letter-spacing:.03em;transition:opacity .15s}
+.lobby-btn:hover{opacity:.9}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="app">
+  <div class="topbar">
+    <button class="back-btn" onclick="try{window.parent.closeBrowser()}catch(e){history.back()}">← CRM</button>
+    <div class="tb-spacer"></div>
+    <div class="badge">🎮 Live</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-logo">🎮</div>
+    <div>
+      <h1>אפליקציית משחקים</h1>
+      <p>משחקים חברתיים למסיבות, זוגות וחברים</p>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">12</div><div class="stat-lbl">משחקים</div></div>
+    <div class="stat"><div class="stat-num">2–10</div><div class="stat-lbl">שחקנים</div></div>
+    <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl">כיף</div></div>
+  </div>
+
+  <button class="lobby-btn" onclick="alert('בקרוב!')">▶ הצטרף לחדר משחק</button>
+
+  <div>
+    <div class="section-title">כל המשחקים</div>
+    <div class="games-grid">
+      <div class="game-card gc-trivia" onclick="alert('בקרוב!')">
+        <div class="gc-emoji">❓</div>
+        <div><div class="gc-cat">ידע</div><div class="gc-name">טריוויה</div></div>
+        <div class="gc-players">2–8 שחקנים</div>
+      </div>
+      <div class="game-card gc-dare" onclick="alert('בקרוב!')">
+        <div class="gc-emoji">🎲</div>
+        <div class="gc-new">חדש</div>
+        <div><div class="gc-cat">אומץ</div><div class="gc-name">אמת או אומץ</div></div>
+        <div class="gc-players">2–6 שחקנים</div>
+      </div>
+      <div class="game-card gc-charades" onclick="alert('בקרוב!')">
+        <div class="gc-emoji">🎭</div>
+        <div><div class="gc-cat">מחוות</div><div class="gc-name">מנסה להסביר</div></div>
+        <div class="gc-players">4–10 שחקנים</div>
+      </div>
+      <div class="game-card gc-quiz" onclick="alert('בקרוב!')">
+        <div class="gc-emoji">📱</div>
+        <div><div class="gc-cat">מהיר</div><div class="gc-name">סיבוב שאלות</div></div>
+        <div class="gc-players">2–8 שחקנים</div>
+      </div>
+      <div class="game-card gc-byond" onclick="alert('בקרוב!')">
+        <div class="gc-emoji">💜</div>
+        <div class="gc-new">פופולרי</div>
+        <div><div class="gc-cat">אינטימי</div><div class="gc-name">ביונד אינטימה</div></div>
+        <div class="gc-players">2–6 שחקנים</div>
+      </div>
+      <div class="game-card gc-fast" onclick="alert('בקרוב!')">
+        <div class="gc-emoji">⏱</div>
+        <div><div class="gc-cat">מהיר</div><div class="gc-name">60 שניות</div></div>
+        <div class="gc-players">2–4 שחקנים</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="featured" onclick="alert('בקרוב!')">
+    <div class="feat-icon">🏆</div>
+    <div class="feat-info">
+      <div class="feat-title">לוח תוצאות שבועי</div>
+      <div class="feat-sub">ראה מי המנצח השבוע</div>
+    </div>
+    <div class="feat-arrow">←</div>
+  </div>
+</div>
+</body>
+</html>

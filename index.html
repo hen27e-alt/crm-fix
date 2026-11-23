@@ -1118,23 +1118,23 @@ load();
 // Migrate existing projects to stable IDs and add URLs
 const _SEED_IDS={'ביונד אינטימה':'seed-bi','קליניקמייט':'seed-cm','פרחי באך':'seed-pb','כדור בדולח':'seed-kb','אפליקציית משחקים':'seed-game'};
 const _SEED_URLS={
-  'seed-bi':  'https://hen27e-alt.github.io/BYOND-INTIMA/',
-  'seed-cm':  'https://github.com/hen27e-alt/clinicmate-v2',
-  'seed-pb':  'https://hen27e-alt.github.io/bach-flowers1-site/',
-  'seed-kb':  'https://hen27e-alt.github.io/kadur-habdolach/',
-  'seed-game':'https://hen27e-alt.github.io/erev-mischakim/'
+  'seed-bi':  'byond/',
+  'seed-cm':  'clinicmate/',
+  'seed-pb':  'bach/',
+  'seed-kb':  'kadur/',
+  'seed-game':'games/'
 };
 let _migrated=false;
 S.projects.forEach(p=>{
   if(_SEED_IDS[p.name]&&p.id!==_SEED_IDS[p.name]){p.id=_SEED_IDS[p.name];_migrated=true;}
-  if(_SEED_URLS[p.id]&&!p.url){p.url=_SEED_URLS[p.id];_migrated=true;}
+  if(_SEED_URLS[p.id]&&p.url!==_SEED_URLS[p.id]){p.url=_SEED_URLS[p.id];_migrated=true;}
 });
 if(_migrated)save();
 
 if(S.projects.length===0){
   const now=Date.now();
   S.projects=[{
-    id:'seed-bi',name:'ביונד אינטימה',emoji:'💜',url:'https://hen27e-alt.github.io/BYOND-INTIMA/',
+    id:'seed-bi',name:'ביונד אינטימה',emoji:'💜',url:'byond/',
     description:'משחק לוח אינטימי וחברתי לזוגות וחברים — חוויה ייחודית של קרבה וחשיפה.',
     status:'active',category:'משחק',
     tasks:[
@@ -1146,7 +1146,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'קונספט',body:'משחק שמביא זוגות וחברים קרובים יותר דרך שאלות ואתגרים מותאמים. כבר יש גרסת לוח — השלב הבא הוא אפליקציה.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:'seed-cm',name:'קליניקמייט',emoji:'🏥',url:'https://github.com/hen27e-alt/clinicmate-v2',
+    id:'seed-cm',name:'קליניקמייט',emoji:'🏥',url:'clinicmate/',
     description:'מערכת ניהול חכמה לקליניקות ומטפלים — תיאום תורים, תיקי מטופלים ומעקב טיפולים.',
     status:'active',category:'SaaS',
     tasks:[
@@ -1158,7 +1158,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'רעיון מרכזי',body:'מערכת CRM ייעודית למטפלים — טיפול בתיקי מטופלים, תזכורות אוטומטיות, וניהול תשלומים במקום אחד.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:'seed-pb',name:'פרחי באך',emoji:'🌸',url:'https://hen27e-alt.github.io/bach-flowers1-site/',
+    id:'seed-pb',name:'פרחי באך',emoji:'🌸',url:'bach/',
     description:'אפליקציה לאבחון עצמי ובחירת פרחי באך — 38 פרחים, מדריך אישי ומעקב טיפול.',
     status:'active',category:'בריאות',
     tasks:[
@@ -1170,7 +1170,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'קהל יעד',body:'מטפלים הוליסטיים, אנשים המחפשים רפואה משלימה, ומתעניינים בבריאות רגשית טבעית.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:'seed-kb',name:'כדור בדולח',emoji:'🔮',url:'https://hen27e-alt.github.io/kadur-habdolach/',
+    id:'seed-kb',name:'כדור בדולח',emoji:'🔮',url:'kadur/',
     description:'אפליקציית AI לניחושים, תחזיות ואסטרולוגיה — חוויה מיסטית מתקדמת.',
     status:'active',category:'בידור',
     tasks:[
@@ -1182,7 +1182,7 @@ if(S.projects.length===0){
     notes:[{id:uid(),title:'ויב',body:'עיצוב כהה, כוכבים, אנימציות מיסטיות. חוויה שמרגישה אמיתית ומיוחדת — לא עוד אפליקציית הורוסקופ רגילה.',createdAt:now}],
     contacts:[],campaigns:[],createdAt:now
   },{
-    id:'seed-game',name:'אפליקציית משחקים',emoji:'🎮',url:'https://hen27e-alt.github.io/erev-mischakim/',
+    id:'seed-game',name:'אפליקציית משחקים',emoji:'🎮',url:'games/',
     description:'פלטפורמת משחקים מגוונת — ​מינגלים, טריוויה, אתגרים חברתיים ועוד.',
     status:'active',category:'משחקים',
     tasks:[
