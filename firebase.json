@@ -10,6 +10,7 @@
       "README.md",
       "docs/**",
       "qa/**",
+      "club-kit/**",
       "**/.*",
       "**/node_modules/**"
     ],
