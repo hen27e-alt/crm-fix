@@ -397,6 +397,11 @@ a.btn{text-decoration:none}
 .pl-loading .logo{animation:plpulse 1.6s ease-in-out infinite}
 @keyframes plpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 .pl-loading b{font-size:1.2rem;font-weight:800}
+.pl-noembed{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(160deg,var(--g1,#111),var(--g2,#222));color:#fff;text-align:center;padding:24px}
+.pl-noembed.hidden{display:none}
+.pl-noembed b{font-size:1.3rem;font-weight:800}
+.pl-noembed p{font-size:.85rem;line-height:1.6;max-width:32ch;color:rgba(255,255,255,.85)}
+.pl-noembed a{text-decoration:none}
 .pl-hint{font-size:.8rem;color:rgba(255,255,255,.8);max-width:30ch;line-height:1.5;display:none}
 .pl-hint.show{display:block}
 .pl-hint a{color:#fff;font-weight:700}
@@ -544,6 +549,13 @@ a.btn{text-decoration:none}
   </div>
   <div class="pl-stage">
     <iframe class="browser-frame" id="browser-frame" title="האפליקציה" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-modals" allow="fullscreen; clipboard-write"></iframe>
+    <div class="pl-noembed hidden" id="pl-noembed">
+      <span id="pl-ne-logo"></span>
+      <b id="pl-ne-name"></b>
+      <p>האתר הזה חוסם הטמעה בתוך אפליקציות אחרות, כהגנת אבטחה. הוא נפתח בחלון נפרד.</p>
+      <a class="hs-play" id="pl-ne-link" href="#" target="_blank" rel="noopener noreferrer">פתח את האתר</a>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="closeBrowser()" style="color:#fff;border-color:rgba(255,255,255,.4)">חזרה</button>
+    </div>
     <div class="pl-loading" id="pl-loading">
       <span id="pl-load-logo"></span>
       <b id="pl-load-name"></b>
@@ -1068,10 +1080,10 @@ function saveProject(){
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 const REG={
   'seed-bi':  {name:'ביונד אינטימה',en:'BYOND INTIMA',tag:'חוויות זוגיות מודרכות',desc:'מארזי ערבים לזוגות עם מלווה דיגיטלי, משחקים ויועץ AI. החנות והאזור האישי של הזוג.',url:'https://byondintima-d1d4e.web.app/',g:['#3A1712','#0A0809'],ac:'#C9A66B'},
-  'seed-cm':  {name:'ClinicMate',en:'CLINICMATE',tag:'ניהול קליניקה חכם',desc:'מערכת למטפלים: תיקי מטופלים, יומן פגישות, הוצאות וקבלות, עם בידוד מלא בין מטפלים.',url:'https://clinicmate.co.il/',g:['#0F766E','#1E3A8A'],ac:'#2DD4BF'},
+  'seed-cm':  {name:'ClinicMate',en:'CLINICMATE',tag:'ניהול קליניקה חכם',desc:'מערכת למטפלים: תיקי מטופלים, יומן פגישות, הוצאות וקבלות, עם בידוד מלא בין מטפלים.',url:'https://clinicmate.co.il/',embed:false,g:['#0F766E','#1E3A8A'],ac:'#2DD4BF'},
   'seed-pb':  {name:'פרחי באך',en:'BACH FLOWERS',tag:'מצאו את הפרח שלכם',desc:'38 פרחי באך ופרח החירום: אבחון עצמי, תערובת אישית ויומן מעקב יומי.',url:'https://bach-flowers-site.vercel.app/',g:['#C2577A','#5B3A86'],ac:'#F4A8C0'},
   'seed-kb':  {name:'כדור בדולח',en:'CRYSTAL BALL',tag:'שאלו את הכדור',desc:'כדור בדולח אינטראקטיבי ועולם של קריאות: קלפים, מזלות, כף יד, אסטרולוגיה סינית, קפה, חלומות, אי צ׳ינג ונומרולוגיה.',url:'https://kadur-habdolach.vercel.app/',g:['#3B1D8A','#07051A'],ac:'#A78BFA'},
-  'seed-game':{name:'ערב משחקים',en:'GAME NIGHT',tag:'משחקים לחברים ולזוגות',desc:'טריוויה, זיהוי שירים, פוקר ובינגו ראש בראש, מסלול שלבים, מטבעות, רמות, אווטארים תלת־ממדיים ופאנל ניהול.',url:'https://erev-mischakim-jfkpt.web.app/',g:['#EA580C','#9D174D'],ac:'#FDBA74'},
+  'seed-game':{name:'ערב משחקים',en:'GAME NIGHT',tag:'משחקים לחברים ולזוגות',desc:'טריוויה, זיהוי שירים, פוקר ובינגו ראש בראש, מסלול שלבים, מטבעות, רמות, אווטארים תלת־ממדיים ופאנל ניהול.',url:'https://erev-mischakim-jfkpt.web.app/',embed:false,g:['#EA580C','#9D174D'],ac:'#FDBA74'},
   'seed-dror':{name:'אצל דרור',en:'ETZEL DROR',tag:'מנות מיוחדות משף דרור',desc:'אתר המותג של שף דרור: בשר, רטבים וסלטים, בישול ארוך, תבשילים ודברים מיוחדים. אתר טיפוגרפי עם תפריט, גלריה, מאמרים וטופס יצירת קשר.',url:'https://claude.ai/artifact/VeYn1FfsdYR9ssQZbc9j2D',g:['#96593B','#2B2622'],ac:'#E8C9AE'}
 };
 const _petals=[0,1,2,3,4,5,6,7].map(i=>`<ellipse cx="0" cy="-12.5" rx="5.6" ry="11" fill="#fff" fill-opacity="${i%2?'.72':'.92'}" transform="rotate(${i*45})"/>`).join('');
@@ -1186,6 +1198,18 @@ function openBrowser(pid){
   player.classList.remove('hidden');
   document.body.style.overflow='hidden';
   S.recent=[pid].concat((S.recent||[]).filter(x=>x!==pid)).slice(0,6);S.featured=pid;save();
+  const ne=document.getElementById('pl-noembed');ne.classList.add('hidden');
+  if(p.url&&(REG[p.id]||{}).embed===false){
+    const abs=new URL(p.url,location.href).href;
+    ext.href=abs;ext.hidden=false;
+    frame.onload=null;frame.src='about:blank';frame.style.visibility='hidden';
+    noUrl.classList.add('hidden');loading.classList.add('done');
+    document.getElementById('pl-ne-logo').innerHTML=logoHTML(p,88);
+    document.getElementById('pl-ne-name').textContent=p.name;
+    document.getElementById('pl-ne-link').href=abs;
+    ne.classList.remove('hidden');
+    return;
+  }
   if(p.url){
     const abs=new URL(p.url,location.href).href;
     ext.href=abs;ext.hidden=false;document.getElementById('pl-hint-link').href=abs;

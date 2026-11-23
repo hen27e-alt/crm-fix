@@ -26,10 +26,13 @@ ok(await pg.locator('#app-browser.hidden').count()===1,'Esc closes player');
 await pg.click('.poster:has-text("ClinicMate")');
 ok((await pg.locator('#browser-ext-link').getAttribute('href'))==='https://clinicmate.co.il/','clinicmate opens https://clinicmate.co.il/');
 ok(await pg.locator('#browser-no-url.hidden').count()===1,'clinicmate does not ask for a domain');
+ok(await pg.locator('#pl-noembed:not(.hidden)').count()===1,'clinicmate shows open-in-new-tab panel (site blocks framing)');
+ok((await pg.locator('#pl-ne-link').getAttribute('href'))==='https://clinicmate.co.il/','panel link points at clinicmate.co.il');
 await pg.click('.pl-btn');
 // bach & kadur load same-origin
 for(const [name,url] of [['פרחי באך','https://bach-flowers-site.vercel.app/'],['כדור בדולח','https://kadur-habdolach.vercel.app/']]){
   await pg.click(`.poster:has-text("${name}")`);
+  ok(await pg.locator('#pl-noembed.hidden').count()===1,name+' embeds in the player');
   ok((await pg.locator('#browser-ext-link').getAttribute('href'))===url,name+' opens '+url);
   await pg.click('.pl-btn');
 }
