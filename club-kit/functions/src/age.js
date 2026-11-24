@@ -18,64 +18,74 @@ function parseBirthDate(s, now = new Date()) {
   const y = +m[1], mo = +m[2], d = +m[3];
   const dt = new Date(Date.UTC(y, mo - 1, d));
   if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
-  if (y < 1900) return null;
   if (dt.getTime() > now.getTime()) return null;
+  if (now.getUTCFullYear() - y > 120) return null; // implausible (also rejects < 1900 for any realistic clock)
   return { y, m: mo, d };
 }
 
-/** Whole years between birth date and `now` (UTC calendar days). */
+const IL_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit' });
+/** Current calendar day in Israel as {y,m,d} (the age is evaluated on the Israeli day). */
+function israelToday(now = new Date()) {
+  const [y, m, d] = IL_DAY.format(now).split('-').map(Number);
+  return { y, m, d };
+}
+
+/** Whole years between birth date and `now` (calendar day in Israel). */
 function ageOn(birth, now = new Date()) {
-  let age = now.getUTCFullYear() - birth.y;
-  const beforeBirthday = now.getUTCMonth() + 1 < birth.m || (now.getUTCMonth() + 1 === birth.m && now.getUTCDate() < birth.d);
+  const t = israelToday(now);
+  let age = t.y - birth.y;
+  const beforeBirthday = t.m < birth.m || (t.m === birth.m && t.d < birth.d);
   if (beforeBirthday) age -= 1;
   return age;
 }
 
 const MSG = Object.freeze({
   bad: 'תאריך הלידה אינו תקין. הזינו תאריך בפורמט שנה-חודש-יום.',
-  locked: 'לא ניתן לשנות תאריך לידה שכבר הוצהר. לפניות: פנו אלינו.',
   minor: 'הרכישה באתר מיועדת לבני 18 ומעלה בלבד. ניתן לבקש מהורה או אפוטרופוס לבצע את הרכישה.',
   needAge: 'לפני הרכישה יש להצהיר על תאריך לידה (הרכישה מיועדת לבני 18 ומעלה).',
 });
 
 /**
- * @returns {{adult:boolean, declared:true}}  Never returns the birth date.
+ * Declaring twice never changes the stored declaration: a different date just returns the existing result
+ * (`already:true`); the SAME date is re-evaluated, so a minor who turns 18 becomes an adult.
+ * Reusable by other apps (e.g. Game Night): pass `userFields(birth, adult)` to store extra server-written
+ * fields on the user doc (such as {birthYear}); pass `userCollection` for another users collection name.
+ * @returns {{adult:boolean, already?:true}}  Never returns the birth date.
  */
-async function declareAgeCore({ db, uid, data, config, now = new Date() }) {
+async function declareAgeCore({ db, uid, data, config, now = new Date(), userFields = null, userCollection = 'users' }) {
   if (!uid) throw httpsError('unauthenticated', 'יש להתחבר כדי להמשיך.');
   const minAge = config.ageGate.minAge;
-  if (data === null || typeof data !== 'object' || Array.isArray(data)) throw httpsError('invalid-argument', MSG.bad);
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) throw httpsError('invalid-argument', MSG.bad, { reason: 'invalid' });
   const birth = parseBirthDate(data.birthDate, now);
-  if (!birth) throw httpsError('invalid-argument', MSG.bad);
+  if (!birth) throw httpsError('invalid-argument', MSG.bad, { reason: 'invalid' });
   const key = `${birth.y}-${String(birth.m).padStart(2, '0')}-${String(birth.d).padStart(2, '0')}`;
   const adult = ageOn(birth, now) >= minAge;
 
   const gateRef = db.collection('ageGates').doc(uid);
-  const userRef = db.collection('users').doc(uid);
+  const userRef = db.collection(userCollection).doc(uid);
   const result = await db.runTransaction(async (tx) => {
     const [g, u] = [await tx.get(gateRef), await tx.get(userRef)];
-    if (g.exists) {
-      const prev = g.data();
-      if (prev.birthDate !== key) return { error: 'locked' }; // cannot "retry" a different date
-    }
     if (!u.exists) return { error: 'no_profile' };
+    if (g.exists && g.data().birthDate !== key) {
+      // cannot "retry" with another date to become an adult: return what is already recorded
+      return { adult: u.data().adult === true, already: true };
+    }
     if (!g.exists) tx.set(gateRef, { birthDate: key, declaredAt: now, minAge });
-    // `adult` can only turn true (a minor who turns 18 re-declares the SAME date); it never silently flips back
-    tx.update(userRef, { adult, ageDeclaredAt: now, ageGateMinAge: minAge });
-    return { adult };
+    // same date again: re-evaluated (a minor who turned 18 becomes an adult)
+    tx.update(userRef, { adult, ageDeclaredAt: now, ageGateMinAge: minAge, ...(userFields ? userFields(birth, adult) : {}) });
+    return g.exists ? { adult, already: true } : { adult };
   });
-  if (result.error === 'locked') throw httpsError('failed-precondition', MSG.locked, { reason: 'age_locked' });
   if (result.error === 'no_profile') throw httpsError('failed-precondition', 'הפרופיל טרם נוצר. נסו שוב בעוד רגע.', { reason: 'no_profile' });
   log.info('age declared', { uid: logId(uid), adult: result.adult });
-  return { adult: result.adult, declared: true };
+  return result.already ? { adult: result.adult, already: true } : { adult: result.adult };
 }
 
 /** Checkout-side gate. Throws HttpsError with details.reason = 'age_required' | 'minor'. */
 function assertAdult(userDoc, config) {
   if (!config.ageGate.required) return;
   if (userDoc && userDoc.adult === true) return;
-  if (userDoc && userDoc.adult === false) throw new HttpsError('failed-precondition', MSG.minor, { reason: 'minor' });
-  throw new HttpsError('failed-precondition', MSG.needAge, { reason: 'age_required' });
+  if (userDoc && userDoc.adult === false) throw new HttpsError('failed-precondition', MSG.minor, { reason: 'not-adult' });
+  throw new HttpsError('failed-precondition', MSG.needAge, { reason: 'age-required' });
 }
 
-module.exports = { parseBirthDate, ageOn, declareAgeCore, assertAdult, MSG };
+module.exports = { parseBirthDate, ageOn, israelToday, declareAgeCore, assertAdult, MSG };

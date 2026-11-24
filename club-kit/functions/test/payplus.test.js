@@ -161,3 +161,15 @@ test('provider registry loads payplus with the interface + secrets', () => {
   assert.deepEqual(p.secrets.map((s) => s.name), ['PAYPLUS_API_KEY', 'PAYPLUS_SECRET_KEY', 'PAYPLUS_PAGE_UID']);
   assert.throws(() => getProvider('nope'), /Unknown payment provider/);
 });
+
+test('CK9: refund is matched EXACTLY on type fields (a status that merely contains "refund" is not a refund); intermediate statuses are ignored, not failed', () => {
+  const v = verifier();
+  let r = v.verifyWebhook(signedReq(bodyObj({ status: 'refund_requested_but_declined', type: 'Charge' })));
+  assert.equal(r.event.status, 'paid');
+  r = v.verifyWebhook(signedReq({ ...bodyObj(), transaction_type: 'refund' }));
+  assert.equal(r.event.status, 'refunded');
+  r = v.verifyWebhook(signedReq(bodyObj({ status_code: '999', status: 'pending', status_description: 'waiting 3ds' })));
+  assert.deepEqual([r.ok, r.event], [true, null]);
+  r = v.verifyWebhook(signedReq(bodyObj({ status_code: '051', status: 'declined' })));
+  assert.equal(r.event.status, 'failed');
+});

@@ -161,3 +161,83 @@ test('an existing profile termsAcceptedAt is not overwritten by later checkouts'
   await run(db, provider, cart([{ productId: 'p1', qty: 1 }]));
   assert.equal(db.read('users/u1').termsAcceptedAt.getTime(), first.getTime());
 });
+
+// ============ age gate ============
+test('AGE GATE: no declaration / minor / non-boolean are all refused with distinct reasons and nothing is created', async () => {
+  for (const [adult, reason] of [[undefined, 'age-required'], [false, 'not-adult'], ['true', 'age-required'], [1, 'age-required']]) {
+    const { db, provider } = setup();
+    db.seed('users/u1', { displayName: 'x', marketingConsent: false, createdAt: NOW, ...(adult === undefined ? {} : { adult }) });
+    let err;
+    try {
+      await run(db, provider, cart([{ productId: 'p1', qty: 1 }]));
+    } catch (e) {
+      err = e;
+    }
+    assert.equal(err.code, 'failed-precondition', String(adult));
+    assert.equal(err.details.reason, reason);
+    assert.match(err.message, /18/);
+    assert.equal(db.list('orders/').length, 0);
+    assert.equal(provider.calls.length, 0);
+  }
+});
+
+test('AGE GATE: a user without any profile doc is refused; the gate can be switched off by config', async () => {
+  const { db, provider } = setup();
+  const noProfile = await createCheckoutCore({ db, provider, config: { ...config, ageGate: { required: false, minAge: 18 } }, uid: 'nobody', token: {}, data: cart([{ productId: 'p1', qty: 1 }]), now: NOW, webhookUrl: WEBHOOK });
+  assert.ok(noProfile.orderId);
+  assert.equal(await codeOf(run(db, provider, cart([{ productId: 'p1', qty: 1 }]), { uid: 'nobody' })), 'failed-precondition');
+});
+
+test('order records the terms version and that the age gate passed', async () => {
+  const { db, provider } = setup();
+  const r = await run(db, provider, cart([{ productId: 'p1', qty: 1 }]));
+  const o = db.read('orders/' + r.orderId);
+  assert.deepEqual([o.termsVersion, o.ageGateOk], ['1', true]);
+});
+
+// ============ coin packs ============
+test('coin packs: the order snapshots coins per unit and is NOT discounted for gold members (noDiscount)', async () => {
+  const { db, provider } = setup();
+  db.seed('products/coins-850', { name: '850 מטבעות', description: '', priceAgorot: 990, currency: 'ILS', grants: [], accessDays: null, coins: 850, noDiscount: true, active: true, sort: 20 });
+  db.seed('members/u1', { points: 0, lifetimeSpendAgorot: 60000, ordersCount: 3, tier: 'gold', updatedAt: NOW });
+  const r = await run(db, provider, cart([{ productId: 'coins-850', qty: 2 }, { productId: 'p1', qty: 1 }]));
+  const o = db.read('orders/' + r.orderId);
+  assert.deepEqual([o.subtotalAgorot, o.discountAgorot, o.totalAgorot], [11980, 1000, 10980]); // 10% only on p1 (10000)
+  assert.deepEqual(o.items[0], { productId: 'coins-850', name: '850 מטבעות', priceAgorot: 990, qty: 2, grants: [], accessDays: null, coins: 850, noDiscount: true });
+});
+
+test('coin packs at the owner prices: 250/3.90, 850/9.90, 5500/19.90 (agorot, VAT included)', async () => {
+  const { db, provider } = setup();
+  const packs = [['coins-250', 250, 390], ['coins-850', 850, 990], ['coins-5500', 5500, 1990]];
+  for (const [id, coins, price] of packs) db.seed('products/' + id, { name: `${coins}`, description: '', priceAgorot: price, currency: 'ILS', grants: [], accessDays: null, coins, noDiscount: true, active: true, sort: 1 });
+  const r = await run(db, provider, cart(packs.map(([id]) => ({ productId: id, qty: 1 }))));
+  assert.equal(db.read('orders/' + r.orderId).totalAgorot, 390 + 990 + 1990);
+});
+
+test('provider ref write is retried; if it keeps failing the order is failed, not left payable', async () => {
+  const { db, provider } = setup();
+  let fails = 2;
+  const orig = db.collection.bind(db);
+  db.collection = (p) => {
+    const c = orig(p);
+    if (p !== 'orders') return c;
+    const d = c.doc.bind(c);
+    c.doc = (id) => {
+      const ref = d(id);
+      const up = ref.update.bind(ref);
+      ref.update = async (patch) => {
+        if (patch.providerRef && fails-- > 0) throw new Error('transient');
+        return up(patch);
+      };
+      return ref;
+    };
+    return c;
+  };
+  const r = await run(db, provider, cart([{ productId: 'p1', qty: 1 }]));
+  assert.equal(db.read('orders/' + r.orderId).providerRef, 'page-req-1', 'succeeded on the 3rd try');
+  fails = 99;
+  assert.equal(await codeOf(run(db, provider, cart([{ productId: 'p1', qty: 1 }]))), 'unavailable');
+  const failed = db.list('orders/').map((p) => db.read(p)).filter((o) => o.status === 'failed');
+  assert.equal(failed.length, 1);
+  assert.equal(failed[0].failedReason, 'provider_ref_not_saved');
+});

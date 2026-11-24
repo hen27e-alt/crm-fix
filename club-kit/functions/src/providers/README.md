@@ -16,6 +16,9 @@ module.exports = {
     // return   { paymentUrl, providerRef }   providerRef = the provider's id of the payment page/session
     // throw    an Error with a short `.code` string on failure (message must contain no secrets)
   },
+  // OPTIONAL (providers with a separate capture step, e.g. PayPal): called by capturePayPalOrder / the webhook backup.
+  //   async capture({ order:{id,totalAgorot,currency}, providerRef }) -> { state:'event', event } | { state:'pending' } | { state:'not_approved' }
+  //   Must verify the provider order belongs to `order.id` and use the provider order id passed in (the stored one).
   // May be sync or async (the handler awaits it). MUST authenticate the request (signature/HMAC/secret) in constant time. Never trust an unsigned body.
   verifyWebhook(req) {
     // req.rawBody (Buffer), req.body (parsed), req.headers
@@ -31,7 +34,8 @@ module.exports = {
 
 ## Steps to add a provider
 
-1. Copy `payplus.js` to `cardcom.js` and keep its structure: constants for every unverified fact at the top,
+0. `paypal.js` is the reference implementation (async verification, capture, idempotency keys). 
+1. Copy `paypal.js` or `payplus.js` to `cardcom.js` and keep its structure: constants for every unverified fact at the top,
    a `VERIFY-WITH-DOCS` checklist, an injectable factory (`createXAdapter({ getCredentials, fetchImpl })`) so it can be unit-tested.
 2. Register it in `index.js`: `cardcom: () => require('./cardcom')`.
 3. Set `"provider": "cardcom"` in `club.config.json` (the order stores `provider`).

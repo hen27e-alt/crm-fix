@@ -57,3 +57,27 @@ test('logId is a short stable pseudonym that does not contain the id', () => {
   assert.ok(!logId('uid-123').includes('uid'));
   assert.equal(logId(''), '-');
 });
+
+test('lib.js exposes the reusable building blocks (Game Night can import them)', () => {
+  const lib = require('../src/lib');
+  for (const k of ['createPayPalAdapter', 'processPaymentEvent', 'captureOrderCore', 'handleWebhook', 'declareAgeCore', 'assertAdult', 'addContribution', 'removeContribution', 'computeDiscountAgorot', 'pointsForTotal', 'safeEqual', 'shekelToAgorot', 'httpsError']) {
+    assert.equal(typeof lib[k], 'function', k);
+  }
+});
+
+test('scripts/check-legal.js fails on template leftovers and passes on a clean page', () => {
+  const { spawnSync } = require('node:child_process');
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'legal-'));
+  const bad = path.join(dir, 'bad.html');
+  const good = path.join(dir, 'good.html');
+  fs.writeFileSync(bad, '<p>תנאי שימוש של [שם העסק]</p>');
+  fs.writeFileSync(good, '<p>תנאי השימוש של חברת דוגמה בע"מ.</p><script>var a=[1,2]</script>');
+  const script = path.join(__dirname, '..', '..', 'scripts', 'check-legal.js');
+  assert.equal(spawnSync(process.execPath, [script, bad]).status, 1);
+  assert.equal(spawnSync(process.execPath, [script, good]).status, 0);
+  assert.equal(spawnSync(process.execPath, [script]).status, 2);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

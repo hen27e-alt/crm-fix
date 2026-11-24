@@ -7,6 +7,7 @@
  *   node scripts/seed-products.js --key ./serviceAccount.json --confirm       # writes (skips products that already exist)
  *   node scripts/seed-products.js --key ./serviceAccount.json --confirm --overwrite   # replaces existing docs
  *   node scripts/seed-products.js --key ... --file ./my-catalog.json --confirm
+ *   node scripts/seed-products.js --key ... --file catalog.coin-packs.json --confirm   # Game Night coin packs (still active:false)
  *
  * Safety rules:
  *  - Nothing is written without --confirm.
@@ -32,6 +33,8 @@ function validateProduct(id, p) {
   if (!(p.accessDays === null || (Number.isInteger(p.accessDays) && p.accessDays > 0))) errs.push('accessDays: null (forever) or positive integer');
   if (typeof p.active !== 'boolean') errs.push('active: boolean');
   if (!Number.isInteger(p.sort)) errs.push('sort: integer');
+  if (p.coins !== undefined && !(Number.isInteger(p.coins) && p.coins > 0 && p.coins <= 10000000)) errs.push('coins: positive integer (coin pack, credited per unit)');
+  if (p.noDiscount !== undefined && typeof p.noDiscount !== 'boolean') errs.push('noDiscount: boolean');
   if (p.imageUrl !== undefined && !(typeof p.imageUrl === 'string' && /^https:\/\//.test(p.imageUrl))) errs.push('imageUrl: https URL when present');
   return errs;
 }

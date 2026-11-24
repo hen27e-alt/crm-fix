@@ -1,281 +1,295 @@
 # SETUP — הקמת מועדון לקוחות, חנות ותשלומים (Club Kit)
 
-מדריך צעד-אחר-צעד לבעל אתר שאינו מפתח. כל אתר מקבל פרויקט Firebase **נפרד**. אם נתקעתם באמצע, אפשר לעצור ולהמשיך מאוחר יותר: כל שלב עומד בפני עצמו.
+מדריך צעד-אחר-צעד לבעל אתר שאינו מפתח. כל אתר מקבל פרויקט Firebase **נפרד**. אפשר לעצור ולהמשיך בכל שלב.
 
-> **חשוב:** המדריך מניח ספק סליקה **PayPlus**. את פרטי ה-API של PayPlus לא ניתן היה לאמת מול התיעוד הרשמי בזמן הכתיבה (ראו סעיף 11). **אל תעברו לתשלומים אמיתיים לפני שביצעתם את בדיקות ה-sandbox בסעיף 9 ואת רשימת האימות בסעיף 11.**
+> **חשוב — מה אומת ומה לא.** ספק התשלום המוגדר כברירת מחדל הוא **PayPal** (Orders API v2). **לא ניתן היה לאמת אף פרט של ה-API של PayPal מול התיעוד הרשמי או מול sandbox אמיתי** (אין גישה לרשת/לחשבון בזמן הכתיבה). הקוד כתוב לפי זיכרון של ה-API, וכל הנחה מבודדת בקבוע בראש `functions/src/providers/paypal.js` ורשומה בסעיף 11 (רשימת VERIFY-WITH-DOCS). **אין לעבור לתשלומים אמיתיים לפני שכל בדיקות ה-sandbox בסעיף 9 עברו ושעברתם על סעיף 11.** בדיקות היחידה מוכיחות שהקוד עושה מה שההנחות אומרות, מול fetch מדומה, ולא מוכיחות שה-API אכן מתנהג כך.
 
 ---
 
 ## 0. מה בונים
 
-- התחברות עם גוגל או טלפון, מועדון לקוחות (נקודות ודרגות), חנות למוצרים **דיגיטליים**, הזמנות ותשלום בעמוד תשלום מתארח של PayPlus.
-- **שום פרט כרטיס אשראי לא עובר דרך האתר או השרתים שלכם.** הלקוח משלם בעמוד של PayPlus.
-- השרת (Cloud Functions) קובע את המחיר, ומאשר תשלום רק לפי הודעה חתומה מ-PayPlus.
+- התחברות עם גוגל או טלפון, מועדון לקוחות (נקודות ודרגות), חנות למוצרים **דיגיטליים** (כולל חבילות מטבעות), הזמנות, ותשלום ב-**PayPal**.
+- **שום פרט כרטיס אשראי לא עובר דרך האתר או השרתים שלכם.** הלקוח מאשר את התשלום באתר של PayPal והשרת מבצע את החיוב (capture).
+- השרת קובע את המחיר, מאשר תשלום רק לפי תשובת PayPal ישירה או webhook מאומת, ובודק סכום, מטבע וזיהוי הזמנה.
+- **שער גיל:** רכישה מותרת רק למי שהצהיר על תאריך לידה ונמצא בן 18 ומעלה (הצהרה עצמית; אינה אימות זהות).
+- מה שאפשר ומה שאי אפשר לאכוף: ראו סעיף 12.
 
-מה תצטרכו: חשבון גוגל, כרטיס אשראי להפעלת תוכנית Blaze של Firebase (יש שכבה חינמית נדיבה; ראו סעיף 1), חשבון PayPlus עם גישת API, מחשב עם Node.js.
+מה תצטרכו: חשבון גוגל; כרטיס אשראי להפעלת תוכנית Blaze; **חשבון PayPal עסקי** (Business) שמאפשר קבלת שקלים (ILS); מחשב עם Node.js.
 
 ---
 
 ## 1. פרויקט Firebase ותוכנית Blaze
 
-1. היכנסו ל-<https://console.firebase.google.com> → **Add project** → תנו שם (למשל `my-site-club`). אפשר להשבית Google Analytics.
-2. **שדרוג ל-Blaze** (תשלום לפי שימוש): בתחתית התפריט הימני → **Upgrade**. נדרש כדי להפעיל Cloud Functions.
-3. **הגדירו תקציב והתראה מיד** (מגן מפני חיובים מפתיעים): Google Cloud Console → **Billing** → **Budgets & alerts** → Create budget, סכום חודשי נמוך (למשל 20$), התראות ב-50% / 90% / 100%.
+1. <https://console.firebase.google.com> → **Add project** → שם (למשל `my-site-club`).
+2. **שדרוג ל-Blaze** (תשלום לפי שימוש; נדרש ל-Cloud Functions).
+3. **תקציב והתראה מיד:** Google Cloud Console → **Billing → Budgets & alerts** → תקציב חודשי נמוך (למשל 20$) עם התראות 50% / 90% / 100%.
 
 ---
 
-## 2. Authentication (התחברות)
+## 2. Authentication
 
-בקונסולת Firebase: **Build → Authentication → Get started**.
+**Build → Authentication → Get started**.
 
-### 2.1 ספקי התחברות (Sign-in method)
-1. **Google** → Enable → בחרו אימייל תמיכה → Save.
-2. **Phone** → Enable → Save.
-
-### 2.2 הגבלת SMS לישראל בלבד (חשוב: מונע חיובי SMS והונאות)
-1. **Authentication → Settings → SMS region policy**.
-2. בחרו **Allow** → סמנו **רק Israel (IL)** → Save.
-3. ב-Phone sign-in אפשר להוסיף "Phone numbers for testing" (למשל `+972501234567` עם קוד `123456`) לבדיקות בלי לשלוח SMS. **מחקו אותם לפני עלייה לאוויר.**
-
-### 2.3 דומיינים מורשים (Authorized domains)
-**Authentication → Settings → Authorized domains → Add domain**, והוסיפו **כל** דומיין שהאתר רץ בו:
-- דומיין האתר (`my-site.co.il`, וגם `www.my-site.co.il` אם רלוונטי),
-- דומיין ה-Vercel (`my-site.vercel.app`),
-- `localhost` (קיים כברירת מחדל, לפיתוח).
-
-בלי זה, ההתחברות תיכשל עם `auth/unauthorized-domain`.
+1. **Sign-in method:** Google → Enable. Phone → Enable.
+2. **הגבלת SMS לישראל בלבד:** Settings → **SMS region policy** → Allow → רק Israel (IL). מספרי בדיקה (Phone numbers for testing) מותרים בפיתוח בלבד: **מחקו אותם לפני עלייה לאוויר.**
+3. **דומיינים מורשים:** Settings → **Authorized domains** → הוסיפו את דומיין האתר (עם ובלי `www`), את דומיין ה-Vercel, ו-`localhost`. בלי זה: `auth/unauthorized-domain`.
 
 ---
 
-## 3. Firestore
+## 3. Firestore (ו-Storage אופציונלי)
 
-**Build → Firestore Database → Create database** → מצב **Production** → מיקום: `eur3 (europe)` או `europe-west1` (קרוב לפונקציות; **לא ניתן לשנות אחר כך**).
-
-את הכללים והאינדקסים תפרסו בסעיף 7. אל תערכו כללים ידנית בקונסולה.
+- **Build → Firestore Database → Create database** → Production → מיקום `eur3` או `europe-west1` (לא ניתן לשנות אחר כך).
+- **Storage** נדרש רק אם תגישו קבצים בתשלום (סעיף 12.3): Build → Storage → Get started.
 
 ---
 
 ## 4. כלים במחשב
 
-1. התקינו Node.js (גרסה 20 או 22) מ-<https://nodejs.org>.
-2. התקינו את Firebase CLI והתחברו:
-   ```bash
-   npm install -g firebase-tools
-   firebase login
-   ```
-3. הכינו קובץ פרויקט (מתוך תיקיית `club-kit`):
-   ```bash
-   cp .firebaserc.example .firebaserc
-   ```
-   ערכו את `.firebaserc` והחליפו את `YOUR-FIREBASE-PROJECT-ID` במזהה הפרויקט (מופיע בהגדרות הפרויקט בקונסולה).
-4. התקנת תלויות הפונקציות:
-   ```bash
-   cd functions && npm install && cd ..
-   ```
+1. Node.js **22** מ-<https://nodejs.org> (הערכה מוגדרת ל-Node 22: `engines.node: "22"`, `runtime: nodejs22`).
+2. `npm install -g firebase-tools` ואז `firebase login`.
+3. מתוך `club-kit`: `cp .firebaserc.example .firebaserc` ועדכנו את מזהה הפרויקט.
+4. `cd functions && npm install && npm test && cd ..` (כל הבדיקות צריכות לעבור לפני פריסה).
 
-> **הערה על גרסת Node:** הערכה מוגדרת ל-Node 20 (`engines.node: "20"` ו-`runtime: nodejs20`). אם בזמן הפריסה Firebase מודיע ש-Node 20 אינו נתמך יותר, שנו ל-`22` בשני המקומות (`functions/package.json` ו-`firebase.json`) והריצו שוב את הבדיקות (`npm test`).
+> אם `npm audit` מדווח על פגיעויות: אלו כמעט תמיד חבילות פיתוח/בדיקות (`firebase` ב-devDependencies), לא חבילות שנפרסות. **אל תריצו `npm audit fix --force`** (הוא מציע שדרוג/הורדת גרסה מטעים). לפני פריסה: `npm audit --omit=dev`.
 
 ---
 
 ## 5. הגדרות האתר: `club.config.json`
 
-פתחו את `club.config.json` ועדכנו **לפחות**:
-
 | שדה | משמעות | דוגמה |
 |---|---|---|
-| `appId` | מזהה האתר (אותיות לועזיות/ספרות/מקף). נשמר בכל הזמנה | `"bach"` |
-| `siteUrl` | הכתובת הראשית של האתר, **https**. אליה חוזר הלקוח אחרי התשלום | `"https://my-site.co.il"` |
-| `returnPath` | הדף שאליו חוזרים (חייב להכיל את המועדון) | `"/"` |
-| `webhookUrl` | כתובת ה-webhook (ימולא בסעיף 7.3). ריק = ברירת מחדל | `""` |
-| `payplus.environment` | `"sandbox"` לבדיקות, `"production"` לאמיתי | `"sandbox"` |
-| `enforceAppCheck` | הפעלת App Check (סעיף 10). להשאיר `false` עד שמפעילים בפרונט | `false` |
-| `tiers`, `points`, `limits` | דרגות, הנחות, נקודות, מגבלות. ברירת המחדל לפי החוזה | ראו README |
+| `appId` | מזהה האתר (אותיות לועזיות/ספרות/מקף), נשמר בכל הזמנה | `"game-night"` |
+| `siteUrl` | הכתובת הראשית של האתר, **https**. אליה חוזר הלקוח מ-PayPal | `"https://my-site.co.il"` |
+| `returnPath` | הדף שאליו חוזרים (מצורפים `?checkout=success\|cancel&order=ID`) | `"/"` |
+| `webhookUrl` | כתובת ה-webhook (ימולא בסעיף 7.3) | `""` |
+| `provider` | `"paypal"` (ברירת מחדל) או `"payplus"` (אופציונלי, סעיף 18) | `"paypal"` |
+| `paypal.brandName`, `paypal.locale` | שם העסק שמוצג ב-PayPal; שפה | `"הדוגמה"`, `"he_IL"` |
+| `termsVersion` | גרסת התנאים שנשמרת בכל הזמנה. **העלו אותה בכל שינוי בתנאים** | `"1"` |
+| `ageGate.required`, `ageGate.minAge` | שער גיל (ברירת מחדל: חובה, 18) | `true`, `18` |
+| `enforceAppCheck` | סעיף 10 | `false` |
+| `tiers`, `points`, `limits` | דרגות, הנחות, נקודות, מגבלות | ברירת מחדל לפי החוזה |
 
-ברירות המחדל: דרגות member (0 ₪, 0%) / silver (200 ₪, 5%) / gold (600 ₪, 10%); נקודה אחת על כל ש"ח ששולם; עד 5 הזמנות ממתינות בשעה למשתמש.
+סודות PayPal **לא** נכתבים כאן (סעיף 6).
 
 ---
 
-## 6. Secrets (מפתחות PayPlus)
+## 6. PayPal: חשבון, אפליקציה, סודות
 
-המפתחות **לא נכתבים בקוד ולא בקבצים**. הם נשמרים ב-Secret Manager של גוגל.
+### 6.1 חשבון ו-sandbox
+1. חשבון PayPal **עסקי**. ודאו בהגדרות החשבון ש**שקל (ILS)** מופעל לקבלת תשלומים.
+2. <https://developer.paypal.com> → **Apps & Credentials** → מצב **Sandbox** → Create App (סוג Merchant) → העתיקו **Client ID** ו-**Secret**.
+3. באותו מסך, ב-**Sandbox accounts**: ישנם חשבון "Business" וחשבון "Personal" לבדיקות (עם סיסמה שמוצגת בלוח). הקונה בבדיקות נכנס עם ה-Personal.
 
-1. ב-PayPlus (לוח הבקרה, **sandbox** קודם): אספו **API Key**, **Secret Key**, ו-**Payment Page UID** (מזהה עמוד התשלום שיצרתם בלוח הבקרה: Payment Pages → צרו עמוד, והעתיקו את ה-UID שלו).
-2. הריצו (מתוך `club-kit`) והדביקו את הערך כשהמערכת מבקשת:
-   ```bash
-   firebase functions:secrets:set PAYPLUS_API_KEY
-   firebase functions:secrets:set PAYPLUS_SECRET_KEY
-   firebase functions:secrets:set PAYPLUS_PAGE_UID
-   ```
-3. כשעוברים ל-production: הגדירו מחדש את שלושת הסודות עם ערכי production, שנו `payplus.environment` ל-`production`, ופרסו שוב.
+### 6.2 Webhook (אחרי הפריסה הראשונה: סעיף 8)
+בדף האפליקציה → **Webhooks → Add Webhook**: כתובת ה-`paymentWebhook` (סעיף 7.3) והאירועים:
+`CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED`, `PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.CAPTURE.REVERSED`. שמרו והעתיקו את **Webhook ID**.
 
-> לעולם אל תשלחו מפתחות בצ'אט/במייל ואל תעלו אותם ל-git. אם מפתח דלף: סובבו אותו מיד בלוח הבקרה של PayPlus והגדירו מחדש.
+### 6.3 סודות
+מתוך `club-kit` (הדביקו את הערך כשמתבקש):
+```bash
+firebase functions:secrets:set PAYPAL_CLIENT_ID
+firebase functions:secrets:set PAYPAL_CLIENT_SECRET
+firebase functions:secrets:set PAYPAL_WEBHOOK_ID
+firebase functions:secrets:set PAYPAL_ENV        # הערך: sandbox   (לייב: live)
+```
+`PAYPAL_ENV` חייב להיות בדיוק `sandbox` או `live`. כל ערך אחר גורם לכישלון סגור (הקוד מסרב לפעול).
+
+למעבר ללייב: צרו אפליקציית **Live** בלוח PayPal (Client ID/Secret/Webhook חדשים), הגדירו מחדש את ארבעת הסודות עם ערכי הלייב ו-`live`, ופרסו שוב `firebase deploy --only functions`.
+
+> לעולם אל תשלחו מפתחות בצ'אט/במייל ואל תעלו אותם ל-git. מפתח שדלף: סובבו אותו מיד בלוח PayPal והגדירו מחדש.
 
 ---
 
 ## 7. פריסה
 
-### 7.1 פריסה ראשונה
+### 7.1 פריסה
 ```bash
 firebase deploy --only functions,firestore:rules,firestore:indexes
 ```
-- הפריסה מעתיקה אוטומטית את `club.config.json` לתוך `functions/` (הוק `predeploy`).
-- בפעם הראשונה Firebase עשוי לבקש להפעיל APIs (Cloud Build, Artifact Registry, Secret Manager). אשרו.
-- בסוף תוצג רשימת פונקציות: `createCheckout`, `paymentWebhook`, `deleteMyAccount`, `onUserCreate`.
+(ההוק `predeploy` מעתיק את `club.config.json` לתוך `functions/`.) בפעם הראשונה Firebase יבקש להפעיל APIs (Cloud Build, Artifact Registry, Secret Manager). אשרו.
+פונקציות: `createCheckout`, `capturePayPalOrder`, `paymentWebhook`, `declareAge`, `getEntitledContent`, `deleteMyAccount`, `onUserCreate`.
+כללי Storage (רק אם משתמשים בקבצים בתשלום): `firebase deploy --only storage`.
 
 ### 7.2 אינדקסים
-האינדקסים נוצרים בפריסה ולוקחים כמה דקות. עד שהם **Enabled** (Firestore → Indexes) שאילתות מסוימות ייכשלו. זה תקין.
+נוצרים בפריסה ולוקחים כמה דקות (Firestore → Indexes → Enabled). עד אז שאילתות מסוימות ייכשלו, וזה תקין.
 
 ### 7.3 כתובת ה-webhook
-1. בפלט הפריסה חפשו: `Function URL (paymentWebhook(europe-west1)): https://paymentwebhook-xxxx-ew.a.run.app`. העתיקו אותה.
-2. הדביקו אותה ב-`club.config.json` בשדה `webhookUrl`, ופרסו שוב: `firebase deploy --only functions`.
-3. בדקו שהכתובת חיה: פתיחה בדפדפן צריכה להחזיר שגיאת **405** (נכון: היא מקבלת POST בלבד).
+1. בפלט הפריסה: `Function URL (paymentWebhook(europe-west1)): https://paymentwebhook-xxxx-ew.a.run.app`.
+2. הדביקו ב-`club.config.json` בשדה `webhookUrl` ופרסו שוב `firebase deploy --only functions`.
+3. פתיחה בדפדפן צריכה להחזיר **405** (נכון: POST בלבד).
 
 ---
 
-## 8. הגדרה אצל PayPlus
-
-1. **כתובת callback:** הערכה שולחת את `refURL_callback` (= כתובת ה-webhook) **בכל בקשת תשלום**. מומלץ להגדיר אותה גם בלוח הבקרה של PayPlus (בהגדרות עמוד התשלום / IPN) לאותה כתובת, כגיבוי.
-2. **כתובות חזרה:** נשלחות בכל בקשה: `…/?checkout=success&order=ID` ו-`…/?checkout=cancel&order=ID`.
-3. **קבלות/חשבוניות:** בדקו בלוח הבקרה שהנפקת חשבונית-קבלה אוטומטית מופעלת, ושהחשבונית מציגה את הפירוט הרצוי (ראו סעיף 11, V5).
-4. ודאו שעמוד התשלום מוגדר ל**חיוב רגיל** (לא "בדיקת כרטיס" / שמירת טוקן בלבד).
-5. פרטי העסק, תנאים ומדיניות ביטולים צריכים להופיע גם בעמוד התשלום (ראו `LEGAL-TEMPLATES.md`).
+## 8. רישום ה-webhook ב-PayPal
+בצעו את סעיף 6.2 עם הכתובת מסעיף 7.3, שמרו את `PAYPAL_WEBHOOK_ID` (סעיף 6.3) ופרסו שוב. ה-webhook הוא **רשת ביטחון**: התשלום נקלט בדרך כלל כבר כשהלקוח חוזר לאתר (הפונקציה `capturePayPalOrder`), והאירוע `CHECKOUT.ORDER.APPROVED` גורם לשרת לבצע את החיוב גם אם הלקוח סגר את הדפדפן באמצע.
 
 ---
 
 ## 9. בדיקות ב-sandbox (חובה לפני עלייה לאוויר)
 
-תנאי: `payplus.environment` = `"sandbox"`, סודות sandbox מוגדרים, מוצר בדיקה פעיל (ראו סעיף 12), הפריסה בוצעה. השתמשו בכרטיסי הבדיקה שמופיעים בתיעוד ה-sandbox של PayPlus.
+תנאי: `PAYPAL_ENV=sandbox`, סודות sandbox, מוצר בדיקה פעיל, פריסה בוצעה. הקונה: חשבון Personal מה-sandbox.
 
 | # | פעולה | תוצאה מצופה |
 |---|---|---|
-| 1 | התחברו באתר עם גוגל | נוצרים `users/{uid}` ו-`members/{uid}` (tier `member`, 0 נקודות) ב-Firestore |
-| 2 | התחברו עם טלפון ישראלי (מספר בדיקה) | כנ"ל. מספר זר נחסם בגלל מדיניות האזורים |
-| 3 | הוסיפו מוצר לסל, סמנו הסכמה, "המשך לתשלום" | מוחזר `orderId` + מעבר לעמוד PayPlus; ב-Firestore נוצרת הזמנה `pending` עם **המחיר מהשרת** |
-| 4 | בלי לסמן הסכמה | הכפתור חסום, ואם נשלחת בקשה ידנית: שגיאת "יש לאשר את תנאי השימוש…" |
-| 5 | שלמו בכרטיס בדיקה תקין | חזרה לאתר, מסך המתנה, ואז הצלחה. ההזמנה `paid`, יש `paidAt`, `providerTxnUid`; נוצר `users/{uid}/entitlements/{feature}`; `members` עודכן (נקודות = שקלים ששולמו) |
-| 6 | חזרו על אותו webhook (אם לוח PayPlus מאפשר שליחה חוזרת, או שליחה חוזרת של אותה בקשה חתומה) | קוד 200, **אין שינוי**: הנקודות והזכאות לא מוכפלות |
-| 7 | שלמו בכרטיס בדיקה שנדחה | ההזמנה `failed` עם `failedReason`; אין זכאות |
-| 8 | סגרו את עמוד התשלום / לחצו ביטול | חזרה עם `?checkout=cancel`; ההזמנה נשארת `pending` |
-| 9 | הזמינו 6 פעמים ברצף בלי לשלם | הניסיון השישי נדחה: "בוצעו יותר מדי ניסיונות תשלום" |
-| 10 | עברו 200 ₪ מצטברים (בהזמנות בדיקה) | tier עולה ל-`silver`, ההזמנה הבאה כוללת 5% הנחה |
-| 11 | שלחו POST ל-webhook ידנית עם חתימה שגויה (`curl -X POST <url> -H 'hash: x' -d '{}'`) | תשובה **401**, ובלוגים `webhook: rejected` |
-| 12 | רשמו מוצר לא פעיל / מזהה שגוי בקריאה ידנית | שגיאה "אחד הפריטים בסל אינו זמין יותר" |
-| 13 | באזור החשבון: מחיקת חשבון | נמחקים `users`, `members`, `entitlements` ומשתמש ה-Auth; ההזמנות נשארות עם `uid: "deleted"` |
-| 14 | החזר: בצעו החזר בלוח PayPlus | אם PayPlus שולח callback: ההזמנה `refunded` והזכאות נשללת. אם לא: הריצו `scripts/refund-order.js` (סעיף 13) |
+| 1 | התחברו עם גוגל | נוצרים `users/{uid}` ו-`members/{uid}` (tier `member`, `coins: 0`) |
+| 2 | נסו לרכוש לפני הצהרת גיל | שגיאה בעברית "לפני הרכישה יש להצהיר על תאריך לידה"; `details.reason` = `age-required`; לא נוצרה הזמנה |
+| 3 | הצהירו תאריך לידה של קטין | `users.adult=false`; נסיון רכישה: "מיועדת לבני 18 ומעלה", `reason` = `not-adult`. הצהרה שנייה עם תאריך אחר מחזירה את הקיים (`already:true`) ולא משנה |
+| 4 | הצהירו תאריך של בגיר (חשבון אחר) | `users.adult=true` נכתב על ידי השרת. ב-Firestore ניתן לראות שהלקוח לא מצליח לכתוב `adult` בעצמו (חוקים) |
+| 5 | הוסיפו מוצר, סמנו הסכמה, "המשך לתשלום" | מוחזר `orderId` ו-`paymentUrl` של PayPal (דומיין `*.paypal.com`); ב-Firestore הזמנה `pending` עם `providerRef` (מזהה הזמנת PayPal), `termsVersion`, והמחיר מהשרת |
+| 6 | אשרו בחשבון ה-Personal ב-PayPal | חזרה ל-`siteUrl` עם `?checkout=success&order=…&token=…&PayerID=…` |
+| 7 | הקריאה `capturePayPalOrder({orderId})` (מהפרונט, או ידנית) | `{status:'paid'}`; ההזמנה `paid` עם `providerTxnUid` (מזהה ה-capture); נוצרה זכאות / נקודות / מטבעות; קריאה שנייה מחזירה `paid` בלי חיוב נוסף |
+| 8 | לאחר מכן, בלוג `paymentWebhook`: `PAYMENT.CAPTURE.COMPLETED` | תשובה 200, ללא שינוי (`noop already_paid`), ללא כפל נקודות/מטבעות |
+| 9 | אשרו ב-PayPal אך **סגרו** את הדפדפן לפני החזרה לאתר | תוך דקה: האירוע `CHECKOUT.ORDER.APPROVED` מבצע capture בשרת וההזמנה הופכת `paid` |
+| 10 | בטלו ב-PayPal ("Cancel and return") | חזרה עם `?checkout=cancel`; ההזמנה נשארת `pending` |
+| 11 | כרטיס/חשבון שנדחה (חשבון בדיקה עם מקור תשלום שנכשל, לפי תיעוד ה-sandbox) | capture מחזיר `failed` או `pending`; לא נוצרת זכאות |
+| 12 | שלחו POST ל-webhook עם כותרות/חתימה מזויפות | **401**, ובלוג `webhook: rejected` |
+| 13 | חבילת מטבעות: קנו `coins-250` | `members.coins` עולה ב-250 **פעם אחת בלבד**, שורה ב-`members/{uid}/coinLedger/{orderId}`, בלי הנחת דרגה |
+| 14 | החזר מלא מלוח PayPal (Sandbox business → Transaction → Refund) | האירוע `PAYMENT.CAPTURE.REFUNDED`: ההזמנה `refunded`, תרומת ההזמנה הוסרה מהזכאות (זכאויות של הזמנות אחרות נשארות), מטבעות נוכו (ואם כבר נוצלו: `needsManualReview`) |
+| 15 | הזמינו 6 פעמים בלי לשלם | ניסיון שישי נדחה: "בוצעו יותר מדי ניסיונות תשלום" |
+| 16 | עברו 200 ₪ מצטברים | tier `silver`, הזמנה הבאה כוללת 5% הנחה (לא על חבילות מטבעות) |
+| 17 | מחיקת חשבון מיד אחרי פתיחת תשלום | שגיאה "יש הזמנה שנפתחה לאחרונה" (`reason: pending_order`); עם `force:true` נמחק, וגם אז PayPal לא יחויב (ההזמנה מבוטלת ואינה ניתנת ל-capture) |
+| 18 | תוכן בתשלום: קריאה ל-`getEntitledContent({contentId})` עם ובלי זכאות | עם זכאות: התוכן; בלי / פגה: `permission-denied` זהה לתוכן שאינו קיים |
 
-**אם בדיקה 5 נכשלת** (ההזמנה נשארת `pending` אחרי תשלום מוצלח): פתחו Logs של `paymentWebhook`.
-- `webhook: rejected reason=bad_signature` → הנחות V7 (אימות חתימה) שגויות: ראו סעיף 11.
-- `result=rejected reason=amount_or_currency_mismatch` → שדה הסכום/מטבע בהודעה שונה מהצפוי (V8).
-- `result=ignored reason=unknown_order` → שדה ה-`more_info` לא חוזר בהודעה (V8/V12).
-- אין לוגים בכלל → כתובת ה-webhook לא נשלחה/נחסמה (V4).
+**אם הזמנה נשארת `pending` אחרי תשלום מוצלח:** פתחו Logs של `capturePayPalOrder` ו-`paymentWebhook`:
+- `capture: provider capture failed … issue …` → הנחות P2/P7/P8 (סעיף 11).
+- `webhook: rejected reason=bad_signature` → P10/P11; `verify_unavailable` או `not_configured` → בדקו `PAYPAL_WEBHOOK_ID`, `PAYPAL_ENV` והסודות.
+- `result=rejected reason=amount_or_currency_mismatch` → P4/P7 (פורמט סכום או מטבע).
 
 ---
 
 ## 10. App Check (אופציונלי, מומלץ)
 
-מגן על ה-API מפני בקשות ממקורות שאינם האתר שלכם.
-1. Firebase Console → **App Check** → Apps → בחרו את אפליקציית ה-Web → **reCAPTCHA v3** → צרו מפתחות ב-<https://www.google.com/recaptcha/admin> (reCAPTCHA v3, הוסיפו את דומייני האתר) → הדביקו את Secret Key בקונסולה.
-2. באתר: אתחול App Check עם ה-**site key** (`initializeAppCheck` עם `ReCaptchaV3Provider`) **לפני** שימוש ב-Auth/Firestore/Functions. ודאו שהפרונט שלכם תומך (אם לא, אל תפעילו אכיפה).
-3. עקבו ב-App Check → **Metrics** שהבקשות "Verified".
-4. רק אחרי שרוב הבקשות מאומתות: ב-`club.config.json` הגדירו `"enforceAppCheck": true` ופרסו `firebase deploy --only functions`. לאכיפה ב-Firestore: App Check → Firestore → **Enforce**.
-5. אם הכל נשבר אחרי ההפעלה: החזירו `false` ופרסו שוב.
+1. Firebase Console → **App Check** → Apps → אפליקציית ה-Web → **reCAPTCHA v3** → מפתחות ב-<https://www.google.com/recaptcha/admin> (הוסיפו את הדומיינים) → Secret Key בקונסולה.
+2. באתר: אתחול App Check (`initializeAppCheck` + `ReCaptchaV3Provider`) **לפני** Auth/Firestore/Functions. ודאו שהפרונט תומך; אם לא, אל תפעילו אכיפה.
+3. App Check → **Metrics**: ודאו שרוב הבקשות "Verified".
+4. אז `"enforceAppCheck": true` ב-`club.config.json` ופריסה (`--only functions`). אכיפה גם ב-Firestore: App Check → Firestore → Enforce.
+5. אם נשבר: החזירו `false` ופרסו.
 
 ---
 
-## 11. בדיקת הנחות מול PayPlus (VERIFY-WITH-DOCS)
+## 11. בדיקת הנחות מול PayPal (VERIFY-WITH-DOCS)
 
-מתאם PayPlus נכתב בלי גישה לתיעוד הרשמי (`docs.payplus.co.il` לא היה נגיש). **מה שאומת באופן עקיף בלבד** (תקציר חיפוש, לא קריאת התיעוד עצמו): הכותרות `api-key` ו-`secret-key`; השדה `payment_page_uid`; `refURL_callback` ו-`refURL_success`; `more_info` חוזר בהודעות; הודעת callback כוללת כותרת `hash` ו-`user-agent`, וחתימת HMAC-SHA256 על גוף ה-JSON במפתח ה-secret.
-**כל השאר הוא הנחה מזיכרון**. כל הנחה מבודדת בקבוע בראש `functions/src/providers/payplus.js`. עברו על הטבלה מול התיעוד ומול ה-sandbox שלכם וסמנו V:
+**כל** הפרטים הבאים הם הנחות מזיכרון (לא אומתו). כל אחד מבודד בקבוע בראש `functions/src/providers/paypal.js`. עברו עליהם מול <https://developer.paypal.com/docs/api/orders/v2/> ומול ה-sandbox שלכם, וסמנו V.
 
 | # | הנחה | איפה בקוד | איך מאמתים |
 |---|---|---|---|
-| V1 | כתובות בסיס: sandbox `https://restapidev.payplus.co.il/api/v1.0`, production `https://restapi.payplus.co.il/api/v1.0` | `API_BASE` | תיעוד / שגיאת רשת בבדיקה 3 |
-| V2 | נתיב `POST /PaymentPages/generateLink` | `GENERATE_LINK_PATH` | תיעוד; תשובת 404 = שגוי |
-| V3 | כותרות אימות `api-key`, `secret-key` | `HEADER_API_KEY`, `HEADER_SECRET_KEY` | תשובת 401/403 בבדיקה 3 |
-| V4 | שמות שדות הבקשה: `payment_page_uid`, `charge_method` (1 = חיוב), `amount` (בשקלים עשרוניים!), `currency_code`, `language_code`, `refURL_success/failure/cancel/callback`, `send_failure_callback`, `more_info`, `customer{customer_name,email,phone}`, `items[{name,quantity,price}]`, `sendEmailApproval`, `create_token` | גוף הבקשה ב-`createPaymentPage` | תיעוד; שדה לא מוכר עלול להתעלם/להיכשל |
-| V5 | סכום הפריטים חייב להיות שווה ל-`amount`. כשיש הנחת מועדון נשלחת שורה מאוחדת אחת ("הזמנה ID") | `buildItems` | בדקו מה מופיע בחשבונית שנוצרת |
-| V6 | מבנה התשובה: `results.status === "success"`, `data.payment_page_link`, `data.page_request_uid` | `createPaymentPage` | תיעוד / תשובה בבדיקה 3 |
-| V7 | חתימת ה-callback: כותרת `hash`, HMAC-SHA256, מפתח = Secret Key, מעל גוף הבקשה הגולמי. הקידוד (base64 או hex) לא ידוע ולכן **שניהם** מתקבלים; נבדק גם `JSON.stringify` של הגוף | `signatureMatches` | בדיקה 5; בדיקה 11 |
-| V8 | שדות ההודעה: `transaction.uid`, `transaction.payment_page_request_uid`, `transaction.more_info`, `transaction.status_code` (`"000"` = אושר), `transaction.amount` (שקלים), `transaction.currency`, ונתיב קישור חשבונית/קבלה (**ניחוש**) | `parseEvent`, `RECEIPT_URL_PATHS`, `SUCCESS_STATUS_CODE` | הדפיסו הודעת sandbox אמיתית (בלוח PayPlus/ב-Cloud Run request logs) והשוו |
-| V9 | כישלון תשלום מייצר callback (`send_failure_callback`) | גוף הבקשה | בדיקה 7 |
-| V10 | האם ואיך PayPlus שולח הודעת החזר (`REFUND_MARKERS` = ניחוש) | `REFUND_MARKERS` | בדיקה 14; אם אין: `scripts/refund-order.js` |
-| V11 | דומיין עמוד התשלום מסתיים ב-`payplus.co.il` (הגנה: קישור אחר נדחה) | `PAYMENT_URL_HOST_SUFFIX` | בדיקה 3 |
-| V12 | מגבלות אורך/תווים של `more_info` (אנו שולחים 20 תווים) | `createPaymentPage` | תיעוד |
+| P1 | כתובות בסיס: sandbox `https://api-m.sandbox.paypal.com`, live `https://api-m.paypal.com` | `API_BASE` | תיעוד; שגיאת רשת בבדיקה 5 |
+| P2 | OAuth: `POST /v1/oauth2/token`, אימות Basic (Client ID:Secret), גוף `grant_type=client_credentials`, תשובה `{access_token, expires_in}` | `OAUTH_PATH`, `accessToken` | שגיאת `oauth failed` בבדיקה 5 |
+| P3 | יצירת הזמנה: `POST /v2/checkout/orders`, גוף: `intent:'CAPTURE'`, `purchase_units[{reference_id, custom_id, amount{currency_code,value,breakdown{item_total,discount}}, items[{name,quantity,unit_amount,category}]}]`, `payment_source.paypal.experience_context{return_url,cancel_url,brand_name,locale,shipping_preference,user_action}` (חלופה ישנה: `application_context`; מתג `USE_EXPERIENCE_CONTEXT`) | `ORDERS_PATH`, `createPaymentPage` | בדיקה 5 |
+| P4 | סכומים הם **מחרוזות** עם 2 ספרות; ILS מופעל בחשבון; `category:"DIGITAL_GOODS"`; `breakdown.discount` מתקבל; `value = item_total − discount` | `money`, `ITEM_CATEGORY` | שגיאת 422 בבדיקה 5 (למשל `CURRENCY_NOT_SUPPORTED`) |
+| P5 | קישור האישור: ב-`links[]` עם `rel` שווה `payer-action` (חדש) או `approve` (ישן), בדומיין `*.paypal.com` | `APPROVE_LINK_RELS` | בדיקה 5 |
+| P6 | כותרת אידמפוטנטיות `PayPal-Request-Id` ביצירה וב-capture | `HEADER_REQUEST_ID` | תיעוד |
+| P7 | Capture: `POST /v2/checkout/orders/{id}/capture`, גוף `{}`, כותרת `Prefer: return=representation`; תשובה `status:'COMPLETED'` ו-`purchase_units[0].payments.captures[0]{id,status,amount}`; `custom_id` חוזר | `CAPTURE_SUFFIX`, `interpretOrder` | בדיקה 7 |
+| P8 | כבר נקלט → 422 עם `ORDER_ALREADY_CAPTURED` (אז מבוצע GET); עדיין לא אושר → `ORDER_NOT_APPROVED` | `ISSUE_*` | קריאה כפולה בבדיקה 7; קריאה לפני אישור |
+| P9 | סטטוסי capture: `COMPLETED` (שולם), `PENDING` (בבדיקת PayPal: **לא** מעניקים), `DECLINED`/`FAILED` | `CAPTURE_*` | בדיקה 11 |
+| P10 | כותרות ה-webhook: `paypal-auth-algo`, `paypal-cert-url`, `paypal-transmission-id`, `paypal-transmission-sig`, `paypal-transmission-time` | `WEBHOOK_HEADERS` | בדיקה 8 |
+| P11 | `POST /v1/notifications/verify-webhook-signature` עם `{auth_algo, cert_url, transmission_id, transmission_sig, transmission_time, webhook_id, webhook_event}`; תשובה `verification_status:'SUCCESS'`; הגוף המנותח (לא הגולמי) מתקבל כ-`webhook_event` | `VERIFY_WEBHOOK_PATH`, `verifyWebhook` | בדיקה 8; אם תמיד FAILURE: ייתכן שנדרש הגוף הגולמי |
+| P12 | מבנה האירועים: `PAYMENT.CAPTURE.COMPLETED/DENIED/REVERSED` (resource = capture עם `custom_id`, `supplementary_data.related_ids.order_id`), `PAYMENT.CAPTURE.REFUNDED` (resource = refund; ה-capture המקורי בקישור `rel:"up"`; `custom_id` ייתכן ואינו קיים), `CHECKOUT.ORDER.APPROVED` (resource = order) | `EVT`, `parseEvent` | בדיקות 8, 9, 14: הדפיסו אירוע sandbox אמיתי והשוו |
+| P13 | `id` של האירוע (`WH-…`) ייחודי לאירוע, משמש לזיהוי שליחה חוזרת | `parseEvent` | תיעוד |
+| P14 | עמלות PayPal על תשלומים קטנים (3.90 ₪) ותנאי החשבון שלכם (בעיה עסקית, לא טכנית) | — | בדקו את תעריף ה-micropayments בחשבון שלכם לפני שקובעים מחירי חבילות |
 
-**דרך מהירה לבדוק V7/V8:** בצעו תשלום sandbox. אם ההזמנה לא עברה ל-`paid`, הלוגים יגידו למה (סעיף 9). אפשר לבקש ממפתח לתקן קבוע אחד בלבד בקובץ ולהריץ `npm test`.
+**ביקורת סיכון:** אם P11 שגוי, כל webhook יידחה (401) ו**נשארים רק** תשלומים שנקלטים דרך `capturePayPalOrder` כשהלקוח חוזר לאתר; החזרים ו-`APPROVED` לא יעבדו. אם P7/P12 שגויים, הסכום/מטבע לא יתאימו וההזמנה תסומן `needsManualReview` במקום להעניק (כישלון בטוח).
 
 ---
 
-## 12. מנהל ומוצרים
+## 12. מנהל, מוצרים, חבילות מטבעות, תוכן בתשלום
 
-### 12.1 יצירת מנהל
-1. Firebase Console → Project settings → **Service accounts** → **Generate new private key** → שמרו כ-`serviceAccount.json` **בתוך `club-kit` בלבד** (`.gitignore` חוסם אותו).
-2. התחברו פעם אחת לאתר עם החשבון שיהיה מנהל.
-3. הריצו:
+### 12.1 מנהל
+1. Firebase Console → Project settings → **Service accounts** → Generate new private key → שמרו כ-`serviceAccount.json` בתוך `club-kit` בלבד (ה-`.gitignore` חוסם).
+2. התחברו פעם אחת לאתר עם החשבון שיהיה מנהל, ואז:
    ```bash
    node scripts/set-admin.js --key ./serviceAccount.json --email owner@example.com
    ```
-4. התנתקו והתחברו שוב. (הרשאת `admin` היא כרגע בסיס לפיתוח עתידי של ממשק ניהול; ניהול מוצרים נעשה בקונסולה או בסקריפט.)
-5. **מחקו את קובץ המפתח** כשסיימתם, וגם את המפתח בקונסולת Google Cloud (IAM → Service accounts → Keys). מפתח כזה הוא "מפתח ראשי" לפרויקט.
+3. התנתקו והתחברו שוב. **הערה:** ה-claim `admin` כרגע אינו נותן שום הרשאה ב-Firestore או בפונקציות (הוא בסיס לממשק ניהול עתידי); מוצרים מנוהלים בקונסולה או בסקריפט. אם לא תשתמשו בו, אל תריצו את הסקריפט.
+4. **מחקו את קובץ המפתח** בסיום, וגם את המפתח בקונסולת Google Cloud (IAM → Service accounts → Keys).
 
-### 12.2 הזנת מוצרים
-קובץ `catalog.sample.json` מכיל 3 מוצרי **טיוטה** (`active: false`, שמות ומחירים סימליים). **אל תפעילו אותם.**
-1. העתיקו ל-`catalog.json` וערכו: שם, תיאור, `priceAgorot` (באגורות, **כולל מע"מ**: 5000 = 50 ₪), `grants` (מפתחות הרשאה, למשל `premium_readings`), `accessDays` (מספר ימים או `null` = לתמיד), `sort`. מחקו את שדה `_draft`.
-2. בדיקה (לא כותב כלום):
-   ```bash
-   node scripts/seed-products.js --file catalog.json --key ./serviceAccount.json
-   ```
-3. כתיבה: הוסיפו `--confirm`. מוצרים קיימים לא נדרסים (אלא עם `--overwrite`).
-4. הפעילו מוצר: בקונסולה → Firestore → `products/<id>` → `active` = `true`.
+### 12.2 מוצרים וחבילות מטבעות
+- `catalog.sample.json`: 3 מוצרי **טיוטה** סימליים (`active:false`). אל תפעילו.
+- `catalog.coin-packs.json`: חבילות המטבעות כפי שנקבעו (כולל מע"מ): **250 מטבעות ב-3.90 ₪, 850 ב-9.90 ₪, 5500 ב-19.90 ₪**. הן נטענות `active:false`. שדות: `coins` (מטבעות ליחידה), `noDiscount:true` (הנחת דרגה לא חלה).
+- ערכו עותק (`catalog.json`), אז:
+  ```bash
+  node scripts/seed-products.js --file catalog.coin-packs.json --key ./serviceAccount.json            # בדיקה בלבד
+  node scripts/seed-products.js --file catalog.coin-packs.json --key ./serviceAccount.json --confirm  # כתיבה
+  ```
+  מוצרים קיימים לא נדרסים (אלא עם `--overwrite`). הפעלה: Firestore → `products/<id>` → `active: true`, **רק אחרי** בדיקות sandbox 13 ו-14.
+- המטבעות נכתבים רק על ידי השרת, לשדה `members/{uid}.coins` (קריאה לבעלים בלבד; הלקוח לא יכול לכתוב). יומן: `members/{uid}/coinLedger/{orderId}`.
+- **החזר של חבילת מטבעות:** המטבעות מנוכים מהיתרה. אם הלקוח כבר הוציא אותם, היתרה לא יורדת מתחת ל-0, והחוב נרשם (`coinShortfall`, `needsManualReview`) להחלטתכם.
+
+### 12.3 תוכן בתשלום שנאכף בשרת
+כדי שתוכן באמת יהיה "בתשלום", הוא **לא** יכול להיות בקוד/ב-HTML של האתר. הכניסו אותו כך:
+1. מסמך ב-Firestore `protectedContent/<contentId>` (גישה ללקוחות חסומה לגמרי): `{feature:'premium_readings', kind:'text', title:'…', body:'…'}`; או `kind:'json'` + `data:{…}`; או `kind:'file'` + `storagePath:'protected/guide.pdf'` (העלו את הקובץ ל-Storage תחת `protected/`; כללי Storage חוסמים הכול, והשרת מנפיק קישור חתום ל-10 דקות).
+2. הפרונט קורא `getEntitledContent({contentId})`. השרת בודק את הזכאות **ואת התפוגה** בזמן הבקשה.
+3. לקבצים: לחשבון השירות של הפונקציות נדרשת ההרשאה `Service Account Token Creator` על עצמו (חתימת URL). אם הקישור נכשל: IAM → חשבון השירות של Cloud Functions → הוסיפו את התפקיד.
+
+**מה הפרונט (`club.has()`) יכול רק "לרמוז":** הסתרה/הצגה של כפתורים ומסכים. כל תוכן שכבר נמצא בקובץ הסטטי של האתר (HTML/JS/תמונות) חשוף לכל מי שפותח DevTools. זה "פתיחת ממשק", לא הגנת תוכן.
 
 ---
 
 ## 13. החזרים
-
-1. בצעו את ההחזר הכספי בלוח הבקרה של PayPlus.
-2. אם PayPlus שולח הודעת החזר, המערכת מעדכנת לבד (מלא: סטטוס `refunded`, שלילת זכאות, ביטול נקודות/הוצאה; חלקי: מסומן `needsManualReview` ללא שינוי זכאות).
-3. אחרת: `node scripts/refund-order.js --key ./serviceAccount.json --order ORDER_ID --confirm` (בלי `--confirm` זו הרצת בדיקה).
-4. החזר לא הופך הזמנה חזרה ל-`paid` גם אם תגיע הודעה ישנה.
+1. בצעו את ההחזר הכספי בלוח PayPal (Transaction → Refund).
+2. PayPal שולח `PAYMENT.CAPTURE.REFUNDED` והמערכת מעדכנת לבד. החזר חלקי רק מסומן `needsManualReview` (ללא שינוי זכאות). `PAYMENT.CAPTURE.REVERSED` (חיוב חוזר/chargeback) מטופל כהחזר מלא.
+3. אם אירוע לא הגיע: `node scripts/refund-order.js --key ./serviceAccount.json --order ORDER_ID --confirm` (בלי `--confirm`: בדיקה בלבד). **הסקריפט לא מזיז כסף.**
+4. הזמנה שהוחזרה נשארת `refunded` גם אם יגיע אירוע ישן.
 
 ---
 
 ## 14. ניטור והתראות
 
-1. **שגיאות פונקציות:** Google Cloud Console → **Logging → Log-based alerts** → שאילתה: `severity>=ERROR AND resource.type="cloud_run_revision"` → התראה במייל.
-2. **webhook חשוד:** התראה על הודעות `webhook: rejected` (חתימה שגויה) בכמות חריגה, וגם על `reason=amount_or_currency_mismatch` (**כל מופע** שווה בדיקה).
-3. **הזמנות לבדיקה ידנית:** ב-Firestore חפשו הזמנות עם `webhookAnomaly` או `needsManualReview: true`.
-4. **תשלומים שנתקעו:** הזמנות `pending` ותיקות שלקוח טוען ששילם: בדקו בלוח PayPlus ואז בלוגי ה-webhook.
-5. **תקציב:** התראת Billing מסעיף 1. מומלץ גם **Usage** של Authentication (SMS).
-6. **גיבוי:** Firestore → Disaster recovery → הפעילו גיבויים יומיים (נתוני הזמנות נדרשים לצרכי מס).
+1. **התראה על כל מקרה שדורש בדיקה ידנית (חובה):** Google Cloud Console → **Logging → Log-based alerts** → שאילתה:
+   ```
+   jsonPayload.alert="manual_review"
+   ```
+   → התראה במייל. היא מופעלת על: חיוב כפול (`duplicate_charge`), תשלום אחרי החזר, אי-התאמת סכום/מטבע, תשלום שהגיע לחשבון שנמחק, החזר חלקי, מטבעות שכבר נוצלו, שימוש חוזר במזהה עסקה.
+2. **שגיאות כלליות:** `severity>=ERROR AND resource.type="cloud_run_revision"`.
+3. **webhook חשוד:** נפח חריג של `webhook: rejected`.
+4. **הזמנות לבדיקה:** ב-Firestore חפשו `needsManualReview == true` או `webhookAnomaly != null`. **כל הזמנה כזו = כסף של לקוח שדורש החלטה**; בדקו אותה בלוח PayPal.
+5. **תקציב:** התראת Billing מסעיף 1; ובדקו Usage של Authentication (SMS).
+6. **גיבוי:** Firestore → Disaster recovery → גיבוי יומי (נתוני הזמנות נדרשים לצרכי מס).
 
 ---
 
-## 15. רשימת בדיקה לפני עלייה לאוויר
+## 15. כותרות אבטחה ו-CSP לאתר
 
-- [ ] כל בדיקות סעיף 9 עברו ב-sandbox, כולל כישלון, כפילות webhook וחתימה שגויה.
-- [ ] סעיף 11 עבר במלואו מול התיעוד (V1–V12), נרשם מה נבדק.
-- [ ] סודות production הוגדרו, `payplus.environment` = `production`, פריסה מחדש, ותשלום אמיתי קטן אחד נבדק (והוחזר).
-- [ ] מספרי בדיקה של טלפון נמחקו; מדיניות SMS = ישראל בלבד.
-- [ ] דומיינים מורשים נכונים (אתר + Vercel).
-- [ ] מוצרים אמיתיים עם מחירים כוללי מע"מ, והדוגמאות לא פעילות/נמחקו.
-- [ ] טקסטים משפטיים הוכנו ואושרו ע"י עורך דין (`LEGAL-TEMPLATES.md`), הקישורים מפורסמים באתר ובתיבת ההסכמה.
-- [ ] רישום מאגר מידע / התייעצות בנושא פרטיות לפי הצורך (עורך דין).
-- [ ] הנפקת חשבוניות/קבלות מסודרת מול רואה החשבון.
-- [ ] התראות וניטור (סעיף 14) ותקציב פעילים.
-- [ ] קובץ `serviceAccount.json` נמחק מהמחשב והמפתח בוטל.
-- [ ] כללי Firestore נפרסו (בדקו בקונסולה שאין "Test mode") וה-CSP/כותרות האבטחה באתר מוגדרים (`firebase.json`/`vercel.json` של האתר).
+קבצי דוגמה: `hosting-examples/firebase.hosting.example.json` ו-`hosting-examples/vercel.example.json`. מעתיקים את הבלוק ל-`firebase.json` / `vercel.json` של **האתר** (לא של הערכה), ומחליפים `PROJECT_ID`.
+- כוללים: HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy: same-origin-allow-popups` (נדרש להתחברות גוגל בחלון קופץ), ו-CSP עם `object-src 'none'; base-uri 'self'`, `connect-src` לדומייני Firebase/Google הנדרשים, ו-`form-action` ל-PayPal.
+- ה-CSP כולל `'unsafe-inline'` ל-script/style כי האפליקציות הן דף יחיד עם קוד מוטמע (פשרה מתועדת).
+- **`frame-ancestors`:** כתבו שם במפורש את המקור היחיד שמורשה להטמיע (למשל ה-CRM) ולא יותר. דפי התחברות ותשלום חוסמים הטמעה ב-iframe בכל מקרה: אפליקציה עם רכישות צריכה להיפתח **בלשונית חדשה** ולא בתוך נגן מוטמע (`embed:false` ב-CRM).
+- **בדקו בדפדפן** (קונסולה ללא הפרות CSP) לפני פריסה: התחברות גוגל, טלפון עם reCAPTCHA, מעבר ל-PayPal וחזרה.
 
 ---
 
-## 16. תקלות נפוצות
+## 16. רשימת בדיקה לפני עלייה לאוויר
+
+- [ ] כל בדיקות סעיף 9 עברו ב-sandbox; סעיף 11 נבדק מול התיעוד (P1–P14), נרשם מה נבדק.
+- [ ] אפליקציית Live ב-PayPal, ארבעת הסודות עם ערכי הלייב ו-`PAYPAL_ENV=live`, פריסה מחדש, ורכישה אמיתית קטנה אחת **ושחזור** (החזר) שעברו נכון.
+- [ ] התראת `jsonPayload.alert="manual_review"` פעילה ונבדקה (גרמו לאירוע ובדקו שהגיע מייל).
+- [ ] מספרי טלפון לבדיקה נמחקו; SMS לישראל בלבד; דומיינים מורשים נכונים.
+- [ ] מוצרים אמיתיים עם מחירים כוללי מע"מ; הדוגמאות לא פעילות; חבילות המטבעות הופעלו רק אחרי הבדיקות.
+- [ ] טקסטים משפטיים סופיים, **שאושרו ע"י עורך דין**, פורסמו, ו-`node scripts/check-legal.js <קבצי הדפים>` עובר (אין שאריות תבנית); `termsVersion` מעודכן. תיבת ההסכמה כוללת: הסכמה לתנאים, הצהרה שהמוצר דיגיטלי והגישה נפתחת מיד, והצהרת גיל.
+- [ ] הוצאת חשבוניות/קבלות מסודרת מול רואה החשבון (PayPal אינו מנפיק חשבונית מס ישראלית בשבילכם).
+- [ ] כללי Firestore נפרסו (בלי "test mode"); כותרות האבטחה והCSP באתר מוגדרים ונבדקו.
+- [ ] `serviceAccount.json` נמחק והמפתח בוטל.
+- [ ] הפרונט משתמש ב-`declareAge`, `capturePayPalOrder`, `getEntitledContent` (ראו README, "שינויים בחוזה לפרונט").
+
+---
+
+## 17. תקלות נפוצות
 
 | סימפטום | סיבה אפשרית |
 |---|---|
-| `auth/unauthorized-domain` | הדומיין לא הוסף ב-Authorized domains (2.3) |
-| SMS לא מגיע | מדיניות אזורים, מספר לא ישראלי, או מכסת SMS |
-| "החנות עדיין אינה מוגדרת" | `siteUrl` ריק ב-`club.config.json` או סודות חסרים |
-| שגיאת "שירות התשלום אינו זמין" | סודות שגויים, `environment` שגוי, או V1–V4 (ראו לוגים של `createCheckout`) |
-| הקטלוג ריק | אין מוצרים עם `active: true`, או אינדקס עדיין נבנה |
-| שאילתה נכשלת עם "requires an index" | המתינו לסיום בניית האינדקסים או פרסו שוב `firestore:indexes` |
-| כל הקריאות נכשלות אחרי `enforceAppCheck: true` | האתר לא מאתחל App Check (סעיף 10) |
-| פריסה נכשלת על runtime | ראו הערה על Node בסעיף 4 |
+| `auth/unauthorized-domain` | הדומיין לא ב-Authorized domains |
+| "לפני הרכישה יש להצהיר על תאריך לידה" | הפרונט לא קרא ל-`declareAge` (או שאין עדיין מסמך `users/{uid}`: המתינו רגע) |
+| "החנות עדיין אינה מוגדרת" | `siteUrl` ריק או סודות PayPal חסרים/`PAYPAL_ENV` שגוי |
+| "שירות התשלום אינו זמין" | סודות שגויים, ILS לא מופעל בחשבון, או הנחות P1–P5 (לוג של `createCheckout`) |
+| לקוח שילם והזמנה `pending` | `capturePayPalOrder` לא נקרא ו-webhook לא מוגדר (סעיפים 8, 11) |
+| `capture` מחזיר `pending` | PayPal מחזיק את התשלום בבדיקה: **אין להעניק**, התשלום יגיע ב-`PAYMENT.CAPTURE.COMPLETED` |
+| הקטלוג ריק | אין מוצרים `active:true` או אינדקס בבנייה |
+| "requires an index" | המתינו לאינדקסים או פרסו שוב `firestore:indexes` |
+| הכול נכשל אחרי `enforceAppCheck:true` | האתר לא מאתחל App Check |
+| פריסה נכשלת על runtime | ודאו Node 22 ו-`nodejs22`; אם Firebase דורש גרסה חדשה יותר, עדכנו את שני הקבצים והריצו `npm test` |
+
+---
+
+## 18. ספק חלופי אופציונלי: PayPlus
+
+הערכה כוללת גם מתאם PayPlus (`provider: "payplus"`). הוא **לא נבדק מול התיעוד**: ראו `VERIFY-WITH-DOCS` V1–V12 בראש `functions/src/providers/payplus.js`. למעבר: סודות `PAYPLUS_API_KEY`, `PAYPLUS_SECRET_KEY`, `PAYPLUS_PAGE_UID`, `payplus.environment` בקונפיג, ופריסה. ב-PayPlus אין שלב capture נפרד (הפונקציה `capturePayPalOrder` אינה רלוונטית), והתשלום נקלט רק מה-webhook. לספק אחר (Cardcom/Tranzila/Meshulam): `functions/src/providers/README.md`.

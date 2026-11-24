@@ -7,6 +7,9 @@ test('the shipped club.config.json is valid and matches contract defaults', () =
   resetConfigCache();
   const c = loadConfig();
   assert.equal(c.region, 'europe-west1');
+  assert.equal(c.provider, 'paypal');
+  assert.deepEqual(c.ageGate, { required: true, minAge: 18 });
+  assert.equal(c.termsVersion, '1');
   assert.equal(c.currency, 'ILS');
   assert.deepEqual(c.tiers.map((t) => [t.id, t.minSpendAgorot, t.discountPct]), [['member', 0, 0], ['silver', 20000, 5], ['gold', 60000, 10]]);
   assert.equal(c.points.perShekel, 1);
@@ -38,6 +41,11 @@ test('invalid configs are rejected', () => {
     { limits: { maxLines: 21 } },
     { points: { perShekel: -1 } },
     { enforceAppCheck: 'yes' },
+    { provider: 'stripe' },
+    { termsVersion: '' },
+    { ageGate: { required: 'yes' } },
+    { ageGate: { minAge: 5 } },
+    { paypal: { locale: 'hebrew' } },
   ];
   for (const b of bad) assert.throws(() => parseConfig(b), /Invalid club.config.json/, JSON.stringify(b));
 });

@@ -22,6 +22,10 @@ test('admin SDK flow on the Firestore emulator', { skip }, async () => {
   const uid = 'emu-user-1';
   await db.collection('products').doc('p1').set({ name: 'מוצר א', priceAgorot: 25000, currency: 'ILS', grants: ['feat_a'], accessDays: 30, active: true, sort: 1 });
   await ensureUserAndMember({ db, user: { uid, displayName: 'דנה', email: 'd@x.co' } });
+  const { declareAgeCore } = require('../../src/age');
+  await assert.rejects(createCheckoutCore({ db, provider: fakeProvider(), config, uid, token: {}, data: { items: [{ productId: 'p1', qty: 1 }], consent: true }, webhookUrl: 'https://x.example/hook' }), (e) => e.details.reason === 'age-required');
+  assert.deepEqual(await declareAgeCore({ db, uid, data: { birthDate: '1990-03-04' }, config }), { adult: true });
+  await db.collection('products').doc('coins-250').set({ name: '250 מטבעות', description: '', priceAgorot: 390, currency: 'ILS', grants: [], accessDays: null, coins: 250, noDiscount: true, active: true, sort: 2 });
   assert.equal((await db.doc(`members/${uid}`).get()).data().tier, 'member');
 
   const provider = fakeProvider();
@@ -44,12 +48,23 @@ test('admin SDK flow on the Firestore emulator', { skip }, async () => {
   assert.equal((await db.doc(`users/${uid}/entitlements/feat_a`).get()).exists, false);
   assert.equal((await db.doc(`members/${uid}`).get()).data().points, 0);
 
+  // coin pack: credited once under concurrency, revoked on refund (real transactions + subcollection ledger)
+  const coinOrder = (await createCheckoutCore({ db, provider, config, uid, token: {}, data: { items: [{ productId: 'coins-250', qty: 2 }], consent: true }, webhookUrl: 'https://x.example/hook' })).orderId;
+  const cev = { orderId: coinOrder, status: 'paid', amountAgorot: 780, currency: 'ILS', txnUid: 'cap-coins', receiptUrl: '', providerRef: 'page-req-1', reason: '' };
+  await Promise.all([1, 2, 3].map(() => processPaymentEvent({ db, config, event: cev })));
+  assert.equal((await db.doc(`members/${uid}`).get()).data().coins, 500);
+  assert.equal((await db.doc(`members/${uid}/coinLedger/${coinOrder}`).get()).data().coins, 500);
+  assert.equal((await processPaymentEvent({ db, config, event: { status: 'refunded', captureId: 'cap-coins', amountAgorot: 780, currency: 'ILS', txnUid: 'refund-1', eventId: 'WH-REF' } })).result, 'refunded');
+  assert.equal((await db.doc(`members/${uid}`).get()).data().coins, 0);
+
   // rate limit with the real transaction + query semantics
   for (let i = 0; i < 5; i++) await createCheckoutCore({ db, provider, config, uid, token: {}, data: { items: [{ productId: 'p1', qty: 1 }], consent: true }, webhookUrl: 'https://x.example/hook' });
   await assert.rejects(createCheckoutCore({ db, provider, config, uid, token: {}, data: { items: [{ productId: 'p1', qty: 1 }], consent: true }, webhookUrl: 'https://x.example/hook' }), (e) => e.code === 'resource-exhausted');
 
   const deleted = [];
-  await deleteAccountCore({ db, auth: { deleteUser: async (u) => deleted.push(u) }, uid });
+  await assert.rejects(deleteAccountCore({ db, auth: { deleteUser: async (u) => deleted.push(u) }, uid }), (e) => e.details.reason === 'pending_order');
+  assert.deepEqual(deleted, []);
+  await deleteAccountCore({ db, auth: { deleteUser: async (u) => deleted.push(u) }, uid, force: true });
   assert.deepEqual(deleted, [uid]);
   assert.equal((await db.doc(`users/${uid}`).get()).exists, false);
   assert.equal((await db.doc(`members/${uid}`).get()).exists, false);

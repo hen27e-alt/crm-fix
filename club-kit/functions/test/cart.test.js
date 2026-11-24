@@ -88,3 +88,31 @@ test('junk grants are dropped from the snapshot', () => {
   const products = new Map([['p1', product({ grants: ['ok_feature', 5, '', 'bad feature!', null] })]]);
   assert.deepEqual(buildOrder([{ productId: 'p1', qty: 1 }], products, opts()).items[0].grants, ['ok_feature']);
 });
+
+test('coin packs: coins snapshot per unit, noDiscount lines excluded from the discountable subtotal', () => {
+  const products = new Map([
+    ['c250', product({ priceAgorot: 390, grants: [], coins: 250, noDiscount: true })],
+    ['p1', product({ priceAgorot: 10000 })],
+  ]);
+  const o = buildOrder([{ productId: 'c250', qty: 3 }, { productId: 'p1', qty: 1 }], products, opts(10));
+  assert.deepEqual([o.subtotalAgorot, o.discountAgorot, o.totalAgorot], [11170, 1000, 10170]);
+  assert.deepEqual([o.items[0].coins, o.items[0].noDiscount, o.items[1].coins, o.items[1].noDiscount], [250, true, 0, false]);
+});
+
+test('malformed coins / noDiscount on a product make it unpurchasable', () => {
+  for (const extra of [{ coins: 0 }, { coins: -5 }, { coins: 1.5 }, { coins: '250' }, { coins: 10 ** 9 }, { noDiscount: 'yes' }]) {
+    assert.equal(isPurchasable(product(extra), 'ILS'), false, JSON.stringify(extra));
+  }
+  assert.equal(isPurchasable(product({ coins: 250, noDiscount: false }), 'ILS'), true);
+});
+
+test('shipped coin-pack catalog matches the owner prices and every pack is a valid purchasable product', () => {
+  const cat = require('../../catalog.coin-packs.json');
+  assert.deepEqual(cat.products.map((p) => [p.id, p.coins, p.priceAgorot]), [['coins-250', 250, 390], ['coins-850', 850, 990], ['coins-5500', 5500, 1990]]);
+  for (const p of cat.products) {
+    const { id, _draft, ...doc } = p;
+    assert.equal(isPurchasable({ ...doc, active: true }, 'ILS'), true, id);
+    assert.equal(p.active, false, 'shipped inactive until the owner activates after the sandbox test');
+    assert.equal(p.noDiscount, true);
+  }
+});

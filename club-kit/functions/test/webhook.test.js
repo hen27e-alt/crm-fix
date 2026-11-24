@@ -267,3 +267,184 @@ test('HTTP: provider misconfiguration (no secret) -> 500, not 401', async () => 
   await handleWebhook({ req: { method: 'POST' }, res, provider: providerReturning({ ok: false, reason: 'not_configured' }), db, config });
   assert.equal(res.statusCode, 500);
 });
+
+// ============ duplicate-charge / replay detection (CK2, CK8) ============
+test('DUPLICATE CHARGE: a second, different txn on an already-paid order is flagged for manual review', async () => {
+  const db = setup();
+  await proc(db, ev());
+  const r = await proc(db, ev({ txnUid: 'txn-2' }), new Date(NOW.getTime() + 1000));
+  assert.equal(r.result, 'duplicate_charge');
+  const o = db.read('orders/ord1');
+  assert.deepEqual([o.status, o.providerTxnUid, o.webhookAnomaly, o.needsManualReview, o.duplicateTxnUids, o.duplicateChargeAgorot], ['paid', 'txn-1', 'duplicate_charge', true, ['txn-2'], 20000]);
+  assert.equal(db.read('members/u1').points, 200, 'no double points');
+  assert.equal(db.read('members/u1').ordersCount, 1);
+  assert.equal(db.read('paymentTxns/txn-2').kind, 'duplicate');
+});
+
+test('duplicate charge: replays of the SAME duplicate are idempotent; the original txn replay stays a plain noop', async () => {
+  const db = setup();
+  await proc(db, ev());
+  await proc(db, ev({ txnUid: 'txn-2' }));
+  const snap = JSON.stringify(db.read('orders/ord1'));
+  assert.equal((await proc(db, ev({ txnUid: 'txn-2' }), new Date(NOW.getTime() + 5000))).result, 'noop');
+  assert.equal((await proc(db, ev(), new Date(NOW.getTime() + 6000))).result, 'noop');
+  assert.equal(JSON.stringify(db.read('orders/ord1')), snap);
+});
+
+test('a charge arriving AFTER a refund (stale link) is flagged, not silently swallowed', async () => {
+  const db = setup();
+  await proc(db, ev());
+  await proc(db, ev({ status: 'refunded' }));
+  const r = await proc(db, ev({ txnUid: 'txn-9' }));
+  assert.equal(r.result, 'duplicate_charge');
+  assert.equal(db.read('orders/ord1').status, 'refunded');
+  assert.equal(db.read('orders/ord1').webhookAnomaly, 'paid_after_refund');
+  assert.equal(ent(db, 'feat_a'), undefined);
+});
+
+test('refund of the DUPLICATE charge keeps the order paid and records it', async () => {
+  const db = setup();
+  await proc(db, ev());
+  await proc(db, ev({ txnUid: 'txn-2' }));
+  const r = await proc(db, ev({ status: 'refunded', txnUid: 'refund-77', captureId: 'txn-2' }));
+  assert.equal(r.result, 'duplicate_refunded');
+  const o = db.read('orders/ord1');
+  assert.deepEqual([o.status, o.duplicateRefundedTxnUids], ['paid', ['txn-2']]);
+  assert.ok(ent(db, 'feat_a'));
+  assert.equal((await proc(db, ev({ status: 'refunded', captureId: 'txn-unknown' }))).result, 'ignored');
+});
+
+test('REPLAY of a provider event id is a no-op even for a refund that would otherwise be re-evaluated', async () => {
+  const db = setup();
+  await proc(db, ev({ eventId: 'WH-1' }));
+  const r = await proc(db, ev({ eventId: 'WH-1', status: 'refunded' })); // same id, tampered status: still dropped
+  assert.deepEqual([r.result, r.reason], ['noop', 'replayed_event']);
+  assert.equal(db.read('orders/ord1').status, 'paid');
+  assert.equal(db.read('paymentEvents/WH-1').result, 'paid');
+});
+
+test('a charge id already bound to ANOTHER order is rejected and flagged', async () => {
+  const db = setup();
+  db.seed('orders/ord2', paidOrder({ providerRef: 'page-req-2' }));
+  await proc(db, ev());
+  const r = await proc(db, ev({ orderId: 'ord2', providerRef: 'page-req-2' })); // same txn-1
+  assert.deepEqual([r.result, r.reason], ['rejected', 'txn_reused_for_other_order']);
+  assert.equal(db.read('orders/ord2').status, 'pending');
+  assert.equal(db.read('orders/ord2').needsManualReview, true);
+});
+
+test('a PAID event for a deleted account is recorded AND flagged for manual refund (CK8)', async () => {
+  const db = setup({ uid: 'deleted' });
+  assert.equal((await proc(db, ev())).result, 'paid');
+  const o = db.read('orders/ord1');
+  assert.deepEqual([o.status, o.webhookAnomaly, o.needsManualReview], ['paid', 'paid_for_deleted_account', true]);
+});
+
+test('amount mismatch also sets needsManualReview (CK4)', async () => {
+  const db = setup();
+  await proc(db, ev({ amountAgorot: 1 }));
+  assert.equal(db.read('orders/ord1').needsManualReview, true);
+});
+
+test('events can name the order only by charge id or provider reference (PayPal refund shape)', async () => {
+  const db = setup();
+  await proc(db, ev());
+  // refund names neither orderId nor providerRef: resolved through paymentTxns[captureId]
+  const r = await proc(db, { status: 'refunded', amountAgorot: 20000, currency: 'ILS', txnUid: 'refund-1', captureId: 'txn-1', eventId: 'WH-R1', reason: 'refund' });
+  assert.equal(r.result, 'refunded');
+  assert.equal(db.read('orders/ord1').status, 'refunded');
+  // paid event naming only the provider's order reference
+  const db2 = setup();
+  const r2 = await proc(db2, { status: 'paid', providerRef: 'page-req-1', amountAgorot: 20000, currency: 'ILS', txnUid: 'txn-5' });
+  assert.equal(r2.result, 'paid');
+  assert.equal(db2.read('orders/ord1').providerTxnUid, 'txn-5');
+  assert.equal((await proc(db2, { status: 'refunded', amountAgorot: 20000, currency: 'ILS', captureId: 'nope' })).result, 'ignored');
+});
+
+// ============ refunds with stacked entitlements (CK3) ============
+const stackedOrder = (id, days) => paidOrder({ items: [{ productId: 'p2', name: 'ב', priceAgorot: 10000, qty: 1, grants: ['feat_s'], accessDays: days }], subtotalAgorot: 10000, totalAgorot: 10000, providerRef: 'ref-' + id });
+const evFor = (id, over = {}) => ev({ orderId: id, providerRef: 'ref-' + id, amountAgorot: 10000, txnUid: 'tx-' + id, ...over });
+
+test('CK3 scenario: two stacked 30-day purchases; refund of the FIRST leaves the second one intact', async () => {
+  const db = new FakeFirestore();
+  db.seed('orders/A', stackedOrder('A', 30));
+  db.seed('orders/B', stackedOrder('B', 30));
+  await proc(db, evFor('A'), NOW);
+  await proc(db, evFor('B'), new Date(NOW.getTime() + 5 * DAY));
+  assert.equal(ent(db, 'feat_s').expiresAt.getTime(), NOW.getTime() + 60 * DAY);
+  const r = await proc(db, evFor('A', { status: 'refunded' }), new Date(NOW.getTime() + 6 * DAY));
+  assert.deepEqual([r.result, r.revoked, r.kept], ['refunded', [], ['feat_s']]);
+  assert.equal(ent(db, 'feat_s').expiresAt.getTime(), NOW.getTime() + 35 * DAY);
+});
+
+test('CK3 scenario: refund of the LAST purchase keeps the first order\'s days (no blanket delete)', async () => {
+  const db = new FakeFirestore();
+  db.seed('orders/A', stackedOrder('A', 30));
+  db.seed('orders/B', stackedOrder('B', 30));
+  await proc(db, evFor('A'), NOW);
+  await proc(db, evFor('B'), new Date(NOW.getTime() + 5 * DAY));
+  await proc(db, evFor('B', { status: 'refunded' }), new Date(NOW.getTime() + 6 * DAY));
+  assert.equal(ent(db, 'feat_s').expiresAt.getTime(), NOW.getTime() + 30 * DAY);
+  const r = await proc(db, evFor('A', { status: 'refunded' }), new Date(NOW.getTime() + 7 * DAY));
+  assert.deepEqual(r.revoked, ['feat_s']);
+  assert.equal(ent(db, 'feat_s'), undefined);
+});
+
+// ============ coin packs ============
+const coinOrder = (over = {}) => paidOrder({
+  items: [{ productId: 'coins-850', name: '850 מטבעות', priceAgorot: 990, qty: 2, grants: [], accessDays: null, coins: 850 }],
+  subtotalAgorot: 1980, totalAgorot: 1980, providerRef: 'ref-c', ...over,
+});
+const evC = (over = {}) => ev({ amountAgorot: 1980, providerRef: 'ref-c', txnUid: 'tx-c', ...over });
+
+test('coin pack: the paid transaction credits coins*qty to the wallet (members.coins) and writes a ledger row', async () => {
+  const db = new FakeFirestore();
+  db.seed('orders/ord1', coinOrder());
+  db.seed('members/u1', { points: 0, lifetimeSpendAgorot: 0, ordersCount: 0, coins: 100, tier: 'member', updatedAt: NOW });
+  const r = await proc(db, evC());
+  assert.deepEqual([r.result, r.granted], ['paid', []]);
+  assert.equal(db.read('members/u1').coins, 1800);
+  assert.equal(db.read('orders/ord1').coinsAwarded, 1700);
+  assert.deepEqual(db.read('members/u1/coinLedger/ord1'), { orderId: 'ord1', type: 'purchase', coins: 1700, at: NOW });
+  assert.equal(db.list('users/u1/entitlements').length, 0);
+});
+
+test('coin pack: replay / concurrent duplicates credit coins exactly once', async () => {
+  const db = new FakeFirestore();
+  db.seed('orders/ord1', coinOrder());
+  const results = await Promise.all(Array.from({ length: 6 }, () => proc(db, evC())));
+  assert.equal(results.filter((r) => r.result === 'paid').length, 1);
+  assert.equal(db.read('members/u1').coins, 1700);
+});
+
+test('coin pack: amount mismatch credits nothing; wallet field starts at 0 for a new member', async () => {
+  const db = new FakeFirestore();
+  db.seed('orders/ord1', coinOrder());
+  await proc(db, evC({ amountAgorot: 990 }));
+  assert.equal(db.read('members/u1'), undefined);
+  await proc(db, evC());
+  assert.equal(db.read('members/u1').coins, 1700);
+});
+
+test('coin refund: coins are clawed back; if already spent the shortfall is flagged for review', async () => {
+  const db = new FakeFirestore();
+  db.seed('orders/ord1', coinOrder());
+  await proc(db, evC());
+  db.seed('members/u1', { ...db.read('members/u1'), coins: 1000 }); // game spent 700
+  const r = await proc(db, evC({ status: 'refunded' }));
+  assert.equal(r.result, 'refunded');
+  assert.equal(db.read('members/u1').coins, 0);
+  const o = db.read('orders/ord1');
+  assert.deepEqual([o.coinShortfall, o.needsManualReview], [700, true]);
+  assert.deepEqual([db.read('members/u1/coinLedger/refund-ord1').coins, db.read('members/u1/coinLedger/refund-ord1').shortfall], [-1000, 700]);
+});
+
+test('coin refund with enough balance: exact reversal, no review flag', async () => {
+  const db = new FakeFirestore();
+  db.seed('orders/ord1', coinOrder());
+  db.seed('members/u1', { points: 0, lifetimeSpendAgorot: 0, ordersCount: 0, coins: 50, tier: 'member', updatedAt: NOW });
+  await proc(db, evC());
+  await proc(db, evC({ status: 'refunded' }));
+  assert.equal(db.read('members/u1').coins, 50);
+  assert.equal(db.read('orders/ord1').needsManualReview, undefined);
+});

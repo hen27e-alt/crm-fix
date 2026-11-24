@@ -1,0 +1,44 @@
+{
+  "_note": "Coin packs for Game Night (virtual currency). Prices/sizes as given by the owner on 2026-11-24, in agorot, VAT INCLUDED: 250 coins = 3.90 NIS, 850 = 9.90 NIS, 5500 = 19.90 NIS. All three are active:false: activate each one in the Firebase console only AFTER the PayPal sandbox checklist (SETUP.md) passed. Coin packs are not discounted by club tiers (noDiscount).",
+  "products": [
+    {
+      "id": "coins-250",
+      "name": "250 מטבעות",
+      "description": "חבילת 250 מטבעות למשחקים. מוצר דיגיטלי, ללא ערך כספי.",
+      "priceAgorot": 390,
+      "currency": "ILS",
+      "grants": [],
+      "accessDays": null,
+      "coins": 250,
+      "noDiscount": true,
+      "active": false,
+      "sort": 10
+    },
+    {
+      "id": "coins-850",
+      "name": "850 מטבעות",
+      "description": "חבילת 850 מטבעות למשחקים. מוצר דיגיטלי, ללא ערך כספי.",
+      "priceAgorot": 990,
+      "currency": "ILS",
+      "grants": [],
+      "accessDays": null,
+      "coins": 850,
+      "noDiscount": true,
+      "active": false,
+      "sort": 20
+    },
+    {
+      "id": "coins-5500",
+      "name": "5500 מטבעות",
+      "description": "חבילת 5500 מטבעות למשחקים. מוצר דיגיטלי, ללא ערך כספי.",
+      "priceAgorot": 1990,
+      "currency": "ILS",
+      "grants": [],
+      "accessDays": null,
+      "coins": 5500,
+      "noDiscount": true,
+      "active": false,
+      "sort": 30
+    }
+  ]
+}

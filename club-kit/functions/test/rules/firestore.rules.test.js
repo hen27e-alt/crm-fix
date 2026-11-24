@@ -32,6 +32,13 @@ test('firestore.rules', { skip }, async (t) => {
     await setDoc(doc(db, 'users/alice'), { displayName: 'Alice', marketingConsent: false, createdAt: Timestamp.now() });
     await setDoc(doc(db, 'users/alice/entitlements/feat'), { feature: 'feat', productId: 'p', orderId: 'o1', grantedAt: Timestamp.now(), expiresAt: null });
     await setDoc(doc(db, 'secret/x'), { a: 1 });
+    await setDoc(doc(db, 'users/carol'), { displayName: 'Carol', marketingConsent: false, createdAt: Timestamp.now(), adult: true, ageDeclaredAt: Timestamp.now(), ageGateMinAge: 18 });
+    await setDoc(doc(db, 'members/carol'), { points: 0, coins: 850, tier: 'member' });
+    await setDoc(doc(db, 'members/carol/coinLedger/o1'), { orderId: 'o1', type: 'purchase', coins: 850 });
+    await setDoc(doc(db, 'paymentEvents/WH-1'), { orderId: 'o1' });
+    await setDoc(doc(db, 'paymentTxns/CAP-1'), { orderId: 'o1' });
+    await setDoc(doc(db, 'ageGates/carol'), { birthDate: '1990-01-01' });
+    await setDoc(doc(db, 'protectedContent/c1'), { feature: 'premium', kind: 'text', body: 'secret' });
   });
 
   const anon = env.unauthenticatedContext().firestore();
@@ -104,6 +111,38 @@ test('firestore.rules', { skip }, async (t) => {
     await assertFails(setDoc(doc(env.authenticatedContext('c1').firestore(), 'users/c1'), { displayName: 'no consent field', createdAt: now() }));
     await assertFails(setDoc(doc(env.authenticatedContext('c2').firestore(), 'users/c2'), goodUser({ extra: 1 })));
     await assertFails(deleteDoc(doc(alice, 'users/alice'))); // via deleteMyAccount only
+  });
+
+  await t.test('AGE GATE + WALLET: adult/ageDeclaredAt/coins are server-only; a profile that already has them stays editable', async () => {
+    const carol = env.authenticatedContext('carol').firestore();
+    const dave = env.authenticatedContext('dave').firestore();
+    await assertFails(setDoc(doc(dave, 'users/dave'), goodUser({ adult: true }))); // cannot create a profile claiming adulthood
+    await assertFails(setDoc(doc(dave, 'users/dave'), goodUser({ ageDeclaredAt: now() })));
+    await assertSucceeds(setDoc(doc(dave, 'users/dave'), goodUser()));
+    await assertFails(updateDoc(doc(dave, 'users/dave'), { adult: true }));
+    await assertFails(updateDoc(doc(dave, 'users/dave'), { ageDeclaredAt: now() }));
+    await assertFails(updateDoc(doc(dave, 'users/dave'), { ageGateMinAge: 1 }));
+    await assertFails(updateDoc(doc(carol, 'users/carol'), { adult: false })); // cannot even downgrade/alter
+    await assertFails(updateDoc(doc(carol, 'users/carol'), { ageDeclaredAt: now() }));
+    await assertSucceeds(updateDoc(doc(carol, 'users/carol'), { displayName: 'Carol B', marketingConsent: true }));
+    await assertFails(setDoc(doc(carol, 'users/carol'), { displayName: 'x', marketingConsent: false, createdAt: now() })); // replacing the doc would drop adult
+    await assertSucceeds(getDoc(doc(carol, 'users/carol')));
+    // wallet
+    await assertSucceeds(getDoc(doc(carol, 'members/carol')));
+    await assertFails(updateDoc(doc(carol, 'members/carol'), { coins: 999999 }));
+    await assertSucceeds(getDoc(doc(carol, 'members/carol/coinLedger/o1')));
+    await assertFails(getDoc(doc(dave, 'members/carol/coinLedger/o1')));
+    await assertFails(setDoc(doc(carol, 'members/carol/coinLedger/fake'), { coins: 1000000 }));
+    await assertFails(deleteDoc(doc(carol, 'members/carol/coinLedger/o1')));
+  });
+
+  await t.test('server-only collections are invisible to clients', async () => {
+    const carol = env.authenticatedContext('carol').firestore();
+    for (const path of ['paymentEvents/WH-1', 'paymentTxns/CAP-1', 'ageGates/carol', 'protectedContent/c1']) {
+      await assertFails(getDoc(doc(carol, path)));
+      await assertFails(getDoc(doc(anon, path)));
+      await assertFails(setDoc(doc(carol, path), { x: 1 }));
+    }
   });
 
   await t.test('everything else is denied (default deny)', async () => {
