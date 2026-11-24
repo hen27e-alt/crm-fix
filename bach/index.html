@@ -23,7 +23,7 @@
   --ink:#2B2230; --ink2:#54485B; --muted:#6C6073;
   --line:rgba(43,34,48,.11);
   --rose:#C9738B; --sage:#8FA68A; --gold:#C9A66B;
-  --primary:#A94E69; --on-primary:#FFFFFF; --primary-soft:rgba(201,115,139,.15);
+  --primary:#A04862; --on-primary:#FFFFFF; --primary-soft:rgba(201,115,139,.15);
   --shadow:0 1px 2px rgba(43,34,48,.05),0 14px 30px -14px rgba(90,52,74,.28);
   --shadow-sm:0 1px 2px rgba(43,34,48,.06),0 6px 16px -10px rgba(90,52,74,.3);
   --nav-bg:rgba(255,251,246,.84);
@@ -772,8 +772,15 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store={
-  get(k,d){try{const v=localStorage.getItem('bach_'+k);return v?JSON.parse(v):d}catch(e){return d}},
-  set(k,v){try{localStorage.setItem('bach_'+k,JSON.stringify(v))}catch(e){}}
+  lastFail:0,
+  get(k,d){try{
+    const v=localStorage.getItem('bach_'+k);if(!v)return d;
+    const p=JSON.parse(v);
+    if(Array.isArray(d)){return Array.isArray(p)?p.filter(x=>x!==null&&x!==undefined):d}
+    if(d!==null&&typeof d==='object'){return p&&typeof p==='object'&&!Array.isArray(p)?p:d}
+    return p;
+  }catch(e){return d}},
+  set(k,v){try{localStorage.setItem('bach_'+k,JSON.stringify(v));return true}catch(e){store.lastFail=Date.now();return false}}
 };
 const ico=(n,c='')=>`<svg class="ico ${c}" aria-hidden="true" focusable="false"><use href="#i-${n}"/></svg>`;
 const q=n=>Math.round(n*10)/10;
@@ -919,8 +926,8 @@ const S={
   diag:{phase:'intro',step:0,sel:new Set()},
   favs:store.get('favs',[]).filter(id=>RM[id]),
   blend:(()=>{const b=store.get('blend',null);return b&&Array.isArray(b.items)?{id:b.id||null,name:b.name||'',items:b.items.filter(id=>RM[id]).slice(0,7)}:{id:null,name:'',items:[]}})(),
-  blends:store.get('blends',[]),
-  journal:store.get('journal',{}),
+  blends:store.get('blends',[]).filter(b=>b&&typeof b==='object'&&Array.isArray(b.items)),
+  journal:Object.fromEntries(Object.entries(store.get('journal',{})).filter(([k,v])=>v&&typeof v==='object')),
   jd:{loaded:null,mood:null,note:'',blend:''},
   sheet:null,lastFocus:null
 };
@@ -934,7 +941,7 @@ const persistBlend=()=>store.set('blend',S.blend);
    ===================================================================== */
 const view=$('#view'),sheetEl=$('#sheet'),panel=$('#panel'),toastEl=$('#toast'),rootEl=$('#root');
 let toastT;
-function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),2600)}
+function toast(msg){if(Date.now()-store.lastFail<2000)msg='לא ניתן לשמור: אחסון הדפדפן מלא או חסום';toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),2600)}
 const gTag=r=>`<span class="tag g-${r.g}"><i class="dot"></i>${GROUPS[r.g].n}</span>`;
 
 /* mood faces (SVG) */
@@ -1228,7 +1235,7 @@ function viewBlend(){
     </ol></section>`:
   `<section class="sec"><div class="empty card soft"><div class="ill">${flowerSVG(RM.heather,{leaves:false})}</div><b style="font-size:18px">הבקבוק עדיין ריק</b><p class="muted" style="margin:4px 0 16px">הוסיפו פרחים מהאבחון או מרשימת הפרחים — עד 7 בתערובת אחת.</p><div class="row" style="justify-content:center"><button class="btn primary" data-act="go" data-r="diag">לאבחון עצמי</button><button class="btn" data-act="go" data-r="browse">לכל הפרחים</button></div></div></section>`}
   ${S.blends.length?`<section class="sec" aria-labelledby="svh"><h2 class="h2" id="svh" style="margin-bottom:12px">התערובות ששמרתי</h2><div class="hist">${saved}</div></section>`:''}
-  <div class="disclaimer sec"><b>חשוב לדעת:</b> פרחי באך הם שיטה משלימה ואינם טיפול רפואי ואינם תחליף לרופא או לאיש מקצוע. אין להפסיק טיפול תרופתי בעקבות השימוש. בהיריון, בהנקה ובילדים — מומלץ להיוועץ במטפל מוסמך.</div>`;
+  <div class="disclaimer sec"><b>חשוב לדעת:</b> פרחי באך הם שיטה משלימה ואינם טיפול רפואי ואינם תחליף לרופא או לאיש מקצוע. אין להפסיק טיפול תרופתי בעקבות השימוש. התוכן באפליקציה לא נבדק על ידי מטפל מוסמך. בהיריון, בהנקה ובילדים — מומלץ להיוועץ במטפל מוסמך.</div>`;
 }
 
 /* ---------- Journal ---------- */
@@ -1308,7 +1315,7 @@ function viewLearn(){
   <section class="sec" aria-labelledby="tlh"><h2 class="h2" id="tlh" style="margin-bottom:14px">קווים לדמותו</h2><ul class="timeline">${tl.map(t=>`<li><b>${t[0]}</b>${t[1]}</li>`).join('')}</ul></section>
   <section class="sec" aria-labelledby="gg"><h2 class="h2" id="gg" style="margin-bottom:12px">שבע הקבוצות</h2><div class="glist">${G_ORDER.map(g=>`<button class="g-${g}" data-act="grp" data-g="${g}"><span class="dot"></span><span><b>${GROUPS[g].n}</b><span>${GROUPS[g].t}</span></span><em>${R.filter(r=>r.g===g).length} ‹</em></button>`).join('')}</div></section>
   <section class="sec" aria-labelledby="fq"><h2 class="h2" id="fq" style="margin-bottom:12px">שאלות נפוצות</h2>${FAQ.map(f=>`<details class="faq"><summary>${f[0]}${ico('down')}</summary><div class="a">${f[1]}</div></details>`).join('')}</section>
-  <section class="sec disclaimer"><b>הבהרה חשובה:</b> האפליקציה נועדה למידע והתבוננות עצמית בלבד. פרחי באך הם שיטה משלימה ואינם טיפול רפואי או פסיכולוגי, ואינם תחליף לאבחון, לייעוץ או לטיפול של רופא או איש מקצוע מוסמך. במצוקה נפשית משמעותית פנו לגורם מקצועי — ער״ן 1201.</section>`;
+  <section class="sec disclaimer"><b>הבהרה חשובה:</b> האפליקציה נועדה למידע והתבוננות עצמית בלבד. פרחי באך הם שיטה משלימה ואינם טיפול רפואי או פסיכולוגי, ואינם תחליף לאבחון, לייעוץ או לטיפול של רופא או איש מקצוע מוסמך. התוכן נכתב כנקודת פתיחה ולא נבדק על ידי מטפל מוסמך. במצוקה נפשית משמעותית פנו לגורם מקצועי — ער״ן 1201.</section>`;
 }
 
 const VIEWS={home:viewHome,browse:viewBrowse,diag:viewDiag,blend:viewBlend,journal:viewJournal,favs:viewFavs,learn:viewLearn};
@@ -1481,7 +1488,7 @@ document.addEventListener('keydown',e=>{
   try{
     if(window.parent!==window){
       const b=$('#crmBack');b.hidden=false;
-      b.addEventListener('click',()=>{try{window.parent.closeBrowser()}catch(e){history.back()}});
+      b.addEventListener('click',()=>{try{window.parent.closeBrowser()}catch(e){try{window.parent.postMessage({type:'crm:close'},'*')}catch(_){}}});
     }
   }catch(e){}
   S.route=routeFromHash();

@@ -593,8 +593,56 @@ let S = {
     tiktok:    { on:false, token:'' }
   }
 };
-function load(){try{const d=localStorage.getItem(SK);if(d){const p=JSON.parse(d);S={...S,...p};if(!S.conns)S.conns={};if(!S.posts)S.posts=[];if(!S.recent)S.recent=[];}}catch(e){}}
-function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
+let _saveOk=true;
+const _isObj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
+const _safeId=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(s);
+// כתובת מותרת: http(s) מלאה או נתיב יחסי. כל סכמה אחרת (javascript:, data:, file:) נפסלת.
+function safeUrl(u){
+  if(typeof u!=='string')return'';
+  u=u.trim();if(!u)return'';
+  if(/^https?:\/\/[^\s]+$/i.test(u))return u;
+  if(/^(?![a-z][a-z0-9+.-]*:)(?!\/\/)[\w.\/-]+$/i.test(u))return u;
+  return'';
+}
+function absUrl(u){try{return new URL(u,location.href).href;}catch(e){return'';}}
+function normalizeState(){
+  const VIEWS=['home','projects','social','dashboard','detail'];
+  if(!VIEWS.includes(S.view))S.view='home';
+  if(!Array.isArray(S.projects))S.projects=[];
+  const seen=new Set();
+  S.projects=S.projects.filter(_isObj).map(p=>{
+    if(!_safeId(p.id)||seen.has(p.id))p.id=uid();
+    seen.add(p.id);
+    p.name=typeof p.name==='string'?p.name:'';
+    ['emoji','description','category'].forEach(k=>{if(typeof p[k]!=='string')p[k]='';});
+    p.url=safeUrl(p.url);
+    if(!['active','paused','done'].includes(p.status))p.status='active';
+    ['tasks','notes','contacts','campaigns'].forEach(k=>{p[k]=Array.isArray(p[k])?p[k].filter(_isObj):[];});
+    p.tasks.forEach(t=>{if(!_safeId(t.id))t.id=uid();t.text=String(t.text??'');});
+    p.notes.forEach(n=>{if(!_safeId(n.id))n.id=uid();n.body=String(n.body??'');});
+    p.contacts.forEach(c=>{if(!_safeId(c.id))c.id=uid();c.name=String(c.name??'');});
+    return p;
+  });
+  if(!Array.isArray(S.posts))S.posts=[];
+  S.posts=S.posts.filter(_isObj).map(x=>{if(!_safeId(x.id))x.id=uid();x.text=String(x.text??'');x.platforms=Array.isArray(x.platforms)?x.platforms.filter(k=>typeof k==='string'):[];return x;});
+  if(!_isObj(S.conns))S.conns={};
+  S.recent=Array.isArray(S.recent)?S.recent.filter(_safeId):[];
+  if(S.featured&&!_safeId(S.featured))S.featured=null;
+  if(S.pid&&!_safeId(S.pid))S.pid=null;
+}
+function load(){
+  let raw=null;try{raw=localStorage.getItem(SK);}catch(e){}
+  if(raw){
+    let p=null;try{p=JSON.parse(raw);}catch(e){}
+    if(_isObj(p)){S={...S,...p};}
+    else{try{localStorage.setItem(SK+'_backup',raw);}catch(e){}}
+  }
+  normalizeState();
+}
+function save(){
+  try{localStorage.setItem(SK,JSON.stringify(S));_saveOk=true;return true;}
+  catch(e){if(_saveOk)toast('לא ניתן לשמור: אחסון הדפדפן מלא או חסום','error');_saveOk=false;return false;}
+}
 
 // Project color palettes
 const PALETTES=[
@@ -673,10 +721,10 @@ function renderDash(){
   const sentPosts=S.posts.filter(p=>p.status==='sent').length;
   c.innerHTML=`
   <div class="stats-grid">
-    <div class="stat-card" onclick="nav('projects')"><div class="stat-icon">📁</div><div class="stat-val">${S.projects.length}</div><div class="stat-label">פרוייקטים</div></div>
+    <div class="stat-card" role="button" tabindex="0" onclick="nav('projects')"><div class="stat-icon">📁</div><div class="stat-val">${S.projects.length}</div><div class="stat-label">פרוייקטים</div></div>
     <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">${done}/${allTasks.length}</div><div class="stat-label">משימות</div></div>
-    <div class="stat-card" onclick="nav('social')"><div class="stat-icon">📡</div><div class="stat-val">${connCount}</div><div class="stat-label">פלטפורמות מחוברות</div></div>
-    <div class="stat-card" onclick="nav('social')"><div class="stat-icon">🚀</div><div class="stat-val">${sentPosts}</div><div class="stat-label">פוסטים שנשלחו</div></div>
+    <div class="stat-card" role="button" tabindex="0" onclick="nav('social')"><div class="stat-icon">📡</div><div class="stat-val">${connCount}</div><div class="stat-label">פלטפורמות מחוברות</div></div>
+    <div class="stat-card" role="button" tabindex="0" onclick="nav('social')"><div class="stat-icon">🚀</div><div class="stat-val">${sentPosts}</div><div class="stat-label">פוסטים שנשלחו</div></div>
   </div>
   <div class="section-head">הפרוייקטים שלי</div>
   <div class="projects-grid" style="margin-bottom:20px">${S.projects.slice(0,6).map(projCard).join('')}</div>
@@ -700,7 +748,7 @@ function projCard(p){
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
   const grad=projGrad(p);
   const col1=projColor1(p);
-  return`<div class="project-card" onclick="openProject('${p.id}')">
+  return`<div class="project-card" role="button" tabindex="0" aria-label="${esc(p.name)}" onclick="openProject('${p.id}')">
     <div class="proj-logo" style="background:${grad}">
       <div class="proj-logo-overlay"></div>
       ${logoHTML(p,60)}
@@ -756,8 +804,8 @@ function renderDetail(){
         <button onclick="confirmDelete(${esc(JSON.stringify('האפליקציה "'+p.name+'" תימחק לצמיתות.'))},()=>deleteProject('${p.id}'))" class="hero-btn danger">🗑️</button>
       </div>
     </div>
-    <div class="tabs" id="detail-tabs">
-      ${['overview','tasks','notes','contacts','campaigns'].map(t=>`<div class="tab${S.tab===t?' active':''}" onclick="switchTab('${t}')">${tabLbl(t)}</div>`).join('')}
+    <div class="tabs" id="detail-tabs" role="tablist">
+      ${['overview','tasks','notes','contacts','campaigns'].map(t=>`<div class="tab${S.tab===t?' active':''}" role="tab" tabindex="0" aria-selected="${S.tab===t}" onclick="switchTab('${t}')">${tabLbl(t)}</div>`).join('')}
     </div>
     <div id="tab-body"></div>
   `;
@@ -800,7 +848,7 @@ function tabTasks(p,body){
 }
 function taskRow(t,pid){
   return`<div class="task-row">
-    <div class="task-check${t.done?' done':''}" onclick="toggleTask('${pid}','${t.id}')">${t.done?'✓':''}</div>
+    <div class="task-check${t.done?' done':''}" role="checkbox" tabindex="0" aria-checked="${!!t.done}" aria-label="סימון משימה כהושלמה" onclick="toggleTask('${pid}','${t.id}')">${t.done?'✓':''}</div>
     <div class="task-text${t.done?' done':''}" style="flex:1">${esc(t.text)}</div>
     ${t.due?`<span style="font-size:.68rem;color:var(--muted)">${new Date(t.due).toLocaleDateString('he-IL')}</span>`:''}
     <span class="pri-pill pri-${t.priority||'med'}">${priLbl(t.priority||'med')}</span>
@@ -918,7 +966,7 @@ function openPlatModal(k){
   const pl=PLATS[k];if(!pl.fields)return;const conn=S.conns[k]||{};
   document.getElementById('plat-modal-title').innerHTML=`${pl.icon} ${esc(pl.name)}`;
   document.getElementById('plat-modal-body').innerHTML=`
-    ${pl.fields.map(f=>`<div class="form-group"><label class="form-label" for="plat-f-${f.id}">${f.label}</label><input class="input" id="plat-f-${f.id}" type="${f.type}" placeholder="${f.ph}" value="${esc(conn[f.id]||'')}" dir="ltr" autocomplete="off"></div>`).join('')}
+    ${pl.fields.map(f=>`<div class="form-group"><label class="form-label" for="plat-f-${f.id}">${f.label}</label><input class="input" id="plat-f-${f.id}" type="${f.type}" placeholder="${f.type==='password'&&conn[f.id]?'•••• שמור. ריק = ללא שינוי':f.ph}" value="${f.type==='password'?'':esc(conn[f.id]||'')}" dir="ltr" autocomplete="off"></div>`).join('')}
     <p class="plat-note">המפתח נשמר רק בדפדפן הזה ונשלח רק אל Telegram. הוסיפו את הבוט כמנהל בערוץ או בקבוצה.</p>
     <div class="modal-foot">
       ${conn.on?`<button class="btn btn-danger" onclick="disconnectPlat('${k}')">נתק</button>`:''}
@@ -930,7 +978,7 @@ function openPlatModal(k){
 }
 function connectPlat(k){
   const pl=PLATS[k];const data={on:true};
-  pl.fields.forEach(f=>{data[f.id]=document.getElementById('plat-f-'+f.id).value.trim();});
+  pl.fields.forEach(f=>{let v=document.getElementById('plat-f-'+f.id).value.trim();if(!v&&f.type==='password'&&S.conns[k]&&S.conns[k][f.id])v=S.conns[k][f.id];data[f.id]=v;});
   if(k==='telegram'&&!/^\d+:[\w-]+$/.test(data.token||'')){toast('ה-Bot Token לא תקין','error');return;}
   if(k==='telegram'&&!data.chat){toast('חסר Chat ID או שם ערוץ','error');return;}
   S.conns[k]=data;save();closeM('mod-platform');renderSocial();toast('✓ '+pl.name+' הוגדר','success');
@@ -975,7 +1023,13 @@ async function dispatchPost(post){
   post.status=v.includes('failed')?'failed':v.includes('ready')?'ready':'sent';
   save();
 }
+let _publishing=false;
 async function submitPost(post){
+  if(_publishing){toast('שליחה קודמת עדיין בעיצומה','error');return;}
+  _publishing=true;
+  try{await _submitPost(post);}finally{_publishing=false;}
+}
+async function _submitPost(post){
   S.posts.push(post);save();
   if(post.status==='scheduled'){toast('הפוסט תוזמן. הוא יישלח כשה-CRM פתוח בזמן היעד','success');refreshPosts();return;}
   toast('שולח...');
@@ -1016,16 +1070,22 @@ let _ticking=false;
 async function tickScheduled(){
   if(_ticking)return;_ticking=true;
   try{
+    let changed=false,fresh=null;
+    try{fresh=JSON.parse(localStorage.getItem(SK)||'null');}catch(e){}
+    const freshStatus=id=>{const q=_isObj(fresh)&&Array.isArray(fresh.posts)?fresh.posts.find(y=>y&&y.id===id):null;return q?q.status:'scheduled';};
     const due=S.posts.filter(x=>x.status==='scheduled'&&x.scheduledAt&&x.scheduledAt<=Date.now());
     for(const post of due){
-      post.status='sending';await dispatchPost(post);
+      const fs=freshStatus(post.id);
+      if(fs!=='scheduled'){post.status=fs;changed=true;continue;}
+      if(Date.now()-post.scheduledAt>6*3600e3){post.status='missed';save();changed=true;toast('פוסט מתוזמן הוחמץ: ה-CRM היה סגור בזמן היעד','error');continue;}
+      post.status='sending';save();await dispatchPost(post);changed=true;
       toast(post.status==='ready'?'פוסט מתוזמן מוכן לשיתוף בהיסטוריה':post.status==='sent'?'פוסט מתוזמן נשלח':'פוסט מתוזמן נכשל',post.status==='failed'?'error':'success');
     }
-    if(due.length)refreshPosts();
+    if(changed)refreshPosts();
   }finally{_ticking=false;}
 }
-function statusLbl(s){return{sent:'נשלח',scheduled:'מתוזמן',sending:'שולח',ready:'מוכן לשיתוף',draft:'טיוטה',failed:'נכשל'}[s]||s;}
-function statusCls(s){return{sent:'pp-sent',scheduled:'pp-sched',sending:'pp-sched',ready:'pp-sched',draft:'pp-draft',failed:'pp-fail'}[s]||'pp-draft';}
+function statusLbl(s){return{sent:'נשלח',scheduled:'מתוזמן',sending:'שולח',ready:'מוכן לשיתוף',draft:'טיוטה',failed:'נכשל',missed:'הוחמץ'}[s]||s;}
+function statusCls(s){return{sent:'pp-sent',scheduled:'pp-sched',sending:'pp-sched',ready:'pp-sched',draft:'pp-draft',failed:'pp-fail',missed:'pp-fail'}[s]||'pp-draft';}
 function postsTableHTML(filter,limit){
   let list=filter==='all'?S.posts:S.posts.filter(x=>x.projectId===filter);
   list=list.slice(-limit).reverse();
@@ -1055,16 +1115,19 @@ function openProjectModal(id){
 }
 function saveProject(){
   const name=document.getElementById('pf-name').value.trim();if(!name){toast('שם חובה','error');return;}
+  const rawUrl=document.getElementById('pf-url').value.trim();
+  const pfUrl=safeUrl(rawUrl);
+  if(rawUrl&&!pfUrl){toast('כתובת לא תקינה. נדרשת כתובת שמתחילה ב-https://','error');return;}
   if(_editPid){
     const p=S.projects.find(x=>x.id===_editPid);if(p){
       p.name=name;p.emoji=document.getElementById('pf-emoji').value||p.emoji;
       p.description=document.getElementById('pf-desc').value;
-      p.url=document.getElementById('pf-url').value.trim();
+      p.url=pfUrl;
       p.status=document.getElementById('pf-status').value;
       p.category=document.getElementById('pf-cat').value;
     }
   }else{
-    S.projects.push({id:uid(),name,emoji:document.getElementById('pf-emoji').value||'📁',description:document.getElementById('pf-desc').value,url:document.getElementById('pf-url').value.trim(),status:document.getElementById('pf-status').value,category:document.getElementById('pf-cat').value,tasks:[],notes:[],contacts:[],campaigns:[],createdAt:Date.now()});
+    S.projects.push({id:uid(),name,emoji:document.getElementById('pf-emoji').value||'📁',description:document.getElementById('pf-desc').value,url:pfUrl,status:document.getElementById('pf-status').value,category:document.getElementById('pf-cat').value,tasks:[],notes:[],contacts:[],campaigns:[],createdAt:Date.now()});
   }
   save();closeM('mod-project');
   if(S.view==='detail')renderDetail();else renderProjects();
@@ -1080,7 +1143,7 @@ function saveProject(){
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 const REG={
   'seed-bi':  {name:'ביונד אינטימה',en:'BYOND INTIMA',tag:'חוויות זוגיות מודרכות',desc:'מארזי ערבים לזוגות עם מלווה דיגיטלי, משחקים ויועץ AI. החנות והאזור האישי של הזוג.',url:'https://byondintima-d1d4e.web.app/',g:['#3A1712','#0A0809'],ac:'#C9A66B'},
-  'seed-cm':  {name:'ClinicMate',en:'CLINICMATE',tag:'ניהול קליניקה חכם',desc:'מערכת למטפלים: תיקי מטופלים, יומן פגישות, הוצאות וקבלות, עם בידוד מלא בין מטפלים.',url:'https://clinicmate.co.il/',embed:false,g:['#0F766E','#1E3A8A'],ac:'#2DD4BF'},
+  'seed-cm':  {name:'ClinicMate',en:'CLINICMATE',tag:'ניהול קליניקה חכם',desc:'מערכת למטפלים: תיקי מטופלים, יומן פגישות, הוצאות וקבלות.',url:'https://clinicmate.co.il/',embed:false,g:['#0F766E','#1E3A8A'],ac:'#2DD4BF'},
   'seed-pb':  {name:'פרחי באך',en:'BACH FLOWERS',tag:'מצאו את הפרח שלכם',desc:'38 פרחי באך ופרח החירום: אבחון עצמי, תערובת אישית ויומן מעקב יומי.',url:'https://bach-flowers-site.vercel.app/',g:['#C2577A','#5B3A86'],ac:'#F4A8C0'},
   'seed-kb':  {name:'כדור בדולח',en:'CRYSTAL BALL',tag:'שאלו את הכדור',desc:'כדור בדולח אינטראקטיבי ועולם של קריאות: קלפים, מזלות, כף יד, אסטרולוגיה סינית, קפה, חלומות, אי צ׳ינג ונומרולוגיה.',url:'https://kadur-habdolach.vercel.app/',g:['#3B1D8A','#07051A'],ac:'#A78BFA'},
   'seed-game':{name:'ערב משחקים',en:'GAME NIGHT',tag:'משחקים לחברים ולזוגות',desc:'טריוויה, זיהוי שירים, פוקר ובינגו ראש בראש, מסלול שלבים, מטבעות, רמות, אווטארים תלת־ממדיים ופאנל ניהול.',url:'https://erev-mischakim-jfkpt.web.app/',embed:false,g:['#EA580C','#9D174D'],ac:'#FDBA74'},
@@ -1181,6 +1244,7 @@ let _browserPid=null,_hintTimer=null;
 function openBrowser(pid){
   _browserPid=pid;
   const p=S.projects.find(x=>x.id===pid);if(!p)return;
+  if(p.url&&(!safeUrl(p.url)||!absUrl(p.url))){toast('כתובת האפליקציה לא תקינה. ערכו אותה במסך הניהול.','error');return;}
   const player=document.getElementById('app-browser');
   const frame=document.getElementById('browser-frame');
   const noUrl=document.getElementById('browser-no-url');
@@ -1216,6 +1280,9 @@ function openBrowser(pid){
     noUrl.classList.add('hidden');loading.classList.remove('done');
     frame.style.visibility='';
     frame.onload=()=>{clearTimeout(_hintTimer);loading.classList.add('done');};
+    // אפליקציה באותו מקור כמו ה-CRM לא מקבלת allow-same-origin, כדי שלא תוכל להסיר את ה-sandbox ולקרוא את הנתונים.
+    let sameOrigin=false;try{sameOrigin=new URL(abs).origin===location.origin;}catch(e){}
+    frame.setAttribute('sandbox',sameOrigin?'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-modals':'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-modals');
     frame.src=abs;
     if(/^https?:/i.test(p.url))_hintTimer=setTimeout(()=>hint.classList.add('show'),4500);
   }else{
@@ -1236,7 +1303,9 @@ function closeBrowser(){
 function saveBrowserUrl(){
   let url=document.getElementById('browser-url-inp').value.trim();
   if(!url){toast('הכנס URL תקין','error');return;}
-  if(!/^https?:\/\//i.test(url)&&/\./.test(url))url='https://'+url;
+  if(!/^https?:\/\//i.test(url)&&/^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(url))url='https://'+url;
+  url=safeUrl(url);
+  if(!url||!absUrl(url)){toast('הכתובת לא תקינה','error');return;}
   const p=S.projects.find(x=>x.id===_browserPid);
   if(p){p.url=url;save();toast('✓ הכתובת נשמרה','success');}
   openBrowser(_browserPid);
@@ -1294,8 +1363,31 @@ function deleteContact(pid,cid){
 // ═══════════════════════════════════════════════════════════════
 // MODALS / UTILS
 // ═══════════════════════════════════════════════════════════════
-function openM(id){document.getElementById(id).classList.remove('hidden');}
-function closeM(id){document.getElementById(id).classList.add('hidden');}
+let _lastFocus=null;
+function openM(id){
+  const el=document.getElementById(id);
+  _lastFocus=document.activeElement;
+  el.classList.remove('hidden');
+  setTimeout(()=>{const f=el.querySelector('input:not([type=hidden]),textarea,select,button');if(f)f.focus();},0);
+}
+function closeM(id){
+  document.getElementById(id).classList.add('hidden');
+  if(_lastFocus&&_lastFocus.focus&&document.contains(_lastFocus))_lastFocus.focus();
+}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Tab')return;
+  const o=[...document.querySelectorAll('.overlay:not(.hidden)')].pop();if(!o)return;
+  const f=[...o.querySelectorAll('a[href],button:not([disabled]),input:not([type=hidden]):not([disabled]),select,textarea,[tabindex="0"]')].filter(x=>x.offsetParent!==null);
+  if(!f.length)return;
+  const first=f[0],last=f[f.length-1];
+  if(!o.contains(document.activeElement)){e.preventDefault();first.focus();}
+  else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
+document.addEventListener('keydown',e=>{
+  const t=e.target;
+  if((e.key==='Enter'||e.key===' ')&&t&&t.matches&&t.matches('[role=button],[role=tab],[role=checkbox]')&&!t.matches('button,a,input,select,textarea,.bn-item')){e.preventDefault();t.click();}
+});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('bn-item')){e.preventDefault();e.target.click();}if(e.key==='Escape'){const o=document.querySelectorAll('.overlay:not(.hidden)');if(o.length)o.forEach(el=>el.classList.add('hidden'));else if(!document.getElementById('app-browser').classList.contains('hidden'))closeBrowser();}});
 document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.add('hidden');}));
 
@@ -1307,6 +1399,7 @@ function confirmDelete(msg,cb){
 }
 
 function toast(msg,type='info'){
+  if(type==='success'&&!_saveOk){msg='לא נשמר: אחסון הדפדפן מלא או חסום';type='error';}
   const t=document.createElement('div');
   t.className='toast'+(type==='success'?' success':type==='error'?' error':'');
   t.innerHTML=`<span>${esc(msg)}</span>`;
@@ -1315,8 +1408,11 @@ function toast(msg,type='info'){
 }
 
 function toggleTheme(){
-  const cur=document.documentElement.dataset.theme||'dark';
-  document.documentElement.dataset.theme=cur==='dark'?'light':'dark';
+  const el=document.documentElement;
+  const cur=el.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const nx=cur==='dark'?'light':'dark';
+  el.dataset.theme=nx;
+  try{localStorage.setItem('crm_theme',nx);}catch(e){}
 }
 
 function globalSearch(q){
@@ -1342,11 +1438,11 @@ const _OLD_NAMES={'ביונד אינטימה':'seed-bi','קליניקמייט':'
 const _STALE_URL=/github\.io|^(byond|clinicmate|bach|kadur|games)\/$/i;
 let _migrated=false;
 S.projects.forEach(p=>{
-  if(_OLD_NAMES[p.name]&&p.id!==_OLD_NAMES[p.name]){p.id=_OLD_NAMES[p.name];_migrated=true;}
+  if(_OLD_NAMES[p.name]&&p.id!==_OLD_NAMES[p.name]&&!S.projects.some(q=>q!==p&&q.id===_OLD_NAMES[p.name])){p.id=_OLD_NAMES[p.name];_migrated=true;}
   const r=REG[p.id];
   if(r){
     if(p.name!==r.name){p.name=r.name;_migrated=true;}
-    if(p.descV!==4){p.description=r.desc;p.descV=4;_migrated=true;}
+    if(p.descV!==5){p.description=r.desc;p.descV=5;_migrated=true;}
     if((!p.url||_STALE_URL.test(p.url))&&p.url!==r.url){p.url=r.url;_migrated=true;}
   }
 });
@@ -1450,6 +1546,21 @@ if(S.projects.length===0){
 }
 
 S.view='home';
+try{const th=localStorage.getItem('crm_theme');if(th==='dark'||th==='light')document.documentElement.dataset.theme=th;}catch(e){}
+document.querySelectorAll('.overlay').forEach(o=>{o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');const t=o.querySelector('.modal-title');if(t){if(!t.id)t.id=o.id+'-t';o.setAttribute('aria-labelledby',t.id);}});
+document.querySelectorAll('.modal-close').forEach(b=>b.setAttribute('aria-label','סגור'));
+document.querySelectorAll('.btn-icon[title]').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.title);});
+document.querySelectorAll('.form-group').forEach(g=>{const l=g.querySelector('label.form-label:not([for])'),c=g.querySelector('input,select,textarea');if(l&&c&&c.id)l.setAttribute('for',c.id);});
+const _gs=document.getElementById('gsearch');if(_gs)_gs.setAttribute('aria-label','חיפוש');
+window.addEventListener('storage',e=>{
+  if(e.key!==SK||!e.newValue)return;
+  const keep={view:S.view,pid:S.pid,tab:S.tab};
+  load();Object.assign(S,keep);render();
+});
+window.addEventListener('message',e=>{
+  const f=document.getElementById('browser-frame');
+  if(f&&e.source===f.contentWindow&&e.data&&e.data.type==='crm:close')closeBrowser();
+});
 syncNav();syncTopbar();
 const _startHash=location.hash.slice(1);
 if(_startHash&&S.projects.find(x=>x.id===_startHash)){openProject(_startHash);}
