@@ -5,8 +5,11 @@
   "returnPath": "/",
   "webhookUrl": "",
   "currency": "ILS",
-  "provider": "payplus",
+  "provider": "paypal",
+  "termsVersion": "1",
   "enforceAppCheck": false,
+  "ageGate": { "required": true, "minAge": 18 },
+  "paypal": { "brandName": "", "locale": "he_IL" },
   "payplus": {
     "environment": "sandbox"
   },

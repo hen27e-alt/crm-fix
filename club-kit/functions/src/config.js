@@ -19,8 +19,11 @@ const DEFAULTS = Object.freeze({
   returnPath: '/',
   webhookUrl: '',
   currency: 'ILS',
-  provider: 'payplus',
+  provider: 'paypal',
+  termsVersion: '1',
   enforceAppCheck: false,
+  ageGate: { required: true, minAge: 18 },
+  paypal: { brandName: '', locale: 'he_IL' },
   payplus: { environment: 'sandbox' },
   points: { perShekel: 1 },
   tiers: [
@@ -50,6 +53,8 @@ function mergeConfig(user) {
   return {
     ...DEFAULTS,
     ...u,
+    paypal: { ...DEFAULTS.paypal, ...(isPlainObject(u.paypal) ? u.paypal : {}) },
+    ageGate: { ...DEFAULTS.ageGate, ...(isPlainObject(u.ageGate) ? u.ageGate : {}) },
     payplus: { ...DEFAULTS.payplus, ...(isPlainObject(u.payplus) ? u.payplus : {}) },
     points: { ...DEFAULTS.points, ...(isPlainObject(u.points) ? u.points : {}) },
     limits: { ...DEFAULTS.limits, ...(isPlainObject(u.limits) ? u.limits : {}) },
@@ -64,6 +69,12 @@ function validateConfig(cfg) {
   if (typeof cfg.appId !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,39}$/i.test(cfg.appId)) errs.push('appId must match [a-z0-9_-]{1,40}');
   if (cfg.currency !== 'ILS') errs.push('currency must be "ILS"');
   if (typeof cfg.region !== 'string' || !cfg.region) errs.push('region must be a non-empty string');
+  if (!['paypal', 'payplus'].includes(cfg.provider)) errs.push('provider must be "paypal" or "payplus"');
+  if (typeof cfg.termsVersion !== 'string' || !/^[A-Za-z0-9._-]{1,32}$/.test(cfg.termsVersion)) errs.push('termsVersion must match [A-Za-z0-9._-]{1,32}');
+  if (typeof cfg.ageGate.required !== 'boolean') errs.push('ageGate.required must be boolean');
+  if (!isInt(cfg.ageGate.minAge) || cfg.ageGate.minAge < 13 || cfg.ageGate.minAge > 21) errs.push('ageGate.minAge must be an integer 13..21');
+  if (typeof cfg.paypal.brandName !== 'string' || cfg.paypal.brandName.length > 127) errs.push('paypal.brandName must be a string up to 127 chars');
+  if (typeof cfg.paypal.locale !== 'string' || !/^[a-z]{2}_[A-Z]{2}$/.test(cfg.paypal.locale)) errs.push('paypal.locale must look like he_IL');
   if (typeof cfg.enforceAppCheck !== 'boolean') errs.push('enforceAppCheck must be boolean');
   if (typeof cfg.returnPath !== 'string' || !cfg.returnPath.startsWith('/') || cfg.returnPath.startsWith('//')) errs.push('returnPath must start with a single "/"');
   if (cfg.siteUrl) {

@@ -22,7 +22,7 @@ const codeOf = async (p) => {
 function setup() {
   const db = new FakeFirestore();
   seedProducts(db);
-  db.seed('users/u1', { displayName: 'דנה', marketingConsent: false, createdAt: NOW });
+  db.seed('users/u1', { displayName: 'דנה', marketingConsent: false, createdAt: NOW, adult: true, ageDeclaredAt: NOW });
   return { db, provider: fakeProvider() };
 }
 
@@ -157,7 +157,7 @@ test('missing siteUrl/webhookUrl is a configuration error, not a crash', async (
 test('an existing profile termsAcceptedAt is not overwritten by later checkouts', async () => {
   const { db, provider } = setup();
   const first = new Date('2026-01-01T00:00:00Z');
-  db.seed('users/u1', { displayName: 'דנה', marketingConsent: false, createdAt: NOW, termsAcceptedAt: first });
+  db.seed('users/u1', { displayName: 'דנה', marketingConsent: false, createdAt: NOW, termsAcceptedAt: first, adult: true });
   await run(db, provider, cart([{ productId: 'p1', qty: 1 }]));
   assert.equal(db.read('users/u1').termsAcceptedAt.getTime(), first.getTime());
 });

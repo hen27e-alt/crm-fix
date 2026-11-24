@@ -1,9 +1,11 @@
 'use strict';
 const { cleanText, logId } = require('./util');
+const { httpsError, MSG } = require('./errors');
 const log = require('./log');
 
 const DELETED_UID = 'deleted';
 const BATCH = 400;
+const PENDING_GRACE_MS = 30 * 60 * 1000;
 
 /**
  * Creates users/{uid} and members/{uid} if (and only if) they do not exist yet.
@@ -23,7 +25,7 @@ async function ensureUserAndMember({ db, user, now = new Date() }) {
       tx.set(userRef, doc);
     }
     if (!m.exists) {
-      tx.set(memberRef, { points: 0, lifetimeSpendAgorot: 0, ordersCount: 0, tier: 'member', updatedAt: now });
+      tx.set(memberRef, { points: 0, lifetimeSpendAgorot: 0, ordersCount: 0, coins: 0, tier: 'member', updatedAt: now });
     }
   });
   log.info('user bootstrap done', { uid: logId(user.uid) });
@@ -35,7 +37,14 @@ async function ensureUserAndMember({ db, user, now = new Date() }) {
  * Pending orders are cancelled; if a late "paid" webhook still arrives the order is marked paid
  * without touching any (deleted) user data.
  */
-async function deleteAccountCore({ db, auth, uid, now = new Date() }) {
+async function deleteAccountCore({ db, auth, uid, force = false, now = new Date() }) {
+  // A payment may be in flight right now. Do not destroy the account under it unless the user confirmed (force):
+  // the late payment would otherwise be recorded against a deleted account and need a manual refund.
+  if (!force) {
+    const since = new Date(now.getTime() - PENDING_GRACE_MS);
+    const recent = await db.collection('orders').where('uid', '==', uid).where('status', '==', 'pending').where('createdAt', '>=', since).limit(1).get();
+    if (!recent.empty) throw httpsError('failed-precondition', MSG.pendingOrder, { reason: 'pending_order' });
+  }
   let anonymised = 0;
   for (let i = 0; i < 1000; i++) {
     const snap = await db.collection('orders').where('uid', '==', uid).limit(BATCH).get();
@@ -54,7 +63,8 @@ async function deleteAccountCore({ db, auth, uid, now = new Date() }) {
   }
 
   await db.recursiveDelete(db.collection('users').doc(uid)); // user doc + entitlements (+ any other subcollection)
-  await db.collection('members').doc(uid).delete();
+  await db.recursiveDelete(db.collection('members').doc(uid)); // member doc + coin ledger
+  await db.collection('ageGates').doc(uid).delete();
 
   try {
     await auth.deleteUser(uid);

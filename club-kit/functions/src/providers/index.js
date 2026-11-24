@@ -1,6 +1,7 @@
 'use strict';
 /** Provider registry. Add new providers here (see README.md in this folder). */
 const REGISTRY = {
+  paypal: () => require('./paypal'),
   payplus: () => require('./payplus'),
 };
 

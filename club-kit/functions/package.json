@@ -5,7 +5,7 @@
   "description": "Club Kit backend: checkout, payment webhook, account deletion, user bootstrap (Firebase Functions v2, region europe-west1)",
   "main": "index.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "scripts": {
     "test": "node --test test/*.test.js",

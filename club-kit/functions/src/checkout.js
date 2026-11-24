@@ -1,6 +1,7 @@
 'use strict';
 const { validateCartInput, buildOrder } = require('./cart');
 const { resolveTier } = require('./club');
+const { assertAdult } = require('./age');
 const { httpsError, MSG, HttpsError } = require('./errors');
 const { cleanText, normalizePhone, logId } = require('./util');
 const log = require('./log');
@@ -47,6 +48,9 @@ async function createCheckoutCore({ db, provider, config, uid, token, data, now 
   const productsById = new Map();
   productSnaps.forEach((s, i) => productsById.set(lines[i].productId, s.exists ? s.data() : null));
 
+  // --- age gate: only users whose server-recorded declaration says adult may buy ---
+  assertAdult(userSnap.exists ? userSnap.data() : null, config);
+
   const lifetime = memberSnap.exists && Number.isFinite(memberSnap.data().lifetimeSpendAgorot) ? memberSnap.data().lifetimeSpendAgorot : 0;
   const tier = resolveTier(config.tiers, lifetime);
 
@@ -71,6 +75,8 @@ async function createCheckoutCore({ db, provider, config, uid, token, data, now 
     discountPct: tier.discountPct,
     provider: config.provider,
     consent: true,
+    termsVersion: config.termsVersion,
+    ageGateOk: config.ageGate.required ? true : null,
     termsAcceptedAt: now,
     createdAt: now,
   };
@@ -118,7 +124,26 @@ async function createCheckoutCore({ db, provider, config, uid, token, data, now 
     throw httpsError('unavailable', MSG.provider);
   }
 
-  await orderRef.update({ providerRef: page.providerRef });
+  // providerRef is what ties a later capture/webhook to this order: retry the write, and if it still fails
+  // cancel the order rather than leave a payable page that the server cannot match.
+  let refSaved = false;
+  for (let i = 0; i < 3 && !refSaved; i++) {
+    try {
+      await orderRef.update({ providerRef: page.providerRef });
+      refSaved = true;
+    } catch (_) {
+      /* retry */
+    }
+  }
+  if (!refSaved) {
+    log.error('checkout: could not store providerRef', { orderId });
+    try {
+      await orderRef.update({ status: 'failed', failedReason: 'provider_ref_not_saved' });
+    } catch (_) {
+      /* nothing more to do */
+    }
+    throw httpsError('unavailable', MSG.provider);
+  }
   if (userSnap.exists && !u.termsAcceptedAt) {
     // best effort: record the FIRST terms acceptance on the profile (each order also keeps its own termsAcceptedAt)
     try {

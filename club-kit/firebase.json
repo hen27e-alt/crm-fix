@@ -3,7 +3,7 @@
     {
       "source": "functions",
       "codebase": "club",
-      "runtime": "nodejs20",
+      "runtime": "nodejs22",
       "predeploy": ["node scripts/sync-config.js"],
       "ignore": ["node_modules", ".git", "test", "*.log"]
     }
@@ -11,6 +11,9 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
   },
   "emulators": {
     "firestore": { "port": 8080 },

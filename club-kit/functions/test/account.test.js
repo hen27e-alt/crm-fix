@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const { FakeFirestore } = require('./helpers/fakeFirestore');
 const { paidOrder } = require('./helpers/fixtures');
 const { deleteAccountCore, ensureUserAndMember } = require('../src/account');
+const { HttpsError } = require('../src/errors');
 
 const NOW = new Date('2026-06-01T12:00:00Z');
 
@@ -59,7 +60,7 @@ test('ensureUserAndMember: creates both docs for a new user, contract shape', as
   const db = new FakeFirestore();
   await ensureUserAndMember({ db, user: { uid: 'n1', displayName: 'נועה', email: 'n@x.co', phoneNumber: '+972501234567' }, now: NOW });
   assert.deepEqual(db.read('users/n1'), { displayName: 'נועה', marketingConsent: false, createdAt: NOW, email: 'n@x.co', phone: '+972501234567' });
-  assert.deepEqual(db.read('members/n1'), { points: 0, lifetimeSpendAgorot: 0, ordersCount: 0, tier: 'member', updatedAt: NOW });
+  assert.deepEqual(db.read('members/n1'), { points: 0, lifetimeSpendAgorot: 0, ordersCount: 0, coins: 0, tier: 'member', updatedAt: NOW });
 });
 
 test('ensureUserAndMember: phone-only user has no email key; existing docs are never overwritten', async () => {
@@ -72,4 +73,36 @@ test('ensureUserAndMember: phone-only user has no email key; existing docs are n
   await ensureUserAndMember({ db, user: { uid: 'n3', displayName: 'other' }, now: NOW });
   assert.equal(db.read('users/n3').displayName, 'custom');
   assert.equal(db.read('members/n3').points, 77);
+});
+
+test('deleteAccount: also removes the coin ledger and the server-only birth-date record', async () => {
+  const db = new FakeFirestore();
+  seedUser(db);
+  db.seed('members/u1/coinLedger/o1', { orderId: 'o1', type: 'purchase', coins: 250, at: NOW });
+  db.seed('ageGates/u1', { birthDate: '1990-01-01', declaredAt: NOW, minAge: 18 });
+  db.seed('ageGates/u2', { birthDate: '1991-01-01', declaredAt: NOW, minAge: 18 });
+  await deleteAccountCore({ db, auth: mkAuth(), uid: 'u1', now: NOW });
+  assert.deepEqual(db.list('members/u1'), []);
+  assert.equal(db.read('ageGates/u1'), undefined);
+  assert.ok(db.read('ageGates/u2'));
+});
+
+test('deleteAccount: a payment possibly in flight blocks deletion unless the user confirms (force)', async () => {
+  const db = new FakeFirestore();
+  seedUser(db);
+  db.seed('orders/recent', paidOrder({ status: 'pending', createdAt: new Date(NOW.getTime() - 5 * 60 * 1000) }));
+  const auth = mkAuth();
+  await assert.rejects(deleteAccountCore({ db, auth, uid: 'u1', now: NOW }), (e) => e instanceof HttpsError && e.code === 'failed-precondition' && e.details.reason === 'pending_order');
+  assert.ok(db.read('users/u1'), 'nothing was deleted');
+  assert.deepEqual(auth.deleted, []);
+  await deleteAccountCore({ db, auth, uid: 'u1', force: true, now: NOW });
+  assert.equal(db.read('users/u1'), undefined);
+  assert.equal(db.read('orders/recent').status, 'cancelled');
+});
+
+test('deleteAccount: an OLD pending order does not block deletion', async () => {
+  const db = new FakeFirestore();
+  seedUser(db);
+  await deleteAccountCore({ db, auth: mkAuth(), uid: 'u1', now: NOW }); // seedUser has o2 pending but created 2026-01-01
+  assert.equal(db.read('users/u1'), undefined);
 });

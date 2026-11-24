@@ -15,10 +15,14 @@ const MSG = Object.freeze({
   provider: 'שירות התשלום אינו זמין כרגע. נסו שוב בעוד רגע.',
   internal: 'אירעה שגיאה. נסו שוב מאוחר יותר.',
   notConfigured: 'החנות עדיין אינה מוגדרת לקבלת תשלומים.',
+  notFound: 'ההזמנה לא נמצאה.',
+  noCapture: 'סוג התשלום אינו תומך בפעולה זו.',
+  pendingOrder: 'יש הזמנה שנפתחה לאחרונה וטרם הושלמה. אם התחלתם תשלום, המתינו כמה דקות לפני מחיקת החשבון, או אשרו שברצונכם למחוק בכל זאת.',
+  noAccess: 'אין לכם גישה לתוכן זה. ייתכן שהרכישה טרם הושלמה או שהגישה פגה.',
 });
 
-function httpsError(code, message) {
-  return new HttpsError(code, message);
+function httpsError(code, message, details) {
+  return details === undefined ? new HttpsError(code, message) : new HttpsError(code, message, details);
 }
 
 /** Convert anything thrown into an HttpsError that is safe to send to the client. */

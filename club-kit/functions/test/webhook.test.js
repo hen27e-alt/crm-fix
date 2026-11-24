@@ -52,8 +52,8 @@ test('paid: an expired entitlement restarts from now; an existing lifetime one i
   db.seed('users/u1/entitlements/feat_c', { feature: 'feat_c', productId: 'o', orderId: 'x', grantedAt: NOW, expiresAt: null });
   await proc(db, ev());
   assert.equal(ent(db, 'feat_b').expiresAt.getTime(), NOW.getTime() + 30 * DAY);
-  assert.equal(ent(db, 'feat_c').expiresAt, null);
-  assert.equal(ent(db, 'feat_c').orderId, 'x');
+  assert.equal(ent(db, 'feat_c').expiresAt, null); // lifetime access is never shortened by a time-limited purchase
+  assert.ok(ent(db, 'feat_c').contributions.some((c) => c.orderId === 'x') && ent(db, 'feat_c').contributions.some((c) => c.orderId === 'ord1'));
 });
 
 test('club progression uses existing member totals and can change tier', async () => {

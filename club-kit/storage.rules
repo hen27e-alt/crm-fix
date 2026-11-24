@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// Club Kit - Cloud Storage rules: NOTHING is readable or writable by clients.
+// Paid files (protected/...) are handed out only as short-lived signed URLs by the
+// getEntitledContent function (Admin SDK bypasses these rules). Upload files with the console or Admin SDK.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

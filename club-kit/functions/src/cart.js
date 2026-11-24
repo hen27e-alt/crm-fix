@@ -6,6 +6,7 @@
 const { httpsError, MSG } = require('./errors');
 const { computeDiscountAgorot } = require('./club');
 
+const MAX_COINS_PER_UNIT = 10000000;
 const PRODUCT_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
 /**
@@ -45,7 +46,10 @@ function isPurchasable(p, currency) {
     Number.isInteger(p.priceAgorot) &&
     p.priceAgorot > 0 &&
     p.priceAgorot <= 100000000 &&
-    p.currency === currency
+    p.currency === currency &&
+    // optional coin pack field: when present it must be a sane positive integer
+    (p.coins === undefined || (Number.isInteger(p.coins) && p.coins > 0 && p.coins <= MAX_COINS_PER_UNIT)) &&
+    (p.noDiscount === undefined || typeof p.noDiscount === 'boolean')
   );
 }
 
@@ -56,6 +60,7 @@ function isPurchasable(p, currency) {
 function buildOrder(lines, productsById, { discountPct, currency, maxOrderTotalAgorot }) {
   const items = [];
   let subtotal = 0;
+  let discountableSubtotal = 0;
   for (const { productId, qty } of lines) {
     const p = productsById.get(productId);
     if (!isPurchasable(p, currency)) throw httpsError('failed-precondition', MSG.unavailable);
@@ -69,10 +74,13 @@ function buildOrder(lines, productsById, { discountPct, currency, maxOrderTotalA
       // snapshot of what this purchase entitles to, so a later product edit cannot change a paid order
       grants,
       accessDays,
+      coins: p.coins === undefined ? 0 : p.coins, // coins credited PER UNIT (coin packs); 0 for ordinary products
+      noDiscount: p.noDiscount === true, // coin packs etc. can opt out of the club tier discount
     });
     subtotal += p.priceAgorot * qty;
+    if (p.noDiscount !== true) discountableSubtotal += p.priceAgorot * qty;
   }
-  const discountAgorot = computeDiscountAgorot(subtotal, discountPct);
+  const discountAgorot = computeDiscountAgorot(discountableSubtotal, discountPct);
   const totalAgorot = subtotal - discountAgorot;
   if (!Number.isSafeInteger(subtotal) || totalAgorot <= 0 || totalAgorot > maxOrderTotalAgorot) {
     throw httpsError('failed-precondition', totalAgorot > maxOrderTotalAgorot ? MSG.tooLarge : MSG.unavailable);
@@ -80,4 +88,4 @@ function buildOrder(lines, productsById, { discountPct, currency, maxOrderTotalA
   return { items, subtotalAgorot: subtotal, discountAgorot, totalAgorot };
 }
 
-module.exports = { validateCartInput, isPurchasable, buildOrder, PRODUCT_ID_RE };
+module.exports = { MAX_COINS_PER_UNIT, validateCartInput, isPurchasable, buildOrder, PRODUCT_ID_RE };

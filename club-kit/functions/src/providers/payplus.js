@@ -43,7 +43,7 @@
  *          transaction.status_code ("000" = approved), transaction.amount (decimal shekels), transaction.currency,
  *          and the path(s) of the receipt/invoice URL (RECEIPT_URL_PATHS is a guess)
  *  [ ] V9  Whether failed payments produce a callback (send_failure_callback) and with which status_code values
- *  [ ] V10 Whether refunds produce a callback at all, and how it is marked (REFUND_MARKERS is a guess).
+ *  [ ] V10 Whether refunds produce a callback at all, and how it is marked (REFUND_MARKERS is a guess; matched EXACTLY, not as a substring).
  *          If PayPlus sends none, refunds must be recorded with scripts/refund-order.js
  *  [ ] V11 Hosted page domain (PAYMENT_URL_HOST_SUFFIX guard)
  *  [ ] V12 `more_info` max length / charset (we send the 20-char Firestore order id)
@@ -72,7 +72,8 @@ const CALLBACK_HASH_HEADER = 'hash'; // V7 (second-hand evidence)
 const CALLBACK_HASH_ALGO = 'sha256'; // V7 (second-hand evidence)
 const CALLBACK_HASH_ENCODINGS = Object.freeze(['base64', 'hex']); // V7: digest encoding unconfirmed -> accept both
 const SUCCESS_STATUS_CODE = '000'; // V8
-const REFUND_MARKERS = Object.freeze(['refund']); // V10 guess: substring match, case-insensitive, on transaction_type / transaction.type / transaction.status
+const REFUND_MARKERS = Object.freeze(['refund']); // V10 guess: EXACT (case-insensitive) match on transaction_type / transaction.type
+const INTERMEDIATE_STATUSES = Object.freeze(['pending', 'in_progress', 'processing', 'waiting']); // V9 guess: transaction.status values that are NOT final -> ignored, never 'failed'
 const RECEIPT_URL_PATHS = Object.freeze([
   ['data', 'invoice_link'],
   ['transaction', 'invoice_link'],
@@ -234,8 +235,9 @@ function createPayPlusAdapter(opts = {}) {
     const amountAgorot = shekelToAgorot(tx.amount);
     const currency = typeof tx.currency === 'string' ? tx.currency.toUpperCase() : typeof tx.currency_code === 'string' ? tx.currency_code.toUpperCase() : '';
     const txnUid = typeof tx.uid === 'string' ? tx.uid.slice(0, 128) : '';
-    const typeText = [body.transaction_type, tx.type, tx.status].filter((x) => typeof x === 'string').join(' ').toLowerCase();
-    const isRefund = REFUND_MARKERS.some((m) => typeText.includes(m));
+    const typeValues = [body.transaction_type, tx.type].filter((x) => typeof x === 'string').map((x) => x.trim().toLowerCase());
+    const isRefund = typeValues.some((v) => REFUND_MARKERS.includes(v));
+    if (!isRefund && typeof tx.status === 'string' && INTERMEDIATE_STATUSES.includes(tx.status.trim().toLowerCase())) return null; // not final: wait for the next callback
     const approved = String(tx.status_code) === SUCCESS_STATUS_CODE;
     let receiptUrl = '';
     for (const p of RECEIPT_URL_PATHS) {

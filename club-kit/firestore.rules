@@ -3,7 +3,8 @@ rules_version = '2';
 // Club Kit - Firestore security rules.
 // Principles (see CONTRACT.md):
 //  * default deny;
-//  * orders / members / entitlements are written ONLY by Cloud Functions (Admin SDK bypasses rules);
+//  * orders / members / entitlements / wallet are written ONLY by Cloud Functions (Admin SDK bypasses rules);
+//  * server-only collections (paymentEvents, paymentTxns, ageGates, protectedContent) have no client access at all;
 //  * clients read only their own data and only active products;
 //  * users/{uid}: owner only, strict field allow-list, types and lengths.
 service cloud.firestore {
@@ -29,17 +30,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ---- members (club state): owner read-only ----
+    // ---- members (club state + coin wallet `coins`): owner read-only ----
     match /members/{uid} {
       allow read: if isOwner(uid);
       allow write: if false;
+
+      // coin ledger (purchases / refunds): owner read-only
+      match /coinLedger/{entryId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
     }
 
     // ---- users profile ----
     match /users/{uid} {
-      // Allowed fields: displayName, email?, phone?, marketingConsent, termsAcceptedAt?, createdAt
+      // Client-writable fields: displayName, email?, phone?, marketingConsent, termsAcceptedAt?, createdAt (create only)
+      // Server-only fields (written by the declareAge function, never by a client): adult, ageDeclaredAt, ageGateMinAge
       function allowedKeys() {
-        return request.resource.data.keys().hasOnly(['displayName', 'email', 'phone', 'marketingConsent', 'termsAcceptedAt', 'createdAt']);
+        return request.resource.data.keys().hasOnly(['displayName', 'email', 'phone', 'marketingConsent', 'termsAcceptedAt', 'createdAt', 'adult', 'ageDeclaredAt', 'ageGateMinAge']);
       }
 
       function validTypes() {
@@ -54,16 +62,17 @@ service cloud.firestore {
 
       allow read: if isOwner(uid);
 
+      // A client can never create a profile that already claims to be an adult.
       allow create: if isOwner(uid)
-        && allowedKeys()
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'phone', 'marketingConsent', 'termsAcceptedAt', 'createdAt'])
         && request.resource.data.keys().hasAll(['displayName', 'marketingConsent', 'createdAt'])
         && validTypes();
 
+      // On update only the listed client fields may change; createdAt and every server-only field are immutable.
       allow update: if isOwner(uid)
         && allowedKeys()
         && validTypes()
-        // createdAt is immutable
-        && request.resource.data.createdAt == resource.data.createdAt;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'email', 'phone', 'marketingConsent', 'termsAcceptedAt']);
 
       // Deleting an account goes through the deleteMyAccount function (it also removes orders' PII and the Auth user).
       allow delete: if false;
